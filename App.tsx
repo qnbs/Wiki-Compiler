@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import i18next from './i18n';
-import { Project, View, Theme, AppSettings, AccentColor } from './types';
-import { getProjects, saveProject, deleteProject as dbDeleteProject, getArticleCache, saveArticleCache, getSettings, saveSettings } from './services/dbService';
-import { getArticleHtml as fetchArticleHtml } from './services/wikipediaService';
+import { View, Theme, AppSettings, AccentColor, ArticleContent } from './types';
+import { getArticleCache, saveArticleCache, getSettings, saveSettings } from './services/dbService';
+import { getArticleHtml as fetchArticleHtml, getArticleMetadata } from './services/wikipediaService';
 import Header from './components/Header';
 import LibraryView from './components/LibraryView';
 import ArchiveView from './components/ArchiveView';
@@ -13,6 +13,8 @@ import HelpView from './components/HelpView';
 import CommandPalette from './components/CommandPalette';
 import { useDarkMode } from './hooks/useDarkMode';
 import BottomNavBar from './components/BottomNavBar';
+import { useProjects } from './hooks/useProjects';
+import Spinner from './components/Spinner';
 
 const DEFAULT_SETTINGS: AppSettings = {
   theme: 'system',
@@ -66,41 +68,42 @@ const accentColorMap: Record<AccentColor, Record<string, string>> = {
 const App: React.FC = () => {
   const { t } = useTranslation();
   const [view, setView] = useState<View>(View.Library);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [settings, setSettings] = useState<AppSettings | null>(null);
-  const [, setTheme, isDarkMode] = useDarkMode();
+  const [isDarkMode] = useDarkMode(settings?.theme);
+  const { 
+    projects, 
+    activeProjectId, 
+    activeProject, 
+    setActiveProjectId, 
+    updateActiveProject, 
+    createNewProject, 
+    deleteProject,
+    loadProjects
+  } = useProjects(setView);
 
 
-  const loadProjects = useCallback(async () => {
-    let dbProjects = await getProjects();
-    if (dbProjects.length === 0) {
-      const newProject: Project = { id: crypto.randomUUID(), name: 'My First Compilation', articles: [] };
-      await saveProject(newProject);
-      dbProjects = [newProject];
-    }
-    setProjects(dbProjects);
-  }, []);
-
-  const loadInitialData = useCallback(async () => {
+  const loadInitialSettings = useCallback(async () => {
     let dbSettings = await getSettings();
     if (!dbSettings) {
       dbSettings = DEFAULT_SETTINGS;
       await saveSettings(dbSettings);
     }
     setSettings(dbSettings);
-    setTheme(dbSettings.theme);
     setView(dbSettings.defaultView);
     if (i18next.language !== dbSettings.language) {
       i18next.changeLanguage(dbSettings.language);
     }
-    await loadProjects();
-  }, [loadProjects, setTheme]);
+  }, []);
 
   useEffect(() => {
-    loadInitialData();
-  }, [loadInitialData]);
+    loadInitialSettings();
+  }, [loadInitialSettings]);
+  
+  const reloadApp = useCallback(() => {
+    loadInitialSettings();
+    loadProjects();
+  },[loadInitialSettings, loadProjects]);
 
   useEffect(() => {
     if (settings) {
@@ -114,44 +117,21 @@ const App: React.FC = () => {
   
   const updateSettings = useCallback(async (newSettings: AppSettings) => {
     setSettings(newSettings);
-    setTheme(newSettings.theme);
     if (i18next.language !== newSettings.language) {
       await i18next.changeLanguage(newSettings.language);
     }
     await saveSettings(newSettings);
-  }, [setTheme]);
+  }, []);
 
   const toggleDarkMode = useCallback(() => {
     if (settings) {
-      const newTheme = isDarkMode ? 'light' : 'dark';
+      const newTheme: Theme = isDarkMode ? 'light' : 'dark';
       updateSettings({ ...settings, theme: newTheme });
     }
   }, [isDarkMode, settings, updateSettings]);
 
-  useEffect(() => {
-    if (projects.length > 0) {
-        const activeProjectExists = projects.some(p => p.id === activeProjectId);
-        if (!activeProjectId || !activeProjectExists) {
-            setActiveProjectId(projects[0].id);
-        }
-    }
-  }, [projects, activeProjectId]);
-
-  const activeProject = useMemo(() => 
-    projects.find(p => p.id === activeProjectId)
-  , [projects, activeProjectId]);
-
-  const updateActiveProject = useCallback(async (updatedProject: Project) => {
-    setProjects(prevProjects =>
-      prevProjects.map(p => (p.id === updatedProject.id ? updatedProject : p))
-    );
-    await saveProject(updatedProject);
-  }, []);
-
   const addArticleToProject = useCallback((title: string) => {
     if (activeProject) {
-      // Silently return if article is already in the project.
-      // The UI will handle user feedback.
       if (activeProject.articles.some(a => a.title === title)) {
         return;
       }
@@ -165,35 +145,20 @@ const App: React.FC = () => {
   }, [activeProject, updateActiveProject]);
 
   const getArticleContent = useCallback(async (title: string): Promise<string> => {
-    let html = await getArticleCache(title);
-    if (!html) {
-      html = await fetchArticleHtml(title);
-      await saveArticleCache({ title, html });
+    let article = await getArticleCache(title);
+    if (!article) {
+      const html = await fetchArticleHtml(title);
+      const metadataArray = await getArticleMetadata([title]);
+      const articleToCache: ArticleContent = { 
+        title, 
+        html, 
+        metadata: metadataArray.length > 0 ? metadataArray[0] : undefined 
+      };
+      await saveArticleCache(articleToCache);
+      return html;
     }
-    return html;
+    return article.html;
   }, []);
-
-  const createNewProject = async () => {
-    const newProjectName = prompt(t('Enter new project name:'), t('New Compilation'));
-    if (newProjectName) {
-      const newProject: Project = { id: crypto.randomUUID(), name: newProjectName, articles: [] };
-      await saveProject(newProject);
-      await loadProjects();
-      setActiveProjectId(newProject.id);
-      setView(View.Compiler);
-    }
-  };
-
-  const deleteProject = async (projectId: string) => {
-    if (projects.length <= 1) {
-      alert(t('You cannot delete the last project.'));
-      return;
-    }
-    if (window.confirm(t('Delete Project Confirmation'))) {
-      await dbDeleteProject(projectId);
-      await loadProjects();
-    }
-  };
 
   const commands = useMemo(() => [
     { id: 'goto-library', label: 'Go to Library', action: () => setView(View.Library), icon: 'book' },
@@ -205,20 +170,24 @@ const App: React.FC = () => {
     { id: 'create-project', label: 'Create New Project', action: createNewProject, icon: 'plus' },
   ], [isDarkMode, toggleDarkMode, createNewProject]);
 
+  if (!settings || !activeProject) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex justify-center items-center">
+        <Spinner />
+      </div>
+    );
+  }
 
   const renderContent = () => {
-    if (!settings) {
-      return null; // Or a loading spinner
-    }
     switch (view) {
         case View.Library:
-            return activeProject && <LibraryView addArticleToProject={addArticleToProject} getArticleContent={getArticleContent} settings={settings} activeProject={activeProject} />;
+            return <LibraryView addArticleToProject={addArticleToProject} getArticleContent={getArticleContent} settings={settings} activeProject={activeProject} />;
         case View.Archive:
-            return activeProject && <ArchiveView addArticleToProject={addArticleToProject} getArticleContent={getArticleContent} activeProject={activeProject} settings={settings} />;
+            return <ArchiveView addArticleToProject={addArticleToProject} getArticleContent={getArticleContent} activeProject={activeProject} settings={settings} />;
         case View.Compiler:
-            return activeProject && <CompilerView project={activeProject} updateProject={updateActiveProject} getArticleContent={getArticleContent} settings={settings} updateSettings={updateSettings} />;
+            return <CompilerView project={activeProject} updateProject={updateActiveProject} getArticleContent={getArticleContent} settings={settings} updateSettings={updateSettings} />;
         case View.Settings:
-            return <SettingsView settings={settings} updateSettings={updateSettings} reloadApp={loadInitialData} />;
+            return <SettingsView settings={settings} updateSettings={updateSettings} reloadApp={reloadApp} />;
         case View.Help:
             return <HelpView />;
         default:
@@ -234,7 +203,7 @@ const App: React.FC = () => {
         setView={setView} 
         isDarkMode={isDarkMode} 
         toggleDarkMode={toggleDarkMode}
-        projectName={activeProject?.name || ''}
+        projectName={activeProject.name}
         projects={projects}
         activeProjectId={activeProjectId}
         setActiveProjectId={setActiveProjectId}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getCacheSize, clearArticleCache, exportAllData, importAllData } from '../services/dbService';
 import { AppSettings, View, AccentColor, PdfOptions } from '../types';
@@ -377,4 +377,4 @@ const AboutSettings = () => {
 };
 
 
-export default SettingsView;
+export default memo(SettingsView);

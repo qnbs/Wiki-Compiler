@@ -30,9 +30,9 @@ interface NavButtonProps {
 const NavButton: React.FC<NavButtonProps> = ({ icon, label, isActive, onClick }) => (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center justify-center gap-1 w-24 h-16 rounded-lg transition-colors ${
+      className={`flex flex-col items-center justify-center gap-1 flex-1 h-16 rounded-lg transition-colors ${
         isActive
-          ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
+          ? 'text-accent-600 dark:text-accent-400 bg-accent-50 dark:bg-accent-900/20'
           : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50'
       }`}
     >

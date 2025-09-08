@@ -49,9 +49,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, actions
         <div className="p-5 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
           <h2 id="modal-title" className="text-xl font-semibold">{title}</h2>
           <button onClick={onClose} className="p-1 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-200" aria-label="Close modal">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-            </svg>
+            <Icon name="x-mark" className="w-6 h-6" />
           </button>
         </div>
         <div className="p-5">

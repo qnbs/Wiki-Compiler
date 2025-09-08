@@ -1,33 +1,26 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Theme } from '../types';
 
-export const useDarkMode = (): [Theme, (theme: Theme) => void, boolean] => {
-    // State for the user's selected theme setting ('light', 'dark', 'system')
-    const [theme, setTheme] = useState<Theme>(() => {
-        if (typeof window === 'undefined') return 'system';
-        return (localStorage.getItem('theme') as Theme) || 'system';
-    });
-    
-    // State for the current effective dark mode status
+export const useDarkMode = (theme: Theme | undefined): [boolean] => {
+    const effectiveTheme = theme || 'system';
+
     const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-        if (theme === 'system') {
+        if (effectiveTheme === 'system') {
             return window.matchMedia('(prefers-color-scheme: dark)').matches;
         }
-        return theme === 'dark';
+        return effectiveTheme === 'dark';
     });
 
-    // Update isDarkMode when theme setting changes
     useEffect(() => {
-        if (theme === 'system') {
+        if (effectiveTheme === 'system') {
             setIsDarkMode(window.matchMedia('(prefers-color-scheme: dark)').matches);
         } else {
-            setIsDarkMode(theme === 'dark');
+            setIsDarkMode(effectiveTheme === 'dark');
         }
-    }, [theme]);
+    }, [effectiveTheme]);
 
-    // Listen for system preference changes when theme is 'system'
     useEffect(() => {
-        if (theme !== 'system') return;
+        if (effectiveTheme !== 'system') return;
 
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
         const handleChange = (e: MediaQueryListEvent) => {
@@ -36,9 +29,8 @@ export const useDarkMode = (): [Theme, (theme: Theme) => void, boolean] => {
 
         mediaQuery.addEventListener('change', handleChange);
         return () => mediaQuery.removeEventListener('change', handleChange);
-    }, [theme]);
+    }, [effectiveTheme]);
 
-    // Apply the 'dark' class to the document root
     useEffect(() => {
         const root = window.document.documentElement;
         if (isDarkMode) {
@@ -48,11 +40,5 @@ export const useDarkMode = (): [Theme, (theme: Theme) => void, boolean] => {
         }
     }, [isDarkMode]);
 
-    // Function to update the theme setting and persist it
-    const handleSetTheme = useCallback((newTheme: Theme) => {
-        localStorage.setItem('theme', newTheme);
-        setTheme(newTheme);
-    }, []);
-
-    return [theme, handleSetTheme, isDarkMode];
+    return [isDarkMode];
 };

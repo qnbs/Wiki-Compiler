@@ -48,10 +48,10 @@ export const deleteProject = async (projectId: string): Promise<void> => {
 };
 
 // Article Cache Functions
-export const getArticleCache = async (title: string): Promise<string | null> => {
+export const getArticleCache = async (title: string): Promise<ArticleContent | null> => {
   const db = await initDB();
-  const article = await db.get(ARTICLES_STORE, title);
-  return article ? article.html : null;
+  const article: ArticleContent | undefined = await db.get(ARTICLES_STORE, title);
+  return article || null;
 };
 
 export const getAllArticles = async (): Promise<ArticleContent[]> => {

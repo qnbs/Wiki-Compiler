@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArticleContent, Project, ArticleInsights, AppSettings } from '../types';
 import { getAllArticles, deleteArticleFromCache } from '../services/dbService';
-import { getArticleInsights } from '../services/geminiService';
+import { useArticleAnalysis } from '../hooks/useArticleAnalysis';
 import { useDebounce } from '../hooks/useDebounce';
 import Icon from './Icon';
 import Spinner from './Spinner';
@@ -28,9 +28,7 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ addArticleToProject, getArtic
   const [justAdded, setJustAdded] = useState<Set<string>>(new Set());
   const [sortOrder, setSortOrder] = useState<'az' | 'za'>('az');
 
-  const [insights, setInsights] = useState<ArticleInsights | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const { insights, isAnalyzing, analysisError, analyze, clearAnalysis } = useArticleAnalysis(selectedArticle, settings);
   
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   
@@ -70,10 +68,9 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ addArticleToProject, getArtic
     const article = allArticles.find(a => a.title === title);
     if(article) {
         setSelectedArticle(article);
-        setInsights(null);
-        setAnalysisError(null);
+        clearAnalysis();
     }
-  }, [allArticles]);
+  }, [allArticles, clearAnalysis]);
   
   const handleQuickAdd = (title: string) => {
     addArticleToProject(title);
@@ -103,28 +100,6 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ addArticleToProject, getArtic
     setArticleToDelete(null);
   };
 
-  const handleAnalyze = async () => {
-    if (!selectedArticle) return;
-    
-    setIsAnalyzing(true);
-    setInsights(null);
-    setAnalysisError(null);
-    
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = selectedArticle.html;
-    const textContent = tempDiv.textContent || tempDiv.innerText || "";
-    
-    try {
-        const resultInsights = await getArticleInsights(textContent, settings.library.aiAssistant.systemInstruction);
-        setInsights(resultInsights);
-    } catch (error) {
-        console.error("Analysis failed:", error);
-        setAnalysisError(error instanceof Error ? error.message : String(error));
-    } finally {
-        setIsAnalyzing(false);
-    }
-  };
-
   return (
     <>
       <Modal
@@ -143,7 +118,7 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ addArticleToProject, getArtic
         }
       >
         <p className="text-sm text-gray-600 dark:text-gray-300">
-          {t('Delete Article Confirmation', { articleTitle: articleToDelete })}
+          {t('Remove Article Confirmation', { articleTitle: articleToDelete })}
         </p>
       </Modal>
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-[calc(100vh-120px)]">
@@ -186,6 +161,11 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ addArticleToProject, getArtic
                       >
                           <div onClick={() => handleSelectArticle(article.title)} className="cursor-pointer flex-grow truncate pr-2">
                              <h3 className="font-semibold text-gray-800 dark:text-gray-200 truncate">{article.title}</h3>
+                             {article.metadata?.touched && (
+                               <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                  {new Date(article.metadata.touched).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+                               </p>
+                             )}
                           </div>
                           <div className="flex-shrink-0 flex items-center">
                               <button
@@ -200,7 +180,7 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ addArticleToProject, getArtic
                               </button>
                               <button 
                                   onClick={(e) => { e.stopPropagation(); handleDeleteArticle(article.title); }}
-                                  className="p-2 rounded-full text-gray-400 hover:bg-red-100 dark:hover:bg-red-900/50 hover:text-red-600 dark:hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  className="p-2 rounded-full text-gray-400 hover:bg-red-100 dark:hover:bg-red-900/50 hover:text-red-600 dark:hover:text-red-500 transition-opacity"
                                   aria-label={t('Delete from Archive')}
                               >
                                   <Icon name="trash" className="w-5 h-5" />
@@ -227,7 +207,7 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ addArticleToProject, getArtic
               <div className="absolute top-2 right-2 flex items-center gap-2 z-10">
                    {settings.library.aiAssistant.enabled && (
                     <button
-                        onClick={handleAnalyze}
+                        onClick={analyze}
                         disabled={isAnalyzing}
                         className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
@@ -265,4 +245,4 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ addArticleToProject, getArtic
   );
 };
 
-export default ArchiveView;
+export default memo(ArchiveView);

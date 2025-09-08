@@ -35,6 +35,7 @@ const resources = {
       "Add to Compilation": "Add to Compilation",
       "Search for an article to begin": "Search for an article to begin",
       "or select one from the list.": "or select one from the list.",
+      "No results found for \"{{term}}\"": "No results found for \"{{term}}\"",
       "Remove Article Confirmation": "Are you sure you want to remove \"{{articleTitle}}\" from the compilation?",
       "Move article up": "Move article up",
       "Move article down": "Move article down",
@@ -155,7 +156,12 @@ const resources = {
       "The Archive stores every article you have ever viewed. This creates a personal, searchable knowledge base of all your research. You can view articles from the archive, add them to your current project, or delete them permanently.": "The Archive stores every article you have ever viewed. This creates a personal, searchable knowledge base of all your research. You can view articles from the archive, add them to your current project, or delete them permanently.",
       "Command Palette": "Command Palette",
       "Press Ctrl+K (or Cmd+K on Mac) to open the Command Palette. This gives you quick, keyboard-driven access to navigate between views, create new projects, and toggle dark mode.": "Press Ctrl+K (or Cmd+K on Mac) to open the Command Palette. This gives you quick, keyboard-driven access to navigate between views, create new projects, and toggle dark mode.",
-      "In the Settings view, you can customize the application's appearance, change the default view on startup, manage AI assistant settings, and configure default export options for the compiler. You can also manage your data by clearing the article cache or exporting/importing all your projects and settings.": "In the Settings view, you can customize the application's appearance, change the default view on startup, manage AI assistant settings, and configure default export options for the compiler. You can also manage your data by clearing the article cache or exporting/importing all your projects and settings."
+      // FIX: Removed duplicate "Settings" key to resolve "multiple properties with the same name" error.
+      "In the Settings view, you can customize the application's appearance, change the default view on startup, manage AI assistant settings, and configure default export options for the compiler. You can also manage your data by clearing the article cache or exporting/importing all your projects and settings.": "In the Settings view, you can customize the application's appearance, change the default view on startup, manage AI assistant settings, and configure default export options for the compiler. You can also manage your data by clearing the article cache or exporting/importing all your projects and settings.",
+      "Generating your PDF... This may take a moment.": "Generating your PDF... This may take a moment.",
+      "Invalid or missing API Key for Gemini. Please check your configuration.": "Invalid or missing API Key for Gemini. Please check your configuration.",
+      "Could not generate insights at this time. The service may be unavailable.": "Could not generate insights at this time. The service may be unavailable.",
+      "Press Ctrl + Arrow Up or Down to reorder.": "Press Ctrl + Arrow Up or Down to reorder."
     }
   }
 };

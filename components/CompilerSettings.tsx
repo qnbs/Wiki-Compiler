@@ -44,7 +44,7 @@ interface CompilerSettingsProps {
     onGenerateMarkdown: () => void;
     onAnalyze: () => void;
     onSaveDefaults: () => void;
-    isGenerating: boolean;
+    isExporting: boolean;
     isAnalyzing: boolean;
     canGenerate: boolean;
     isArticleSelected: boolean;
@@ -60,7 +60,7 @@ const CompilerSettings: React.FC<CompilerSettingsProps> = ({
     onGenerateMarkdown,
     onAnalyze,
     onSaveDefaults,
-    isGenerating,
+    isExporting,
     isAnalyzing,
     canGenerate,
     isArticleSelected
@@ -217,12 +217,12 @@ const CompilerSettings: React.FC<CompilerSettingsProps> = ({
             <div className="flex flex-col sm:flex-row gap-4 mt-8">
                 <button
                 onClick={onGeneratePdf}
-                disabled={isGenerating || !canGenerate}
+                disabled={isExporting || !canGenerate}
                 className="w-full flex items-center justify-center gap-2 bg-accent-600 text-white px-4 py-3 rounded-lg hover:bg-accent-700 transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
-                {isGenerating ? (
+                {isExporting ? (
                     <>
-                    <Spinner light /> {t('Generating PDF...')}
+                    <Spinner light /> {t('Exporting...')}
                     </>
                 ) : (
                     <>
@@ -233,10 +233,10 @@ const CompilerSettings: React.FC<CompilerSettingsProps> = ({
                 </button>
                 <button
                     onClick={onGenerateMarkdown}
-                    disabled={isGenerating || !canGenerate}
+                    disabled={isExporting || !canGenerate}
                     className="w-full flex items-center justify-center gap-2 bg-gray-700 dark:bg-gray-600 text-white px-4 py-3 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-700 transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
-                {isGenerating ? (
+                {isExporting ? (
                     <>
                     <Spinner light /> {t('Exporting...')}
                     </>
@@ -249,7 +249,7 @@ const CompilerSettings: React.FC<CompilerSettingsProps> = ({
                 </button>
                 <button
                     onClick={onAnalyze}
-                    disabled={isGenerating || isAnalyzing || !isArticleSelected}
+                    disabled={isExporting || isAnalyzing || !isArticleSelected}
                     className="w-full flex items-center justify-center gap-2 bg-purple-600 text-white px-4 py-3 rounded-lg hover:bg-purple-700 transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
                     {isAnalyzing ? (

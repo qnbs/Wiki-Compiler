@@ -8,6 +8,7 @@ export interface SearchResult {
 export interface ArticleContent {
   title: string;
   html: string;
+  metadata?: ArticleMetadata;
 }
 
 export interface ProjectArticle {

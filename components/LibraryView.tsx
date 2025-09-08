@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDebounce } from '../hooks/useDebounce';
 import { SearchResult, ArticleContent, ArticleInsights, AppSettings, Project } from '../types';
 import { searchArticles } from '../services/wikipediaService';
-import { getArticleInsights } from '../services/geminiService';
+import { useArticleAnalysis } from '../hooks/useArticleAnalysis';
 import Icon from './Icon';
 import Spinner from './Spinner';
 import ArticleInsightsView from './ArticleInsightsView';
@@ -22,11 +22,10 @@ const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArtic
   const [selectedArticle, setSelectedArticle] = useState<ArticleContent | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [isLoadingArticle, setIsLoadingArticle] = useState(false);
-  const [insights, setInsights] = useState<ArticleInsights | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [justAdded, setJustAdded] = useState<Set<string>>(new Set());
   const [sortOption, setSortOption] = useState('relevance');
+  
+  const { insights, isAnalyzing, analysisError, analyze, clearAnalysis } = useArticleAnalysis(selectedArticle, settings);
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
@@ -65,8 +64,7 @@ const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArtic
   const handleSelectArticle = useCallback(async (title: string) => {
     setIsLoadingArticle(true);
     setSelectedArticle(null);
-    setInsights(null);
-    setAnalysisError(null);
+    clearAnalysis();
     try {
         const html = await getArticleContent(title);
         setSelectedArticle({ title, html });
@@ -74,7 +72,7 @@ const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArtic
         console.error("Failed to load article:", error);
     }
     setIsLoadingArticle(false);
-  }, [getArticleContent]);
+  }, [getArticleContent, clearAnalysis]);
 
   const handleQuickAdd = (title: string) => {
     addArticleToProject(title);
@@ -86,28 +84,6 @@ const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArtic
         return next;
       });
     }, 2000);
-  };
-
-  const handleAnalyze = async () => {
-    if (!selectedArticle) return;
-    
-    setIsAnalyzing(true);
-    setInsights(null);
-    setAnalysisError(null);
-    
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = selectedArticle.html;
-    const textContent = tempDiv.textContent || tempDiv.innerText || "";
-    
-    try {
-        const resultInsights = await getArticleInsights(textContent, settings.library.aiAssistant.systemInstruction);
-        setInsights(resultInsights);
-    } catch (error) {
-        console.error("Analysis failed:", error);
-        setAnalysisError(error instanceof Error ? error.message : String(error));
-    } finally {
-        setIsAnalyzing(false);
-    }
   };
 
   return (
@@ -142,6 +118,11 @@ const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArtic
             </select>
         </div>
         {isSearching && <Spinner />}
+        {!isSearching && debouncedSearchTerm && results.length === 0 && (
+          <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
+            <p>{t('No results found for "{{term}}"', { term: debouncedSearchTerm })}</p>
+          </div>
+        )}
         <ul className="space-y-2">
           {results.map((result) => {
             const isAdded = articlesInProject.has(result.title);
@@ -184,7 +165,7 @@ const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArtic
              <div className="absolute top-2 right-2 flex items-center gap-2 z-10">
                 {settings.library.aiAssistant.enabled && (
                     <button
-                        onClick={handleAnalyze}
+                        onClick={analyze}
                         disabled={isAnalyzing}
                         className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
@@ -223,4 +204,4 @@ const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArtic
   );
 };
 
-export default LibraryView;
+export default memo(LibraryView);

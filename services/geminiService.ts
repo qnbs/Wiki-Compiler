@@ -72,6 +72,9 @@ export const getArticleInsights = async (text: string, systemInstruction?: strin
         if (error instanceof SyntaxError) {
              throw new Error("Failed to parse AI response. The format might be invalid.");
         }
-        throw new Error("Could not generate insights at this time. There might be an issue with the API key or service.");
+        if (error instanceof Error && error.message.toLowerCase().includes('api key')) {
+            throw new Error("Invalid or missing API Key for Gemini. Please check your configuration.");
+        }
+        throw new Error("Could not generate insights at this time. The service may be unavailable.");
     }
 };

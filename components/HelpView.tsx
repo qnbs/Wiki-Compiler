@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from './Icon';
 
@@ -53,4 +53,4 @@ const HelpView: React.FC = () => {
   );
 };
 
-export default HelpView;
+export default memo(HelpView);
