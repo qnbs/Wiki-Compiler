@@ -116,3 +116,34 @@ export const getArticleInsights = async (text: string, systemInstruction: string
         throw new Error("Could not generate insights at this time. The service may be unavailable.");
     }
 };
+
+export const editTextWithAi = async (instruction: string, textToEdit: string): Promise<string> => {
+    if (!ai) {
+        throw new Error("AI Service is not configured. Please set your API key.");
+    }
+
+    if (!textToEdit.trim()) {
+        return textToEdit;
+    }
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: `INSTRUCTION: "${instruction}"\n\nTEXT TO EDIT: "${textToEdit}"`,
+            config: {
+                systemInstruction: "You are an expert academic editor. You will be given a piece of text and an instruction. You MUST return ONLY the modified text, without any preamble, explanation, or markdown formatting like ```.",
+                // Lower temperature for more predictable, deterministic edits
+                temperature: 0.2, 
+            },
+        });
+
+        return response.text.trim();
+
+    } catch (error) {
+        console.error("Error editing text with Gemini API:", error);
+        if (error instanceof Error && error.message.toLowerCase().includes('api key')) {
+            throw new Error("Invalid or missing API Key for Gemini. Please check your configuration.");
+        }
+        throw new Error("Could not perform AI edit at this time. The service may be unavailable.");
+    }
+};

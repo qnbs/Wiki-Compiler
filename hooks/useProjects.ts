@@ -11,7 +11,7 @@ export const useProjects = (setView: (view: View) => void) => {
     const loadProjects = useCallback(async () => {
         let dbProjects = await getProjects();
         if (dbProjects.length === 0) {
-            const newProject: Project = { id: crypto.randomUUID(), name: 'My First Compilation', articles: [] };
+            const newProject: Project = { id: crypto.randomUUID(), name: 'My First Compilation', articles: [], notes: '' };
             await saveProject(newProject);
             dbProjects = [newProject];
         }
@@ -51,7 +51,7 @@ export const useProjects = (setView: (view: View) => void) => {
             counter++;
         }
 
-        const newProject: Project = { id: crypto.randomUUID(), name: newName, articles: [] };
+        const newProject: Project = { id: crypto.randomUUID(), name: newName, articles: [], notes: '' };
         await saveProject(newProject);
         
         setProjects(prevProjects => [...prevProjects, newProject]);

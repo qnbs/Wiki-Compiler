@@ -19,6 +19,7 @@ export interface Project {
   id: string;
   name: string;
   articles: ProjectArticle[];
+  notes?: string;
 }
 
 export enum View {

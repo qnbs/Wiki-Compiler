@@ -3,10 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { marked } from 'marked';
 import { Project, PdfOptions, AppSettings, ArticleInsights, CustomCitation, ProjectArticleContent } from '../types';
 import { useArticleAnalysis } from '../hooks/useArticleAnalysis';
+import { useDebounce } from '../hooks/useDebounce';
 import { getProjectArticleContent, saveProjectArticleContent } from '../services/dbService';
+import { editTextWithAi } from '../services/geminiService';
 import Icon from './Icon';
 import Spinner from './Spinner';
 import Modal from './Modal';
+import AIEditorModal from './AIEditorModal';
 import { generatePdf, generateMarkdown, generateMarkdownContent } from '../services/exportService';
 import CompilerSettings from './CompilerSettings';
 import ArticleInsightsView from './ArticleInsightsView';
@@ -70,6 +73,14 @@ const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, get
   const [markdownPreview, setMarkdownPreview] = useState('');
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
   
+  const [projectNotes, setProjectNotes] = useState(project.notes || '');
+  const debouncedProjectNotes = useDebounce(projectNotes, 500);
+
+  const [isAiEditorOpen, setIsAiEditorOpen] = useState(false);
+  const [isEditingWithAi, setIsEditingWithAi] = useState(false);
+  const [aiEditError, setAiEditError] = useState<string | null>(null);
+  const selectionRef = useRef<Range | null>(null);
+  
   const { insights, isAnalyzing, analysisError, analyze, clearAnalysis } = useArticleAnalysis(activeArticle, settings);
 
   const [pdfOptions, setPdfOptions] = useState<PdfOptions>(settings.compiler.defaultPdfOptions);
@@ -81,11 +92,18 @@ const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, get
   useEffect(() => {
     setArticles(project.articles);
     setProjectName(project.name);
+    setProjectNotes(project.notes || '');
     if (activeArticle && !project.articles.some(a => a.title === activeArticle.title)) {
       setActiveArticle(null);
       setRightPaneView('settings');
     }
   }, [project, activeArticle]);
+
+  useEffect(() => {
+    if (project && debouncedProjectNotes !== (project.notes || '')) {
+        updateProject({ ...project, notes: debouncedProjectNotes });
+    }
+  }, [debouncedProjectNotes]);
   
   useEffect(() => {
     const generatePreview = async () => {
@@ -114,6 +132,10 @@ const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, get
     if (project.name !== projectName) {
       updateProject({...project, name: projectName});
     }
+  };
+
+  const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setProjectNotes(e.target.value);
   };
 
   const handleSort = () => {
@@ -198,6 +220,66 @@ const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, get
     setIsCitationModalOpen(false);
   };
 
+  const openAiEditor = () => {
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        if (editorRef.current && editorRef.current.contains(range.commonAncestorContainer)) {
+            selectionRef.current = range;
+        } else {
+            selectionRef.current = null;
+        }
+    } else {
+        selectionRef.current = null;
+    }
+    setIsAiEditorOpen(true);
+  };
+
+  const handleRunAiEdit = async (prompt: string) => {
+      if (!editorRef.current) return;
+      
+      setIsEditingWithAi(true);
+      setAiEditError(null);
+
+      const selection = window.getSelection();
+      let textToEdit: string;
+      let range: Range | null = selectionRef.current;
+      
+      if (range && range.toString().trim()) {
+          textToEdit = range.toString();
+      } else {
+          textToEdit = editorRef.current.innerText;
+      }
+
+      if (!textToEdit.trim()) {
+          setAiEditError("No text to edit. Select text or have content in the editor.");
+          setIsEditingWithAi(false);
+          return;
+      }
+
+      try {
+          const editedText = await editTextWithAi(prompt, textToEdit);
+          
+          editorRef.current.focus();
+          if (range) {
+              selection?.removeAllRanges();
+              selection?.addRange(range);
+              document.execCommand('insertText', false, editedText);
+          } else {
+              const newHtml = editedText.replace(/\n/g, '<br>');
+              editorRef.current.innerHTML = newHtml;
+              setActiveArticle(prev => prev ? { ...prev, html: newHtml } : null);
+          }
+          setIsDirty(true);
+      } catch (error) {
+          setAiEditError(error instanceof Error ? error.message : "An unknown error occurred.");
+      } finally {
+          setIsEditingWithAi(false);
+          setIsAiEditorOpen(false);
+          selectionRef.current = null;
+      }
+  };
+
 
   const handleGeneratePdf = useCallback(async () => {
     setIsExporting(true);
@@ -239,7 +321,7 @@ const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, get
     switch (rightPaneView) {
         case 'article':
             return activeArticle && (
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border dark:border-gray-700">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border dark:border-gray-700 relative">
                     <div className="flex justify-between items-start gap-4 mb-4 border-b pb-2 dark:border-gray-600">
                         <h2 className="text-3xl font-bold flex-grow">{activeArticle.title}</h2>
                         <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
@@ -279,6 +361,14 @@ const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, get
                         aria-multiline="true"
                         aria-label={t('Editable article content for {{title}}', { title: activeArticle.title })}
                     />
+                     <button 
+                        onClick={openAiEditor}
+                        className="absolute bottom-4 right-4 bg-purple-600 text-white p-3 rounded-full shadow-lg hover:bg-purple-700 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 dark:focus:ring-offset-gray-800"
+                        aria-label={t('Edit with AI')}
+                        title={t('Edit with AI')}
+                    >
+                        <Icon name="sparkles" className="w-6 h-6"/>
+                    </button>
                 </div>
             );
         case 'markdown':
@@ -321,6 +411,13 @@ const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, get
             <p className="text-white text-lg mt-4">{t('Generating your PDF... This may take a moment.')}</p>
         </div>
       )}
+    <AIEditorModal
+        isOpen={isAiEditorOpen}
+        onClose={() => setIsAiEditorOpen(false)}
+        onRunAiEdit={handleRunAiEdit}
+        isEditing={isEditingWithAi}
+        error={aiEditError}
+    />
     <CitationModal 
         isOpen={isCitationModalOpen}
         onClose={() => setIsCitationModalOpen(false)}
@@ -331,6 +428,15 @@ const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, get
     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-[calc(100vh-120px)]">
       {/* Article List Column */}
       <div className="md:col-span-5 lg:col-span-4 overflow-y-auto border-r border-gray-200 dark:border-gray-700 pr-4">
+        <div className="mb-4">
+            <h2 className="text-xl font-bold mb-2">{t('Project Notes')}</h2>
+            <textarea
+                value={projectNotes}
+                onChange={handleNotesChange}
+                placeholder={t('Add your outline, scratchpad, or project notes here...')}
+                className="w-full h-32 p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 outline-none text-sm"
+            />
+        </div>
         <h2 className="text-2xl font-bold mb-4">{t('Compilation Articles')}</h2>
         {articles.length > 0 ? (
             <ul ref={listRef} className="space-y-2">
@@ -355,10 +461,10 @@ const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, get
                             }
                         }
                     }}
-                    className={`group flex items-center justify-between p-3 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-accent-500 ${activeArticle?.title === article.title ? 'bg-accent-100 dark:bg-accent-900/50 ring-2 ring-accent-500' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'} cursor-pointer`}
+                    className={`group flex items-center justify-between p-3 rounded-lg shadow-sm transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-500 ${activeArticle?.title === article.title ? 'bg-accent-100 dark:bg-accent-900/50 ring-2 ring-accent-500' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'} cursor-pointer`}
                 >
                     <div className="flex items-center gap-3 truncate">
-                    <Icon name="grip" className="w-5 h-5 text-gray-400 cursor-grab active:cursor-grabbing flex-shrink-0" title={t('Press Ctrl + Arrow Up or Down to reorder.')} />
+                    <Icon name="grip" className="w-5 h-5 text-gray-400 cursor-grab active:cursor-grabbing flex-shrink-0 group-hover:text-gray-600 dark:group-hover:text-gray-300" title={t('Press Ctrl + Arrow Up or Down to reorder.')} />
                     <span className="font-medium truncate">{article.title}</span>
                     </div>
                     <div className="flex items-center flex-shrink-0">
