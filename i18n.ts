@@ -225,7 +225,23 @@ const resources = {
       "about_ai_title": "Powered by Google Gemini & AI Studio",
       "about_ai_p1": "The AI Research Assistant feature in Wiki Compiler uses Google's powerful Gemini model. This allows for intelligent content analysis, providing you with instant summaries, key concept extraction, and insightful research questions to supercharge your learning process.",
       "about_ai_p2": "This integration is powered by the same technology available in Google AI Studio, a web-based tool for developers to prototype and build with generative AI models. AI Studio provides a comprehensive environment for exploring the capabilities of Gemini and streamlining the development of next-generation AI applications.",
-      "Learn more about AI Studio": "Learn more about AI Studio"
+      "Learn more about AI Studio": "Learn more about AI Studio",
+      "Export As...": "Export As...",
+      "HTML export failed.": "HTML export failed.",
+      "Plain Text export failed.": "Plain Text export failed.",
+      "JSON export failed.": "JSON export failed.",
+      "DOCX export failed.": "DOCX export failed.",
+      "Exporting Markdown...": "Exporting Markdown...",
+      "Exporting HTML...": "Exporting HTML...",
+      "Exporting Plain Text...": "Exporting Plain Text...",
+      "Exporting JSON...": "Exporting JSON...",
+      "Exporting DOCX...": "Exporting DOCX...",
+      "Markdown (.md)": "Markdown (.md)",
+      "HTML (.html)": "HTML (.html)",
+      "Plain Text (.txt)": "Plain Text (.txt)",
+      "JSON (.json)": "JSON (.json)",
+      "DOCX (.docx)": "DOCX (.docx)",
+      "Word Count: {{count}}": "Word Count: {{count}}"
     }
   },
   de: {
@@ -450,7 +466,23 @@ const resources = {
       "about_ai_title": "Unterstützt durch Google Gemini & AI Studio",
       "about_ai_p1": "Die Funktion 'KI-Forschungsassistent' in Wiki Compiler verwendet das leistungsstarke Gemini-Modell von Google. Dies ermöglicht eine intelligente Inhaltsanalyse und liefert Ihnen sofortige Zusammenfassungen, die Extraktion von Schlüsselkonzepten und aufschlussreiche Forschungsfragen, um Ihren Lernprozess zu beschleunigen.",
       "about_ai_p2": "Diese Integration wird durch dieselbe Technologie ermöglicht, die auch in Google AI Studio verfügbar ist, einem webbasierten Werkzeug für Entwickler zum Prototyping und Erstellen mit generativen KI-Modellen. AI Studio bietet eine umfassende Umgebung zur Erkundung der Fähigkeiten von Gemini und zur Vereinfachung der Entwicklung von KI-Anwendungen der nächsten Generation.",
-      "Learn more about AI Studio": "Mehr über AI Studio erfahren"
+      "Learn more about AI Studio": "Mehr über AI Studio erfahren",
+      "Export As...": "Exportieren als...",
+      "HTML export failed.": "HTML-Export fehlgeschlagen.",
+      "Plain Text export failed.": "Klartext-Export fehlgeschlagen.",
+      "JSON export failed.": "JSON-Export fehlgeschlagen.",
+      "DOCX export failed.": "DOCX-Export fehlgeschlagen.",
+      "Exporting Markdown...": "Exportiere Markdown...",
+      "Exporting HTML...": "Exportiere HTML...",
+      "Exporting Plain Text...": "Exportiere Klartext...",
+      "Exporting JSON...": "Exportiere JSON...",
+      "Exporting DOCX...": "Exportiere DOCX...",
+      "Markdown (.md)": "Markdown (.md)",
+      "HTML (.html)": "HTML (.html)",
+      "Plain Text (.txt)": "Klartext (.txt)",
+      "JSON (.json)": "JSON (.json)",
+      "DOCX (.docx)": "DOCX (.docx)",
+      "Word Count: {{count}}": "Wortanzahl: {{count}}"
     }
   }
 };

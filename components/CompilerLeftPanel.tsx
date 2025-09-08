@@ -94,8 +94,6 @@ const CompilerLeftPanel: React.FC<CompilerLeftPanelProps> = ({
             <li
               key={article.title}
               tabIndex={0}
-              draggable
-              onDragStart={() => (dragItem.current = index)}
               onDragEnter={() => (dragOverItem.current = index)}
               onDragEnd={handleSort}
               onDragOver={(e) => e.preventDefault()}
@@ -114,7 +112,9 @@ const CompilerLeftPanel: React.FC<CompilerLeftPanelProps> = ({
               className={`group flex items-center justify-between p-3 rounded-lg shadow-sm transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-500 ${activeArticleTitle === article.title ? 'bg-accent-100 dark:bg-accent-900/50 ring-2 ring-accent-500' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'} cursor-pointer`}
             >
               <div className="flex items-center gap-3 truncate">
-                <Icon name="grip" className="w-5 h-5 text-gray-400 cursor-grab active:cursor-grabbing flex-shrink-0 group-hover:text-gray-600 dark:group-hover:text-gray-300" title={t('Press Ctrl + Arrow Up or Down to reorder.')} />
+                <div draggable onDragStart={() => (dragItem.current = index)} className="cursor-grab active:cursor-grabbing">
+                    <Icon name="grip" className="w-5 h-5 text-gray-400 flex-shrink-0 group-hover:text-gray-600 dark:group-hover:text-gray-300" title={t('Press Ctrl + Arrow Up or Down to reorder.')} />
+                </div>
                 <span className="font-medium truncate">{article.title}</span>
               </div>
               <div className="flex items-center flex-shrink-0">

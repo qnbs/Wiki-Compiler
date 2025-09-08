@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useProjects } from '../hooks/useProjectsContext';
 import { useSettings } from '../hooks/useSettingsContext';
 import { useToasts } from '../hooks/useToasts';
-import { generatePdf, generateMarkdown } from '../services/exportService';
+import { generatePdf, generateMarkdown, generateJsonFile, generateDocx } from '../services/exportService';
 import Spinner from './Spinner';
 import CompilerLeftPanel from './CompilerLeftPanel';
 import CompilerRightPanel from './CompilerRightPanel';
@@ -62,6 +62,26 @@ const CompilerView: React.FC<CompilerViewProps> = ({ getArticleContent }) => {
       addToast('Markdown generation failed.', 'error');
     }
   }, [activeProject, getArticleContent, addToast]);
+  
+  const handleGenerateJson = useCallback(async () => {
+    if (!activeProject) return;
+    try {
+        await generateJsonFile(activeProject, getArticleContent);
+    } catch (error) {
+        console.error("JSON export failed:", error);
+        addToast('JSON export failed.', 'error');
+    }
+  }, [activeProject, getArticleContent, addToast]);
+
+  const handleGenerateDocx = useCallback(async () => {
+    if (!activeProject) return;
+    try {
+        await generateDocx(activeProject, getArticleContent);
+    } catch (error) {
+        console.error("DOCX export failed:", error);
+        addToast('DOCX export failed.', 'error');
+    }
+  }, [activeProject, getArticleContent, addToast]);
 
 
   if (!activeProject || !settings) {
@@ -99,6 +119,8 @@ const CompilerView: React.FC<CompilerViewProps> = ({ getArticleContent }) => {
         setView={setRightPaneView}
         onGeneratePdf={handleGeneratePdf}
         onGenerateMarkdown={handleGenerateMarkdown}
+        onGenerateJson={handleGenerateJson}
+        onGenerateDocx={handleGenerateDocx}
         isGeneratingPdf={isGeneratingPdf}
       />
     </div>
