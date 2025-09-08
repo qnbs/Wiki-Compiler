@@ -241,7 +241,9 @@ const resources = {
       "Plain Text (.txt)": "Plain Text (.txt)",
       "JSON (.json)": "JSON (.json)",
       "DOCX (.docx)": "DOCX (.docx)",
-      "Word Count: {{count}}": "Word Count: {{count}}"
+      "Word Count: {{count}}": "Word Count: {{count}}",
+      "Bold": "Bold",
+      "Italic": "Italic"
     }
   },
   de: {
@@ -482,7 +484,9 @@ const resources = {
       "Plain Text (.txt)": "Klartext (.txt)",
       "JSON (.json)": "JSON (.json)",
       "DOCX (.docx)": "DOCX (.docx)",
-      "Word Count: {{count}}": "Wortanzahl: {{count}}"
+      "Word Count: {{count}}": "Wortanzahl: {{count}}",
+      "Bold": "Fett",
+      "Italic": "Kursiv"
     }
   }
 };

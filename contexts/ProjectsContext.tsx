@@ -1,8 +1,9 @@
 import React, { createContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Project, View } from '../types';
+import { Project } from '../types';
 import { getProjects, saveProject, deleteProject as dbDeleteProject } from '../services/dbService';
 import { useToasts } from '../hooks/useToasts';
+import { useSettings } from '../hooks/useSettingsContext';
 
 interface ProjectsContextType {
   projects: Project[];
@@ -22,22 +23,31 @@ export const ProjectsContext = createContext<ProjectsContextType | undefined>(un
 export const ProjectsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { t } = useTranslation();
   const { addToast } = useToasts();
+  const { settings } = useSettings();
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
 
   const loadProjects = useCallback(async () => {
     let dbProjects = await getProjects();
-    if (dbProjects.length === 0) {
-      const newProject: Project = { id: crypto.randomUUID(), name: 'My First Compilation', articles: [], notes: '' };
+    if (dbProjects.length === 0 && settings) {
+      const newProject: Project = { 
+        id: crypto.randomUUID(), 
+        name: t('New Compilation'), 
+        articles: [], 
+        notes: '',
+        pdfOptions: settings.compiler.defaultPdfOptions,
+      };
       await saveProject(newProject);
       dbProjects = [newProject];
     }
     setProjects(dbProjects);
-  }, []);
+  }, [settings, t]);
 
   useEffect(() => {
-    loadProjects();
-  }, [loadProjects]);
+    if (settings) {
+        loadProjects();
+    }
+  }, [loadProjects, settings]);
 
   useEffect(() => {
     if (projects.length > 0) {
@@ -82,6 +92,8 @@ export const ProjectsProvider: React.FC<{ children: ReactNode }> = ({ children }
   }, [activeProject, updateProject]);
 
   const createNewProject = useCallback(async (callback?: () => void) => {
+    if (!settings) return;
+
     const baseName = t('New Compilation');
     let newName = baseName;
     let counter = 2;
@@ -90,13 +102,19 @@ export const ProjectsProvider: React.FC<{ children: ReactNode }> = ({ children }
         counter++;
     }
 
-    const newProject: Project = { id: crypto.randomUUID(), name: newName, articles: [], notes: '' };
+    const newProject: Project = { 
+        id: crypto.randomUUID(), 
+        name: newName, 
+        articles: [], 
+        notes: '',
+        pdfOptions: settings.compiler.defaultPdfOptions,
+    };
     await saveProject(newProject);
     
     setProjects(prevProjects => [...prevProjects, newProject]);
     setActiveProjectId(newProject.id);
     if (callback) callback();
-  }, [t, projects]);
+  }, [t, projects, settings]);
 
   const deleteProject = useCallback(async (projectId: string) => {
     if (projects.length <= 1) {

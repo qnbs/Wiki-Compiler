@@ -40,10 +40,15 @@ export const getArticleHtml = async (title: string): Promise<string> => {
   if (!response.ok) {
     throw new Error(`Failed to fetch article: ${title}`);
   }
-  const html = await response.text();
+  let html = await response.text();
   // The REST API wraps content in <html><body>...</body></html>, we only want the inner content.
   const bodyContentMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/);
-  return bodyContentMatch ? bodyContentMatch[1] : html;
+  let content = bodyContentMatch ? bodyContentMatch[1] : html;
+
+  // Performance Optimization: Add lazy loading to all images
+  content = content.replace(/<img /g, '<img loading="lazy" decoding="async" ');
+  
+  return content;
 };
 
 export const getArticleMetadata = async (titles: string[]): Promise<ArticleMetadata[]> => {

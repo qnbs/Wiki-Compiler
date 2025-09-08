@@ -7,6 +7,7 @@ import { isAiConfigured } from '../services/geminiService';
 import { useArticleAnalysis } from '../hooks/useArticleAnalysis';
 import Icon from './Icon';
 import Spinner from './Spinner';
+import SkeletonLoader from './SkeletonLoader';
 import ArticleInsightsView from './ArticleInsightsView';
 import { useSettings } from '../hooks/useSettingsContext';
 import { useProjects } from '../hooks/useProjectsContext';
@@ -198,7 +199,7 @@ const LibraryView: React.FC<LibraryViewProps> = ({ getArticleContent }) => {
 
       {/* Article View Column */}
       <div className="md:col-span-8 lg:col-span-9 overflow-y-auto">
-        {isLoadingArticle && <div className="flex justify-center items-center h-full"><Spinner /></div>}
+        {isLoadingArticle && <SkeletonLoader />}
         {!isLoadingArticle && selectedArticle && (
           <div>
             <div className="flex justify-between items-start gap-4 mb-4 border-b pb-2 dark:border-gray-600">

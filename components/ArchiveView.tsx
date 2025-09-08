@@ -8,6 +8,7 @@ import { useDebounce } from '../hooks/useDebounce';
 import Icon from './Icon';
 import Spinner from './Spinner';
 import Modal from './Modal';
+import SkeletonLoader from './SkeletonLoader';
 import ArticleInsightsView from './ArticleInsightsView';
 import { useSettings } from '../hooks/useSettingsContext';
 import { useProjects } from '../hooks/useProjectsContext';
@@ -213,7 +214,7 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ getArticleContent }) => {
                   <option value="date_oldest">{t('Date (Oldest)')}</option>
               </select>
           </div>
-          {isLoading && <Spinner />}
+          {isLoading && <div className="mt-4"><SkeletonLoader /></div>}
           {!isLoading && filteredArticles.length > 0 && (
               <ul className="space-y-2">
               {filteredArticles.map((article) => (
@@ -276,7 +277,7 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ getArticleContent }) => {
               <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: selectedArticle.html }} />
             </div>
           )}
-          {!selectedArticle && (
+          {!selectedArticle && !isLoading && (
             <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 dark:text-gray-400">
               <Icon name="book" className="w-16 h-16 mb-4" />
               <p className="text-lg">{t('Select an article to read')}</p>

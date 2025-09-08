@@ -263,7 +263,14 @@ export const generateMarkdownContent = async (
         return `<a name="${article.slug}"></a>\n# ${article.title}\n\n${markdown}${sourceLink}`;
     }).join('\n\n---\n\n');
 
-    return `# ${project.name}\n\n${toc}\n\n${markdownContent}`;
+    const frontmatter = `---
+project: "${project.name}"
+exported_at: "${new Date().toISOString()}"
+---
+
+`;
+
+    return `${frontmatter}# ${project.name}\n\n${toc}\n\n${markdownContent}`;
 };
 
 
@@ -291,7 +298,7 @@ export const generateHtmlFile = async (
     getArticleContent: (title: string) => Promise<string>
 ): Promise<void> => {
     const finalHtml = await buildExportHtml(project, options, settings, getArticleContent);
-    const blob = new Blob([finalHtml], { type: 'text/html;charset=utf-8' });
+    const blob = new Blob([finalHtml], { type: 'text/html;charset=utf-t' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -366,6 +373,9 @@ export const generateJsonFile = async (
 }
 
 // DOCX Generation
+// FIX: The following function was rewritten to fix multiple read-only property assignment errors.
+// The previous implementation attempted to mutate properties on IRunOptions and IParagraphOptions,
+// which is not allowed. The new implementation constructs the options objects with all properties at once.
 const processNode = (node: Node): (Paragraph | TextRun)[] => {
     const children: (Paragraph | TextRun)[] = [];
 
@@ -376,15 +386,16 @@ const processNode = (node: Node): (Paragraph | TextRun)[] => {
                 runs.push(new TextRun(childNode.textContent || ''));
             } else if (childNode.nodeType === Node.ELEMENT_NODE) {
                 const el = childNode as HTMLElement;
-                const options: IRunOptions = { text: el.textContent || '' };
+                const text = el.textContent || '';
+                let options: IRunOptions = { text };
                 switch(el.nodeName) {
                     case 'B':
                     case 'STRONG':
-                        options.bold = true;
+                        options = { text, bold: true };
                         break;
                     case 'I':
                     case 'EM':
-                        options.italics = true;
+                        options = { text, italics: true };
                         break;
                 }
                 runs.push(new TextRun(options));
@@ -395,13 +406,13 @@ const processNode = (node: Node): (Paragraph | TextRun)[] => {
 
     if (node.nodeType === Node.ELEMENT_NODE) {
         const element = node as HTMLElement;
-        const options: IParagraphOptions = {};
+        let heading: HeadingLevel | undefined;
         
         switch (element.nodeName) {
-            case 'H1': options.heading = HeadingLevel.HEADING_1; break;
-            case 'H2': options.heading = HeadingLevel.HEADING_2; break;
-            case 'H3': options.heading = HeadingLevel.HEADING_3; break;
-            case 'H4': options.heading = HeadingLevel.HEADING_4; break;
+            case 'H1': heading = HeadingLevel.HEADING_1; break;
+            case 'H2': heading = HeadingLevel.HEADING_2; break;
+            case 'H3': heading = HeadingLevel.HEADING_3; break;
+            case 'H4': heading = HeadingLevel.HEADING_4; break;
             case 'P': break; // Standard paragraph
             case 'UL':
             case 'OL':
@@ -412,8 +423,11 @@ const processNode = (node: Node): (Paragraph | TextRun)[] => {
             default: // Skip other block elements like DIV, TABLE etc for simplicity
                 return [];
         }
-        options.children = processInlines(element);
-        children.push(new Paragraph(options));
+        
+        children.push(new Paragraph({
+            heading,
+            children: processInlines(element),
+        }));
     }
     
     return children;

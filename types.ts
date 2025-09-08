@@ -20,6 +20,7 @@ export interface Project {
   name: string;
   articles: ProjectArticle[];
   notes?: string;
+  pdfOptions?: PdfOptions;
 }
 
 export enum View {

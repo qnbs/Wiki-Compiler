@@ -19,6 +19,7 @@ import AIEditorModal from './AIEditorModal';
 import ArticleInsightsView from './ArticleInsightsView';
 import ArticleEditor from './ArticleEditor';
 import CompilerExportSettings from './CompilerExportSettings';
+import SkeletonLoader from './SkeletonLoader';
 
 interface CompilerRightPanelProps {
   project: Project;
@@ -40,24 +41,12 @@ const countWords = (htmlString: string): number => {
     const div = document.createElement('div');
     div.innerHTML = htmlString;
     const text = div.textContent || div.innerText || "";
+    if (!text) return 0;
     return text.trim().split(/\s+/).filter(Boolean).length;
 };
 
-const CompilerRightPanel: React.FC<CompilerRightPanelProps> = ({
-  project,
-  updateProject,
-  activeArticleTitle,
-  getArticleContent,
-  settings,
-  updateSettings,
-  view,
-  setView,
-  onGeneratePdf,
-  onGenerateMarkdown,
-  onGenerateJson,
-  onGenerateDocx,
-  isGeneratingPdf,
-}) => {
+const CompilerRightPanel: React.FC<CompilerRightPanelProps> = (props) => {
+  const { project, updateProject, activeArticleTitle, getArticleContent, settings, view, setView } = props;
   const { t } = useTranslation();
   const { addToast } = useToasts();
   
@@ -67,45 +56,42 @@ const CompilerRightPanel: React.FC<CompilerRightPanelProps> = ({
   const debouncedArticleContent = useDebounce(activeArticleContent, 1000);
   
   const [isCitationModalOpen, setIsCitationModalOpen] = useState(false);
-  const [markdownPreview, setMarkdownPreview] = useState('');
-  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
-  const [totalWordCount, setTotalWordCount] = useState(0);
-
+  
   const [isAiEditorOpen, setIsAiEditorOpen] = useState(false);
   const [aiEditorSelectedText, setAiEditorSelectedText] = useState('');
   const [isEditingWithAi, setIsEditingWithAi] = useState(false);
   const [aiEditError, setAiEditError] = useState<string | null>(null);
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
-  const [articleWordCount, setArticleWordCount] = useState(0);
 
-  const [pdfOptions, setPdfOptions] = useState<PdfOptions>(settings.compiler.defaultPdfOptions);
+  const [pdfOptions, setPdfOptions] = useState<PdfOptions>(project.pdfOptions || settings.compiler.defaultPdfOptions);
+  const debouncedPdfOptions = useDebounce(pdfOptions, 1000);
   
-  const [isGeneratingMarkdown, setIsGeneratingMarkdown] = useState(false);
-  const [isGeneratingHtml, setIsGeneratingHtml] = useState(false);
-  const [isGeneratingPlainText, setIsGeneratingPlainText] = useState(false);
-  const [isGeneratingJson, setIsGeneratingJson] = useState(false);
-  const [isGeneratingDocx, setIsGeneratingDocx] = useState(false);
-
-  const { insights, isAnalyzing, analysisError, analyze, clearAnalysis } = useArticleAnalysis(
-    activeArticleTitle && activeArticleContent ? { title: activeArticleTitle, html: activeArticleContent } : null
-  );
-  
-  const handleEditorCreated = useCallback((editor: Editor) => {
+  const handleEditorCreated = useCallback((editor: Editor | null) => {
     setEditorInstance(editor);
   }, []);
+  
+  // Effect to load project-specific settings or reset to defaults
+  useEffect(() => {
+    setPdfOptions(project.pdfOptions || settings.compiler.defaultPdfOptions);
+  }, [project.id, project.pdfOptions, settings.compiler.defaultPdfOptions]);
+
+  // Effect to save updated pdfOptions to the project
+  useEffect(() => {
+      if (JSON.stringify(debouncedPdfOptions) !== JSON.stringify(project.pdfOptions)) {
+          updateProject({ ...project, pdfOptions: debouncedPdfOptions });
+      }
+  }, [debouncedPdfOptions, project, updateProject]);
   
   useEffect(() => {
     const loadContent = async () => {
       if (activeArticleTitle) {
         setIsLoadingArticle(true);
         setActiveArticleContent(null);
-        clearAnalysis();
         setIsDirty(false);
         try {
           const modifiedContent = await getProjectArticleContent(project.id, activeArticleTitle);
           const htmlContent = modifiedContent ? modifiedContent.html : await getArticleContent(activeArticleTitle);
           setActiveArticleContent(htmlContent);
-          setArticleWordCount(countWords(htmlContent));
         } catch (error) {
           console.error("Failed to load article:", error);
           addToast('Failed to load article content.', 'error');
@@ -115,11 +101,10 @@ const CompilerRightPanel: React.FC<CompilerRightPanelProps> = ({
         }
       } else {
         setActiveArticleContent(null);
-        setArticleWordCount(0);
       }
     };
     loadContent();
-  }, [activeArticleTitle, project.id, getArticleContent, clearAnalysis, setView, addToast]);
+  }, [activeArticleTitle, project.id, getArticleContent, setView, addToast]);
 
   useEffect(() => {
     const saveContent = async () => {
@@ -137,30 +122,9 @@ const CompilerRightPanel: React.FC<CompilerRightPanelProps> = ({
     };
     saveContent();
   }, [debouncedArticleContent, activeArticleTitle, isDirty, project.id, addToast, t]);
-  
-  useEffect(() => {
-    const generatePreview = async () => {
-      if (view === 'markdown' && project.articles.length > 0) {
-        setIsGeneratingPreview(true);
-        try {
-          const markdown = await generateMarkdownContent(project, getArticleContent);
-          setTotalWordCount(countWords(markdown));
-          const html = await marked.parse(markdown);
-          setMarkdownPreview(html as string);
-        } catch (error) {
-          console.error("Failed to generate markdown preview:", error);
-          setMarkdownPreview('<p>Error generating preview.</p>');
-        } finally {
-          setIsGeneratingPreview(false);
-        }
-      }
-    };
-    generatePreview();
-  }, [view, project, getArticleContent]);
 
   const handleContentUpdate = (html: string) => {
     setActiveArticleContent(html);
-    setArticleWordCount(countWords(html));
     setIsDirty(true);
   };
   
@@ -208,175 +172,26 @@ const CompilerRightPanel: React.FC<CompilerRightPanelProps> = ({
     }
   };
 
-  const handleGenerateMarkdownWrapper = useCallback(async () => {
-    setIsGeneratingMarkdown(true);
-    addToast(t('Exporting Markdown...'), 'info');
-    try {
-        await onGenerateMarkdown();
-    } finally {
-        setIsGeneratingMarkdown(false);
-    }
-  }, [onGenerateMarkdown, addToast, t]);
-  
-  const handleGenerateHtml = useCallback(async () => {
-    if (!project || !settings) return;
-    setIsGeneratingHtml(true);
-    addToast(t('Exporting HTML...'), 'info');
-    try {
-        await generateHtmlFile(project, pdfOptions, settings, getArticleContent);
-    } catch (error) {
-        console.error("HTML export failed:", error);
-        addToast(t('HTML export failed.'), 'error');
-    } finally {
-        setIsGeneratingHtml(false);
-    }
-  }, [project, settings, getArticleContent, pdfOptions, addToast, t]);
-
-  const handleGeneratePlainText = useCallback(async () => {
-    if (!project) return;
-    setIsGeneratingPlainText(true);
-    addToast(t('Exporting Plain Text...'), 'info');
-    try {
-        await generatePlainTextFile(project, getArticleContent);
-    } catch (error) {
-        console.error("Plain text export failed:", error);
-        addToast(t('Plain Text export failed.'), 'error');
-    } finally {
-        setIsGeneratingPlainText(false);
-    }
-  }, [project, getArticleContent, addToast, t]);
-
-  const handleGenerateJsonWrapper = useCallback(async () => {
-    setIsGeneratingJson(true);
-    addToast(t('Exporting JSON...'), 'info');
-    try {
-        await onGenerateJson();
-    } finally {
-        setIsGeneratingJson(false);
-    }
-  }, [onGenerateJson, addToast, t]);
-
-  const handleGenerateDocxWrapper = useCallback(async () => {
-    setIsGeneratingDocx(true);
-    addToast(t('Exporting DOCX...'), 'info');
-    try {
-        await onGenerateDocx();
-    } finally {
-        setIsGeneratingDocx(false);
-    }
-  }, [onGenerateDocx, addToast, t]);
-  
-  const aiEnabled = settings.library.aiAssistant.enabled && isAiConfigured;
-  const aiDisabledTooltip = !isAiConfigured ? t('Invalid or missing API Key for Gemini. Please check your configuration.') : undefined;
-
-  const fonts = {
-    modern: { body: "'Inter', sans-serif" },
-    classic: { body: "'Lora', serif" },
-  };
-
-  const previewStyles: React.CSSProperties = {
-      fontFamily: fonts[pdfOptions.typography.fontPair].body,
-      fontSize: `${pdfOptions.typography.fontSize}px`,
-      lineHeight: pdfOptions.lineSpacing,
-      columnCount: pdfOptions.layout === 'two' ? 2 : 1,
-      columnGap: '2rem',
-  };
-
   const renderContent = () => {
-    if (isLoadingArticle) return <div className="flex justify-center items-center h-full"><Spinner /></div>
+    if (isLoadingArticle) return <SkeletonLoader />
     
     switch (view) {
         case 'article':
-            return activeArticleTitle && activeArticleContent !== null ? (
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border dark:border-gray-700 relative">
-                    <div className="flex justify-between items-start gap-4 mb-4 border-b pb-2 dark:border-gray-600">
-                        <h2 className="text-3xl font-bold flex-grow">{activeArticleTitle}</h2>
-                        <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
-                            <div className="relative" title={aiDisabledTooltip}>
-                                <button onClick={analyze} disabled={isAnalyzing || !aiEnabled} className="bg-purple-600 text-white px-3 py-1.5 rounded-lg hover:bg-purple-700 text-sm font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-1.5">
-                                    <Icon name="beaker" className="w-4 h-4" />
-                                    {isAnalyzing ? t('Analyzing...') : t('Analyze Article')}
-                                </button>
-                            </div>
-                            <button onClick={() => setIsCitationModalOpen(true)} className="bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 text-sm font-semibold flex items-center gap-1.5">
-                                <Icon name="plus" className="w-4 h-4"/>
-                                {t('Insert Citation')}
-                            </button>
-                             <button onClick={() => setView('settings')} className="bg-gray-600 text-white px-3 py-1.5 rounded-lg hover:bg-gray-700 text-sm font-semibold flex items-center gap-1.5">
-                                <Icon name="settings" className="w-4 h-4"/>
-                                {t('Settings & Export')}
-                            </button>
-                        </div>
-                    </div>
-                    <ArticleInsightsView insights={insights} isAnalyzing={isAnalyzing} analysisError={analysisError} />
-                    <div style={previewStyles}>
-                        <ArticleEditor
-                            content={activeArticleContent}
-                            onUpdate={handleContentUpdate}
-                            editable={true}
-                            onEditorCreated={handleEditorCreated}
-                            placeholder={t('Editable article content for {{title}}', { title: activeArticleTitle })}
-                        />
-                    </div>
-                    <div className="absolute bottom-4 right-4 flex items-center gap-4">
-                        <span className="text-xs text-gray-500 dark:text-gray-400 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm px-2 py-1 rounded-md">{t('Word Count: {{count}}', { count: articleWordCount })}</span>
-                        <div title={aiDisabledTooltip}>
-                            <button 
-                                onClick={handleOpenAiEditor}
-                                disabled={!aiEnabled}
-                                className="bg-purple-600 text-white p-3 rounded-full shadow-lg hover:bg-purple-700 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 dark:focus:ring-offset-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none"
-                                aria-label={t('Edit with AI')}
-                            >
-                                <Icon name="sparkles" className="w-6 h-6"/>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            ) : null;
+            return <ArticlePane 
+                activeArticleTitle={activeArticleTitle}
+                activeArticleContent={activeArticleContent}
+                pdfOptions={pdfOptions}
+                onContentUpdate={handleContentUpdate}
+                onEditorCreated={handleEditorCreated}
+                onOpenCitationModal={() => setIsCitationModalOpen(true)}
+                onOpenAiEditor={handleOpenAiEditor}
+                onSetView={setView}
+            />
         case 'markdown':
-            return (
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border dark:border-gray-700 relative">
-                    <div className="flex justify-between items-center mb-4 border-b pb-2 dark:border-gray-600">
-                      <h2 className="text-3xl font-bold">{project.name}</h2>
-                      <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">{t('Word Count: {{count}}', { count: totalWordCount })}</span>
-                    </div>
-                    {isGeneratingPreview
-                        ? <div className="flex justify-center items-center h-full"><Spinner /></div>
-                        : <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: markdownPreview }} />
-                    }
-                </div>
-            )
+            return <MarkdownPane project={project} getArticleContent={getArticleContent} />
         case 'settings':
         default:
-             return <CompilerExportSettings 
-                project={project}
-                updateProject={updateProject}
-                settings={settings}
-                updateSettings={updateSettings}
-                pdfOptions={pdfOptions}
-                onPdfOptionsChange={(path, value) => {
-                    const keys = path.split('.');
-                    const newOptions = JSON.parse(JSON.stringify(pdfOptions));
-                    let current = newOptions;
-                    for(let i=0; i<keys.length - 1; i++) {
-                        current = current[keys[i]];
-                    }
-                    current[keys[keys.length-1]] = value;
-                    setPdfOptions(newOptions);
-                }}
-                onGeneratePdf={onGeneratePdf}
-                onGenerateMarkdown={handleGenerateMarkdownWrapper}
-                onGenerateHtml={handleGenerateHtml}
-                onGeneratePlainText={handleGeneratePlainText}
-                onGenerateJson={handleGenerateJsonWrapper}
-                onGenerateDocx={handleGenerateDocxWrapper}
-                isGeneratingPdf={isGeneratingPdf}
-                isGeneratingMarkdown={isGeneratingMarkdown}
-                isGeneratingHtml={isGeneratingHtml}
-                isGeneratingPlainText={isGeneratingPlainText}
-                isGeneratingJson={isGeneratingJson}
-                isGeneratingDocx={isGeneratingDocx}
-             />
+             return <SettingsPane {...props} pdfOptions={pdfOptions} setPdfOptions={setPdfOptions} />
     }
   }
 
@@ -406,6 +221,211 @@ const CompilerRightPanel: React.FC<CompilerRightPanelProps> = ({
     </div>
   );
 };
+
+// --- Sub-components for each pane for better readability ---
+
+const ArticlePane: React.FC<{
+    activeArticleTitle: string | null;
+    activeArticleContent: string | null;
+    pdfOptions: PdfOptions;
+    onContentUpdate: (html: string) => void;
+    onEditorCreated: (editor: Editor | null) => void;
+    onOpenCitationModal: () => void;
+    onOpenAiEditor: () => void;
+    onSetView: (view: RightPaneView) => void;
+}> = ({ activeArticleTitle, activeArticleContent, pdfOptions, onContentUpdate, onEditorCreated, onOpenCitationModal, onOpenAiEditor, onSetView }) => {
+    const { t } = useTranslation();
+    const [wordCount, setWordCount] = useState(0);
+
+    const { insights, isAnalyzing, analysisError, analyze } = useArticleAnalysis(
+        activeArticleTitle && activeArticleContent ? { title: activeArticleTitle, html: activeArticleContent } : null
+    );
+
+    useEffect(() => {
+        if(activeArticleContent) {
+            setWordCount(countWords(activeArticleContent));
+        }
+    }, [activeArticleContent]);
+
+    const fonts = {
+        modern: { body: "'Inter', sans-serif" },
+        classic: { body: "'Lora', serif" },
+    };
+    const previewStyles: React.CSSProperties = {
+        fontFamily: fonts[pdfOptions.typography.fontPair].body,
+        fontSize: `${pdfOptions.typography.fontSize}px`,
+        lineHeight: pdfOptions.lineSpacing,
+        columnCount: pdfOptions.layout === 'two' ? 2 : 1,
+        columnGap: '2rem',
+    };
+
+    if (!activeArticleTitle || activeArticleContent === null) {
+        return <SkeletonLoader />;
+    }
+
+    const aiEnabled = isAiConfigured;
+    const aiDisabledTooltip = !aiEnabled ? t('Invalid or missing API Key for Gemini. Please check your configuration.') : undefined;
+
+    return (
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border dark:border-gray-700 relative">
+            <div className="flex justify-between items-start gap-4 mb-4 border-b pb-2 dark:border-gray-600">
+                <h2 className="text-3xl font-bold flex-grow">{activeArticleTitle}</h2>
+                <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
+                    <div className="relative" title={aiDisabledTooltip}>
+                        <button onClick={analyze} disabled={isAnalyzing || !aiEnabled} className="bg-purple-600 text-white px-3 py-1.5 rounded-lg hover:bg-purple-700 text-sm font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-1.5">
+                            <Icon name="beaker" className="w-4 h-4" />
+                            {isAnalyzing ? t('Analyzing...') : t('Analyze Article')}
+                        </button>
+                    </div>
+                    <button onClick={onOpenCitationModal} className="bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 text-sm font-semibold flex items-center gap-1.5">
+                        <Icon name="plus" className="w-4 h-4"/>
+                        {t('Insert Citation')}
+                    </button>
+                    <button onClick={() => onSetView('settings')} className="bg-gray-600 text-white px-3 py-1.5 rounded-lg hover:bg-gray-700 text-sm font-semibold flex items-center gap-1.5">
+                        <Icon name="settings" className="w-4 h-4"/>
+                        {t('Settings & Export')}
+                    </button>
+                </div>
+            </div>
+            <ArticleInsightsView insights={insights} isAnalyzing={isAnalyzing} analysisError={analysisError} />
+            <div style={previewStyles}>
+                <ArticleEditor
+                    content={activeArticleContent}
+                    onUpdate={onContentUpdate}
+                    editable={true}
+                    onEditorCreated={onEditorCreated}
+                    onAiEditClick={onOpenAiEditor}
+                    placeholder={t('Editable article content for {{title}}', { title: activeArticleTitle })}
+                />
+            </div>
+            <div className="absolute bottom-4 right-4 flex items-center gap-4">
+                <span className="text-xs text-gray-500 dark:text-gray-400 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm px-2 py-1 rounded-md">{t('Word Count: {{count}}', { count: wordCount })}</span>
+            </div>
+        </div>
+    );
+};
+
+const MarkdownPane: React.FC<{ project: Project; getArticleContent: (title: string) => Promise<string>; }> = ({ project, getArticleContent }) => {
+    const { t } = useTranslation();
+    const [markdownPreview, setMarkdownPreview] = useState('');
+    const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
+    const [totalWordCount, setTotalWordCount] = useState(0);
+
+    useEffect(() => {
+        const generatePreview = async () => {
+            if (project.articles.length > 0) {
+                setIsGeneratingPreview(true);
+                try {
+                    const markdown = await generateMarkdownContent(project, getArticleContent);
+                    const html = await marked.parse(markdown);
+                    setMarkdownPreview(html as string);
+                    setTotalWordCount(countWords(html as string));
+                } catch (error) {
+                    console.error("Failed to generate markdown preview:", error);
+                    setMarkdownPreview('<p>Error generating preview.</p>');
+                } finally {
+                    setIsGeneratingPreview(false);
+                }
+            }
+        };
+        generatePreview();
+    }, [project, getArticleContent]);
+
+    return (
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border dark:border-gray-700 relative">
+            <div className="flex justify-between items-center mb-4 border-b pb-2 dark:border-gray-600">
+                <h2 className="text-3xl font-bold">{project.name}</h2>
+                <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">{t('Word Count: {{count}}', { count: totalWordCount })}</span>
+            </div>
+            {isGeneratingPreview
+                ? <div className="flex justify-center items-center h-64"><Spinner /></div>
+                : <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: markdownPreview }} />
+            }
+        </div>
+    );
+};
+
+const SettingsPane: React.FC<CompilerRightPanelProps & { pdfOptions: PdfOptions; setPdfOptions: (options: PdfOptions) => void; }> = (props) => {
+    const { 
+        project, updateProject, settings, updateSettings, onGeneratePdf, onGenerateMarkdown, 
+        onGenerateJson, onGenerateDocx, isGeneratingPdf, pdfOptions, setPdfOptions 
+    } = props;
+    const { t } = useTranslation();
+    const { addToast } = useToasts();
+
+    const [isGeneratingMarkdown, setIsGeneratingMarkdown] = useState(false);
+    const [isGeneratingHtml, setIsGeneratingHtml] = useState(false);
+    const [isGeneratingPlainText, setIsGeneratingPlainText] = useState(false);
+    const [isGeneratingJson, setIsGeneratingJson] = useState(false);
+    const [isGeneratingDocx, setIsGeneratingDocx] = useState(false);
+
+    const onPdfOptionsChange = (path: string, value: any) => {
+        const keys = path.split('.');
+        const newOptions = JSON.parse(JSON.stringify(pdfOptions));
+        let current = newOptions;
+        for (let i = 0; i < keys.length - 1; i++) {
+            current = current[keys[i]];
+        }
+        current[keys[keys.length - 1]] = value;
+        setPdfOptions(newOptions);
+    };
+
+    const handleGenerateMarkdownWrapper = useCallback(async () => {
+        setIsGeneratingMarkdown(true);
+        addToast(t('Exporting Markdown...'), 'info');
+        try { await onGenerateMarkdown(); } finally { setIsGeneratingMarkdown(false); }
+    }, [onGenerateMarkdown, addToast, t]);
+
+    const handleGenerateHtml = useCallback(async () => {
+        setIsGeneratingHtml(true);
+        addToast(t('Exporting HTML...'), 'info');
+        try { await generateHtmlFile(project, pdfOptions, settings, props.getArticleContent); } 
+        catch (e) { addToast(t('HTML export failed.'), 'error'); } 
+        finally { setIsGeneratingHtml(false); }
+    }, [project, pdfOptions, settings, props.getArticleContent, addToast, t]);
+
+    const handleGeneratePlainText = useCallback(async () => {
+        setIsGeneratingPlainText(true);
+        addToast(t('Exporting Plain Text...'), 'info');
+        try { await generatePlainTextFile(project, props.getArticleContent); } 
+        catch (e) { addToast(t('Plain Text export failed.'), 'error'); } 
+        finally { setIsGeneratingPlainText(false); }
+    }, [project, props.getArticleContent, addToast, t]);
+    
+    const handleGenerateJsonWrapper = useCallback(async () => {
+        setIsGeneratingJson(true);
+        addToast(t('Exporting JSON...'), 'info');
+        try { await onGenerateJson(); } finally { setIsGeneratingJson(false); }
+    }, [onGenerateJson, addToast, t]);
+
+    const handleGenerateDocxWrapper = useCallback(async () => {
+        setIsGeneratingDocx(true);
+        addToast(t('Exporting DOCX...'), 'info');
+        try { await onGenerateDocx(); } finally { setIsGeneratingDocx(false); }
+    }, [onGenerateDocx, addToast, t]);
+
+    return <CompilerExportSettings
+        project={project}
+        updateProject={updateProject}
+        settings={settings}
+        updateSettings={updateSettings}
+        pdfOptions={pdfOptions}
+        onPdfOptionsChange={onPdfOptionsChange}
+        onGeneratePdf={onGeneratePdf}
+        onGenerateMarkdown={handleGenerateMarkdownWrapper}
+        onGenerateHtml={handleGenerateHtml}
+        onGeneratePlainText={handleGeneratePlainText}
+        onGenerateJson={handleGenerateJsonWrapper}
+        onGenerateDocx={handleGenerateDocxWrapper}
+        isGeneratingPdf={isGeneratingPdf}
+        isGeneratingMarkdown={isGeneratingMarkdown}
+        isGeneratingHtml={isGeneratingHtml}
+        isGeneratingPlainText={isGeneratingPlainText}
+        isGeneratingJson={isGeneratingJson}
+        isGeneratingDocx={isGeneratingDocx}
+    />
+};
+
 
 const PaneToggleButton: React.FC<{label: string, view: RightPaneView, currentView: RightPaneView, setView: (view: RightPaneView) => void, disabled?: boolean}> = ({ label, view, currentView, setView, disabled = false }) => (
     <button
