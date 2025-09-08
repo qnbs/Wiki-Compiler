@@ -15,11 +15,12 @@ interface CompilerViewProps {
   updateProject: (project: Project) => void;
   getArticleContent: (title: string) => Promise<string>;
   settings: AppSettings;
+  updateSettings: (settings: AppSettings) => void;
 }
 
 type RightPaneView = 'settings' | 'article' | 'markdown';
 
-const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, getArticleContent, settings }) => {
+const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, getArticleContent, settings, updateSettings }) => {
   const { t } = useTranslation();
   const [articles, setArticles] = useState(project.articles);
   const [projectName, setProjectName] = useState(project.name);
@@ -175,6 +176,20 @@ const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, get
     }
   }, [project, getArticleContent]);
 
+  const handleSaveDefaults = () => {
+    if (window.confirm(t('Are you sure you want to overwrite your default export settings with the current ones?'))) {
+        const newSettings = {
+            ...settings,
+            compiler: {
+                ...settings.compiler,
+                defaultPdfOptions: pdfOptions,
+            }
+        };
+        updateSettings(newSettings);
+        alert(t('Default settings have been updated.'));
+    }
+  };
+
   const renderRightPane = () => {
     if (isLoadingArticle) {
         return <div className="flex justify-center items-center h-full"><Spinner /></div>
@@ -217,6 +232,7 @@ const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, get
                         onGeneratePdf={handleGeneratePdf}
                         onGenerateMarkdown={handleGenerateMarkdown}
                         onAnalyze={handleAnalyzeSelectedArticle}
+                        onSaveDefaults={handleSaveDefaults}
                         isGenerating={isGenerating}
                         isAnalyzing={isAnalyzing}
                         canGenerate={articles.length > 0}
@@ -243,7 +259,7 @@ const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, get
                 onDragEnd={handleSort}
                 onDragOver={(e) => e.preventDefault()}
                 onClick={() => handleSelectArticle(article.title)}
-                className={`group flex items-center justify-between p-3 rounded-lg shadow-sm transition-colors ${selectedArticle?.title === article.title ? 'bg-blue-100 dark:bg-blue-900/50 ring-2 ring-blue-500' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'} cursor-pointer`}
+                className={`group flex items-center justify-between p-3 rounded-lg shadow-sm transition-colors ${selectedArticle?.title === article.title ? 'bg-accent-100 dark:bg-accent-900/50 ring-2 ring-accent-500' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'} cursor-pointer`}
               >
                 <div className="flex items-center gap-3 truncate">
                   <Icon name="grip" className="w-5 h-5 text-gray-400 cursor-grab active:cursor-grabbing flex-shrink-0" />
@@ -313,7 +329,7 @@ const PaneToggleButton: React.FC<PaneToggleButtonProps> = ({ label, view, curren
         disabled={disabled}
         className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
             currentView === view 
-            ? 'border-blue-500 text-blue-600 dark:text-blue-400' 
+            ? 'border-accent-500 text-accent-600 dark:text-accent-400' 
             : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
         } disabled:opacity-40 disabled:cursor-not-allowed`}
     >

@@ -15,7 +15,7 @@ interface RadioOptionProps {
 
 const RadioOption: React.FC<RadioOptionProps> = ({ id, name, value, checked, onChange, label }) => (
     <div className="flex items-center">
-        <input id={id} name={name} type="radio" value={value} checked={checked} onChange={onChange} className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"/>
+        <input id={id} name={name} type="radio" value={value} checked={checked} onChange={onChange} className="h-4 w-4 border-gray-300 text-accent-600 focus:ring-accent-500 dark:bg-gray-700 dark:border-gray-600"/>
         <label htmlFor={id} className="ml-2 block text-sm text-gray-900 dark:text-gray-200">{label}</label>
     </div>
 );
@@ -29,7 +29,7 @@ interface CheckboxOptionProps {
 
 const CheckboxOption: React.FC<CheckboxOptionProps> = ({ id, checked, onChange, label }) => (
     <div className="flex items-center">
-        <input id={id} type="checkbox" checked={checked} onChange={onChange} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"/>
+        <input id={id} type="checkbox" checked={checked} onChange={onChange} className="h-4 w-4 rounded border-gray-300 text-accent-600 focus:ring-accent-500 dark:bg-gray-700 dark:border-gray-600"/>
         <label htmlFor={id} className="ml-2 block text-sm text-gray-900 dark:text-gray-200">{label}</label>
     </div>
 );
@@ -43,6 +43,7 @@ interface CompilerSettingsProps {
     onGeneratePdf: () => void;
     onGenerateMarkdown: () => void;
     onAnalyze: () => void;
+    onSaveDefaults: () => void;
     isGenerating: boolean;
     isAnalyzing: boolean;
     canGenerate: boolean;
@@ -58,6 +59,7 @@ const CompilerSettings: React.FC<CompilerSettingsProps> = ({
     onGeneratePdf,
     onGenerateMarkdown,
     onAnalyze,
+    onSaveDefaults,
     isGenerating,
     isAnalyzing,
     canGenerate,
@@ -77,7 +79,7 @@ const CompilerSettings: React.FC<CompilerSettingsProps> = ({
                 value={projectName}
                 onChange={onProjectNameChange}
                 onBlur={onProjectNameBlur}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 outline-none"
               />
             </div>
         
@@ -124,7 +126,7 @@ const CompilerSettings: React.FC<CompilerSettingsProps> = ({
                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                            <div>
                                 <label htmlFor="headerContent" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('Header Content')}</label>
-                                <select id="headerContent" value={pdfOptions.headerContent} onChange={e => setPdfOptions({...pdfOptions, headerContent: e.target.value as 'title' | 'custom' | 'none'})} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                                <select id="headerContent" value={pdfOptions.headerContent} onChange={e => setPdfOptions({...pdfOptions, headerContent: e.target.value as 'title' | 'custom' | 'none'})} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 outline-none">
                                     <option value="none">{t('None')}</option>
                                     <option value="title">{t('Document Title')}</option>
                                     <option value="custom">{t('Custom')}</option>
@@ -135,7 +137,7 @@ const CompilerSettings: React.FC<CompilerSettingsProps> = ({
                            </div>
                            <div>
                                 <label htmlFor="footerContent" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('Footer Content')}</label>
-                                <select id="footerContent" value={pdfOptions.footerContent} onChange={e => setPdfOptions({...pdfOptions, footerContent: e.target.value as 'pageNumber' | 'custom' | 'none'})} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                                <select id="footerContent" value={pdfOptions.footerContent} onChange={e => setPdfOptions({...pdfOptions, footerContent: e.target.value as 'pageNumber' | 'custom' | 'none'})} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 outline-none">
                                     <option value="none">{t('None')}</option>
                                     <option value="pageNumber">{t('Page Number')}</option>
                                     <option value="custom">{t('Custom')}</option>
@@ -170,7 +172,7 @@ const CompilerSettings: React.FC<CompilerSettingsProps> = ({
                                 step="1"
                                 value={pdfOptions.typography.fontSize} 
                                 onChange={e => setPdfOptions({...pdfOptions, typography: {...pdfOptions.typography, fontSize: parseInt(e.target.value, 10)}})} 
-                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-accent-500"
                             />
                        </div>
                    </div>
@@ -190,7 +192,7 @@ const CompilerSettings: React.FC<CompilerSettingsProps> = ({
                                        <RadioOption id="apa" name="citationStyle" value="apa" checked={pdfOptions.citationStyle === 'apa'} onChange={() => setPdfOptions({...pdfOptions, citationStyle: 'apa'})} label={t('APA')}/>
                                        <RadioOption id="mla" name="citationStyle" value="mla" checked={pdfOptions.citationStyle === 'mla'} onChange={() => setPdfOptions({...pdfOptions, citationStyle: 'mla'})} label={t('MLA')}/>
                                    </div>
-                                  <button className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:underline" onClick={() => alert('This would connect to your Zotero/Mendeley account.')}>
+                                  <button className="flex items-center gap-2 text-sm text-accent-600 dark:text-accent-400 hover:underline" onClick={() => alert('This would connect to your Zotero/Mendeley account.')}>
                                       <Icon name="link" className="w-4 h-4" />
                                       {t('Connect to Zotero...')}
                                   </button>
@@ -199,13 +201,24 @@ const CompilerSettings: React.FC<CompilerSettingsProps> = ({
                       </div>
                    </div>
                 </fieldset>
+
+                <fieldset>
+                   <legend className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200 border-b dark:border-gray-600 pb-2">{t('Default Settings')}</legend>
+                   <div className="space-y-2">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{t('Save the current export options as the new default for all future projects.')}</p>
+                        <button onClick={onSaveDefaults} className="flex items-center gap-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm font-semibold">
+                            <Icon name="archive-box" className="w-4 h-4" />
+                            {t('Save as Default Settings')}
+                        </button>
+                   </div>
+                </fieldset>
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4 mt-8">
                 <button
                 onClick={onGeneratePdf}
                 disabled={isGenerating || !canGenerate}
-                className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 bg-accent-600 text-white px-4 py-3 rounded-lg hover:bg-accent-700 transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                 {isGenerating ? (
                     <>

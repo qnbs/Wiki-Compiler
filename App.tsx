@@ -214,9 +214,9 @@ const App: React.FC = () => {
         case View.Library:
             return activeProject && <LibraryView addArticleToProject={addArticleToProject} getArticleContent={getArticleContent} settings={settings} activeProject={activeProject} />;
         case View.Archive:
-            return activeProject && <ArchiveView addArticleToProject={addArticleToProject} getArticleContent={getArticleContent} activeProject={activeProject} />;
+            return activeProject && <ArchiveView addArticleToProject={addArticleToProject} getArticleContent={getArticleContent} activeProject={activeProject} settings={settings} />;
         case View.Compiler:
-            return activeProject && <CompilerView project={activeProject} updateProject={updateActiveProject} getArticleContent={getArticleContent} settings={settings} />;
+            return activeProject && <CompilerView project={activeProject} updateProject={updateActiveProject} getArticleContent={getArticleContent} settings={settings} updateSettings={updateSettings} />;
         case View.Settings:
             return <SettingsView settings={settings} updateSettings={updateSettings} reloadApp={loadInitialData} />;
         case View.Help:

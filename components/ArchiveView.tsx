@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArticleContent, Project, ArticleInsights } from '../types';
+import { ArticleContent, Project, ArticleInsights, AppSettings } from '../types';
 import { getAllArticles, deleteArticleFromCache } from '../services/dbService';
 import { getArticleInsights } from '../services/geminiService';
 import { useDebounce } from '../hooks/useDebounce';
@@ -13,9 +13,10 @@ interface ArchiveViewProps {
   addArticleToProject: (title: string) => void;
   getArticleContent: (title: string) => Promise<string>;
   activeProject: Project;
+  settings: AppSettings;
 }
 
-const ArchiveView: React.FC<ArchiveViewProps> = ({ addArticleToProject, getArticleContent, activeProject }) => {
+const ArchiveView: React.FC<ArchiveViewProps> = ({ addArticleToProject, getArticleContent, activeProject, settings }) => {
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [allArticles, setAllArticles] = useState<ArticleContent[]>([]);
@@ -114,7 +115,7 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ addArticleToProject, getArtic
     const textContent = tempDiv.textContent || tempDiv.innerText || "";
     
     try {
-        const resultInsights = await getArticleInsights(textContent);
+        const resultInsights = await getArticleInsights(textContent, settings.library.aiAssistant.systemInstruction);
         setInsights(resultInsights);
     } catch (error) {
         console.error("Analysis failed:", error);
@@ -155,7 +156,7 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ addArticleToProject, getArtic
               placeholder={t('Search Archive...')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 outline-none"
             />
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Icon name="search" className="w-5 h-5 text-gray-400" />
@@ -167,7 +168,7 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ addArticleToProject, getArtic
                   id="sort-archive"
                   value={sortOrder}
                   onChange={e => setSortOrder(e.target.value as 'az' | 'za')}
-                  className="py-1 px-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-sm focus:ring-1 focus:ring-blue-500 outline-none"
+                  className="py-1 px-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-sm focus:ring-1 focus:ring-accent-500 outline-none"
               >
                   <option value="az">{t('Title (A-Z)')}</option>
                   <option value="za">{t('Title (Z-A)')}</option>
@@ -181,7 +182,7 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ addArticleToProject, getArtic
                   const wasJustAdded = justAdded.has(article.title);
                   return (
                       <li key={article.title}
-                          className={`group p-3 rounded-lg transition-colors flex justify-between items-center ${selectedArticle?.title === article.title ? 'bg-blue-100 dark:bg-blue-900/50' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                          className={`group p-3 rounded-lg transition-colors flex justify-between items-center ${selectedArticle?.title === article.title ? 'bg-accent-100 dark:bg-accent-900/50' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
                       >
                           <div onClick={() => handleSelectArticle(article.title)} className="cursor-pointer flex-grow truncate pr-2">
                              <h3 className="font-semibold text-gray-800 dark:text-gray-200 truncate">{article.title}</h3>
@@ -192,7 +193,7 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ addArticleToProject, getArtic
                                 disabled={isAdded}
                                 aria-label={t('Quick Add to Compilation')}
                                 className={`p-2 rounded-full transition-colors ${
-                                  isAdded ? 'text-green-500' : 'text-gray-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 hover:text-blue-600'
+                                  isAdded ? 'text-green-500' : 'text-gray-400 hover:bg-accent-100 dark:hover:bg-accent-900/50 hover:text-accent-600'
                                 } disabled:text-green-500 disabled:cursor-default disabled:hover:bg-transparent dark:disabled:hover:bg-transparent`}
                               >
                                 <Icon name={isAdded || wasJustAdded ? 'check' : 'plus'} className="w-5 h-5" />
@@ -224,7 +225,8 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ addArticleToProject, getArtic
           {selectedArticle && (
             <div className="relative">
               <div className="absolute top-2 right-2 flex items-center gap-2 z-10">
-                   <button
+                   {settings.library.aiAssistant.enabled && (
+                    <button
                         onClick={handleAnalyze}
                         disabled={isAnalyzing}
                         className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
@@ -232,9 +234,10 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ addArticleToProject, getArtic
                         <Icon name="beaker" className="w-4 h-4"/>
                         {isAnalyzing ? t('Analyzing...') : t('Analyze with AI')}
                     </button>
+                   )}
                   <button
                       onClick={() => addArticleToProject(selectedArticle.title)}
-                      className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold"
+                      className="flex items-center gap-2 bg-accent-600 text-white px-4 py-2 rounded-lg hover:bg-accent-700 transition-colors text-sm font-semibold"
                   >
                       <Icon name="plus" className="w-4 h-4"/>
                       {t('Add to Compilation')}

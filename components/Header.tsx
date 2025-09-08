@@ -26,6 +26,7 @@ const Header: React.FC<HeaderProps> = ({
   const { t } = useTranslation();
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  const [projectSearch, setProjectSearch] = useState('');
   
   const projectDropdownRef = useRef<HTMLDivElement>(null);
   const moreMenuRef = useRef<HTMLDivElement>(null);
@@ -36,16 +37,29 @@ const Header: React.FC<HeaderProps> = ({
   const closeAllMenus = () => {
     setIsProjectDropdownOpen(false);
     setIsMoreMenuOpen(false);
+    setProjectSearch('');
   };
+
+  const filteredProjects = projects.filter(p => 
+    p.name.toLowerCase().includes(projectSearch.toLowerCase())
+  );
 
   const projectDropdownContent = (
     <>
-      <div className="p-2 font-semibold text-sm border-b border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200">{t('Projects')}</div>
+      <div className="p-2 border-b border-gray-200 dark:border-gray-700">
+        <input
+          type="text"
+          placeholder="Search projects..."
+          value={projectSearch}
+          onChange={(e) => setProjectSearch(e.target.value)}
+          className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-900/50 focus:ring-1 focus:ring-accent-500 outline-none"
+        />
+      </div>
       <ul className="py-1 max-h-60 overflow-y-auto">
-        {projects.map(project => (
+        {filteredProjects.map(project => (
           <li key={project.id}>
             <a href="#" onClick={(e) => { e.preventDefault(); setActiveProjectId(project.id); closeAllMenus(); }}
-               className={`flex justify-between items-center px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700/60 ${project.id === activeProjectId ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-gray-700 dark:text-gray-300'}`}
+               className={`flex justify-between items-center px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700/60 ${project.id === activeProjectId ? 'text-accent-600 dark:text-accent-400 font-semibold' : 'text-gray-700 dark:text-gray-300'}`}
             >
               <span className="truncate pr-2">{project.name}</span>
               {projects.length > 1 && (
@@ -159,7 +173,7 @@ const NavButton: React.FC<NavButtonProps> = ({ icon, label, isActive, onClick })
       onClick={onClick}
       className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
         isActive
-          ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-300 shadow-sm'
+          ? 'bg-white dark:bg-gray-700 text-accent-600 dark:text-accent-300 shadow-sm'
           : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700/50'
       }`}
     >

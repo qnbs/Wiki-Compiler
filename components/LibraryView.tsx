@@ -26,7 +26,7 @@ const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArtic
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [justAdded, setJustAdded] = useState<Set<string>>(new Set());
-  const [sortOrder, setSortOrder] = useState<'az' | 'za'>('az');
+  const [sortOption, setSortOption] = useState('relevance');
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
@@ -38,15 +38,20 @@ const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArtic
     const search = async () => {
       if (debouncedSearchTerm) {
         setIsSearching(true);
-        let searchResults = await searchArticles(debouncedSearchTerm, settings.library.searchResultLimit);
+        const isTitleSort = sortOption === 'az' || sortOption === 'za';
+        const apiSort = isTitleSort ? 'relevance' : sortOption;
+
+        let searchResults = await searchArticles(debouncedSearchTerm, settings.library.searchResultLimit, apiSort);
         
-        searchResults.sort((a, b) => {
-            if (sortOrder === 'az') {
-                return a.title.localeCompare(b.title);
-            } else {
-                return b.title.localeCompare(a.title);
-            }
-        });
+        if (isTitleSort) {
+          searchResults.sort((a, b) => {
+              if (sortOption === 'az') {
+                  return a.title.localeCompare(b.title);
+              } else {
+                  return b.title.localeCompare(a.title);
+              }
+          });
+        }
         
         setResults(searchResults);
         setIsSearching(false);
@@ -55,7 +60,7 @@ const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArtic
       }
     };
     search();
-  }, [debouncedSearchTerm, settings.library.searchResultLimit, sortOrder]);
+  }, [debouncedSearchTerm, settings.library.searchResultLimit, sortOption]);
 
   const handleSelectArticle = useCallback(async (title: string) => {
     setIsLoadingArticle(true);
@@ -115,7 +120,7 @@ const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArtic
             placeholder={t('Search Wikipedia...')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 outline-none"
           />
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Icon name="search" className="w-5 h-5 text-gray-400" />
@@ -125,10 +130,13 @@ const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArtic
             <label htmlFor="sort-library" className="font-medium text-gray-700 dark:text-gray-400 mr-2">{t('Sort by')}:</label>
             <select
                 id="sort-library"
-                value={sortOrder}
-                onChange={e => setSortOrder(e.target.value as 'az' | 'za')}
-                className="py-1 px-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-sm focus:ring-1 focus:ring-blue-500 outline-none"
+                value={sortOption}
+                onChange={e => setSortOption(e.target.value)}
+                className="py-1 px-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-sm focus:ring-1 focus:ring-accent-500 outline-none"
             >
+                <option value="relevance">{t('Relevance')}</option>
+                <option value="last_edit_desc">{t('Date (Newest)')}</option>
+                <option value="last_edit_asc">{t('Date (Oldest)')}</option>
                 <option value="az">{t('Title (A-Z)')}</option>
                 <option value="za">{t('Title (Z-A)')}</option>
             </select>
@@ -141,18 +149,23 @@ const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArtic
             
             return (
               <li key={result.pageid}
-                className={`group p-3 rounded-lg transition-colors flex justify-between items-center ${selectedArticle?.title === result.title ? 'bg-blue-100 dark:bg-blue-900/50' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                className={`group p-3 rounded-lg transition-colors flex justify-between items-center ${selectedArticle?.title === result.title ? 'bg-accent-100 dark:bg-accent-900/50' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
               >
                 <div onClick={() => handleSelectArticle(result.title)} className="cursor-pointer flex-grow truncate pr-2">
                   <h3 className="font-semibold text-gray-800 dark:text-gray-200 truncate">{result.title}</h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{result.snippet}</p>
+                   {result.timestamp && (
+                     <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                        {new Date(result.timestamp).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+                     </p>
+                   )}
                 </div>
                 <button
                   onClick={() => handleQuickAdd(result.title)}
                   disabled={isAdded}
                   aria-label={t('Quick Add to Compilation')}
                   className={`flex-shrink-0 p-2 rounded-full transition-colors ${
-                    isAdded ? 'text-green-500' : 'text-gray-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 hover:text-blue-600'
+                    isAdded ? 'text-green-500' : 'text-gray-400 hover:bg-accent-100 dark:hover:bg-accent-900/50 hover:text-accent-600'
                   } disabled:text-green-500 disabled:cursor-default disabled:hover:bg-transparent dark:disabled:hover:bg-transparent`}
                 >
                   <Icon name={isAdded || wasJustAdded ? 'check' : 'plus'} className="w-5 h-5" />
@@ -181,7 +194,7 @@ const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArtic
                 )}
                 <button
                     onClick={() => addArticleToProject(selectedArticle.title)}
-                    className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold"
+                    className="flex items-center gap-2 bg-accent-600 text-white px-4 py-2 rounded-lg hover:bg-accent-700 transition-colors text-sm font-semibold"
                 >
                     <Icon name="plus" className="w-4 h-4"/>
                     {t('Add to Compilation')}

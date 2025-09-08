@@ -3,13 +3,15 @@ import { SearchResult, ArticleMetadata } from '../types';
 const WIKI_API_BASE = 'https://en.wikipedia.org/w/api.php';
 const WIKI_REST_BASE = 'https://en.wikipedia.org/api/rest_v1/page/html/';
 
-export const searchArticles = async (query: string, limit: number = 10): Promise<SearchResult[]> => {
+export const searchArticles = async (query: string, limit: number = 10, sort: string = 'relevance'): Promise<SearchResult[]> => {
   if (!query) return [];
   const params = new URLSearchParams({
     action: 'query',
     list: 'search',
     srsearch: query,
     srlimit: String(limit),
+    srprop: 'snippet|timestamp',
+    srsort: sort,
     format: 'json',
     origin: '*',
   });

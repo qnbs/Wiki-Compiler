@@ -2,6 +2,7 @@ export interface SearchResult {
   title: string;
   snippet: string;
   pageid: number;
+  timestamp?: string;
 }
 
 export interface ArticleContent {
@@ -10,7 +11,7 @@ export interface ArticleContent {
 }
 
 export interface ProjectArticle {
-  title: string;
+  title:string;
 }
 
 export interface Project {
