@@ -218,6 +218,7 @@ const resources = {
       "Quick Actions": "Quick Actions",
       "Improve Writing": "Improve Writing",
       "Fix Spelling & Grammar": "Fix Spelling & Grammar",
+      "Summarize": "Summarize",
       "Change Tone to Academic": "Change Tone to Academic",
       "about_p1": "Wiki Compiler is a premium knowledge management and research environment designed to curate, customize, and consume knowledge from Wikipedia. It transforms passive reading into an active, creative act of knowledge assembly.",
       "about_p2": "Our goal is to empower students, researchers, and lifelong learners to build and share knowledge more effectively by providing a focused sanctuary for deep work, from initial research to a final, polished publication.",

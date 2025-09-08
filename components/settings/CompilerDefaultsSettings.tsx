@@ -76,6 +76,38 @@ const CompilerDefaultsSettings: React.FC = () => {
                    </div>
                </div>
            </fieldset>
+
+           <fieldset>
+                <legend className="text-md font-semibold text-gray-800 dark:text-gray-200">{t('Header Content')}</legend>
+                <div className="space-y-4 pl-2 mt-2">
+                    <div>
+                        <select value={pdfOptions.headerContent} onChange={e => set('headerContent', e.target.value)} className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800">
+                            <option value="none">{t('None')}</option>
+                            <option value="title">{t('Document Title')}</option>
+                            <option value="custom">{t('Custom')}</option>
+                        </select>
+                        {pdfOptions.headerContent === 'custom' && (
+                            <input type="text" value={pdfOptions.customHeaderText || ''} onChange={e => set('customHeaderText', e.target.value)} placeholder={t('Custom Header Text')} className="mt-2 w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"/>
+                        )}
+                    </div>
+                </div>
+           </fieldset>
+            
+           <fieldset>
+                <legend className="text-md font-semibold text-gray-800 dark:text-gray-200">{t('Footer Content')}</legend>
+                <div className="space-y-4 pl-2 mt-2">
+                    <div>
+                        <select value={pdfOptions.footerContent} onChange={e => set('footerContent', e.target.value)} className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800">
+                            <option value="none">{t('None')}</option>
+                            <option value="pageNumber">{t('Page Number')}</option>
+                            <option value="custom">{t('Custom')}</option>
+                        </select>
+                        {pdfOptions.footerContent === 'custom' && (
+                            <input type="text" value={pdfOptions.customFooterText || ''} onChange={e => set('customFooterText', e.target.value)} placeholder={t('Custom Footer Text')} className="mt-2 w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"/>
+                        )}
+                    </div>
+                </div>
+           </fieldset>
            
            <fieldset>
                <legend className="text-md font-semibold text-gray-800 dark:text-gray-200">{t('Typography')}</legend>

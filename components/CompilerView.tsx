@@ -99,6 +99,7 @@ const CompilerView: React.FC<CompilerViewProps> = ({ getArticleContent }) => {
         setView={setRightPaneView}
         onGeneratePdf={handleGeneratePdf}
         onGenerateMarkdown={handleGenerateMarkdown}
+        isGeneratingPdf={isGeneratingPdf}
       />
     </div>
     </>

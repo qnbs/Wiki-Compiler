@@ -1,16 +1,18 @@
-import React, { memo } from 'react';
+import React, { memo, useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Focus from '@tiptap/extension-focus';
+import { Editor } from '@tiptap/core';
 
 interface ArticleEditorProps {
   content: string;
   onUpdate: (html: string) => void;
   editable: boolean;
+  onEditorCreated: (editor: Editor) => void;
 }
 
-const ArticleEditor: React.FC<ArticleEditorProps> = ({ content, onUpdate, editable }) => {
+const ArticleEditor: React.FC<ArticleEditorProps> = ({ content, onUpdate, editable, onEditorCreated }) => {
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -28,6 +30,13 @@ const ArticleEditor: React.FC<ArticleEditorProps> = ({ content, onUpdate, editab
       onUpdate(editor.getHTML());
     },
   }, [content, editable]); // Re-initialize editor if content or editable prop changes
+
+  // Fix: Pass the editor instance to the parent component once it's created.
+  useEffect(() => {
+    if (editor) {
+      onEditorCreated(editor);
+    }
+  }, [editor, onEditorCreated]);
 
   return (
       <div className="prose dark:prose-invert max-w-none focus-within:ring-2 focus-within:ring-accent-500 rounded-md -m-2">

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View, ArticleContent } from './types';
-// FIX: `getArticleMetadata` is exported from `wikipediaService`, not `dbService`.
 import { getArticleCache, saveArticleCache } from './services/dbService';
 import { getArticleHtml as fetchArticleHtml, getArticleMetadata } from './services/wikipediaService';
 import Header from './components/Header';

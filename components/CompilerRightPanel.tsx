@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { marked } from 'marked';
-// FIX: Module '"@tiptap/react"' declares 'Editor' locally, but it is not exported. Use `import type`.
-import type { Editor } from '@tiptap/react';
+// Fix: The Editor type is exported from '@tiptap/core', not '@tiptap/react'.
+import type { Editor } from '@tiptap/core';
 
 import { Project, PdfOptions, AppSettings, CustomCitation, ProjectArticleContent } from '../types';
 import { RightPaneView } from './CompilerView';
@@ -31,7 +31,178 @@ interface CompilerRightPanelProps {
   setView: (view: RightPaneView) => void;
   onGeneratePdf: (options: PdfOptions) => void;
   onGenerateMarkdown: () => void;
+  isGeneratingPdf: boolean;
 }
+
+const ExportSettingsPanel: React.FC<{
+    project: Project;
+    updateProject: (project: Project) => void;
+    pdfOptions: PdfOptions;
+    setPdfOptions: React.Dispatch<React.SetStateAction<PdfOptions>>;
+    onGeneratePdf: () => void;
+    onGenerateMarkdown: () => void;
+    onSaveDefaults: () => void;
+    isGeneratingPdf: boolean;
+}> = ({ project, updateProject, pdfOptions, setPdfOptions, onGeneratePdf, onGenerateMarkdown, onSaveDefaults, isGeneratingPdf }) => {
+    const { t } = useTranslation();
+
+    const set = (path: string, value: any) => {
+        setPdfOptions(prev => {
+            const newOptions = JSON.parse(JSON.stringify(prev)); // Deep copy
+            let current: any = newOptions;
+            const keys = path.split('.');
+            for (let i = 0; i < keys.length - 1; i++) {
+                current = current[keys[i]];
+            }
+            current[keys[keys.length - 1]] = value;
+            return newOptions;
+        });
+    };
+
+    return (
+      <div className="bg-white dark:bg-gray-800/50 p-6 rounded-lg shadow-sm space-y-8">
+        <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('Document Title')}</label>
+            <input type="text" value={project.name} onChange={e => updateProject({ ...project, name: e.target.value })} className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800" />
+        </div>
+        <div className="space-y-8">
+            <fieldset>
+               <legend className="text-md font-semibold text-gray-800 dark:text-gray-200">{t('Layout')}</legend>
+               <div className="space-y-4 pl-2 mt-2">
+                   <div>
+                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('Paper Size')}</label>
+                       <select value={pdfOptions.paperSize} onChange={e => set('paperSize', e.target.value)} className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800">
+                           <option value="letter">{t('Letter')}</option>
+                           <option value="a4">{t('A4')}</option>
+                       </select>
+                   </div>
+                    <div>
+                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('Columns')}</label>
+                        <select value={pdfOptions.layout} onChange={e => set('layout', e.target.value)} className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800">
+                           <option value="single">{t('Single Column')}</option>
+                           <option value="two">{t('Two Column')}</option>
+                       </select>
+                   </div>
+               </div>
+           </fieldset>
+
+           <fieldset>
+               <legend className="text-md font-semibold text-gray-800 dark:text-gray-200">{t('Page Setup')}</legend>
+               <div className="space-y-4 pl-2 mt-2">
+                   <div>
+                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('Margins')}</label>
+                       <select value={pdfOptions.margins} onChange={e => set('margins', e.target.value)} className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800">
+                           <option value="normal">{t('Normal')}</option>
+                           <option value="narrow">{t('Narrow')}</option>
+                           <option value="wide">{t('Wide')}</option>
+                       </select>
+                   </div>
+                    <div>
+                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('Line Spacing')}</label>
+                       <select value={pdfOptions.lineSpacing} onChange={e => set('lineSpacing', parseFloat(e.target.value))} className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800">
+                           <option value="1.15">{t('Single (1.15)')}</option>
+                           <option value="1.5">{t('One and a half (1.5)')}</option>
+                           <option value="2.0">{t('Double (2.0)')}</option>
+                       </select>
+                   </div>
+               </div>
+           </fieldset>
+
+           <fieldset>
+                <legend className="text-md font-semibold text-gray-800 dark:text-gray-200">{t('Header Content')}</legend>
+                <div className="space-y-4 pl-2 mt-2">
+                    <div>
+                        <select value={pdfOptions.headerContent} onChange={e => set('headerContent', e.target.value)} className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800">
+                            <option value="none">{t('None')}</option>
+                            <option value="title">{t('Document Title')}</option>
+                            <option value="custom">{t('Custom')}</option>
+                        </select>
+                        {pdfOptions.headerContent === 'custom' && (
+                            <input type="text" value={pdfOptions.customHeaderText || ''} onChange={e => set('customHeaderText', e.target.value)} placeholder={t('Custom Header Text')} className="mt-2 w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"/>
+                        )}
+                    </div>
+                </div>
+           </fieldset>
+            
+           <fieldset>
+                <legend className="text-md font-semibold text-gray-800 dark:text-gray-200">{t('Footer Content')}</legend>
+                <div className="space-y-4 pl-2 mt-2">
+                    <div>
+                        <select value={pdfOptions.footerContent} onChange={e => set('footerContent', e.target.value)} className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800">
+                            <option value="none">{t('None')}</option>
+                            <option value="pageNumber">{t('Page Number')}</option>
+                            <option value="custom">{t('Custom')}</option>
+                        </select>
+                        {pdfOptions.footerContent === 'custom' && (
+                            <input type="text" value={pdfOptions.customFooterText || ''} onChange={e => set('customFooterText', e.target.value)} placeholder={t('Custom Footer Text')} className="mt-2 w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"/>
+                        )}
+                    </div>
+                </div>
+           </fieldset>
+           
+           <fieldset>
+               <legend className="text-md font-semibold text-gray-800 dark:text-gray-200">{t('Typography')}</legend>
+               <div className="space-y-4 pl-2 mt-2">
+                    <div>
+                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('Font Pairing')}</label>
+                       <select value={pdfOptions.typography.fontPair} onChange={e => set('typography.fontPair', e.target.value)} className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800">
+                            <option value="modern">{t('Modern (Inter)')}</option>
+                            <option value="classic">{t('Classic (Lora)')}</option>
+                        </select>
+                   </div>
+                   <div>
+                        <label htmlFor="fontSize" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            {t('Base Font Size')}: <span className="font-bold">{pdfOptions.typography.fontSize}px</span>
+                        </label>
+                        <input type="range" id="fontSize" min="10" max="24" step="1" value={pdfOptions.typography.fontSize} onChange={e => set('typography.fontSize', parseInt(e.target.value, 10))} className="w-full max-w-xs h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700" />
+                   </div>
+               </div>
+           </fieldset>
+           
+            <fieldset>
+               <legend className="text-md font-semibold text-gray-800 dark:text-gray-200">{t('Content')}</legend>
+              <div className="space-y-4 pl-2 mt-2">
+                    <div className="flex items-center">
+                        <input id="includeTOC" type="checkbox" checked={pdfOptions.includeTOC} onChange={e => set('includeTOC', e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-accent-600 focus:ring-accent-500"/>
+                        <label htmlFor="includeTOC" className="ml-2 block text-sm text-gray-900 dark:text-gray-200">{t('Include Table of Contents')}</label>
+                    </div>
+                  <div>
+                      <div className="flex items-center">
+                          <input id="includeBibliography" type="checkbox" checked={pdfOptions.includeBibliography} onChange={e => set('includeBibliography', e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-accent-600 focus:ring-accent-500"/>
+                          <label htmlFor="includeBibliography" className="ml-2 block text-sm text-gray-900 dark:text-gray-200">{t('Include Bibliography')}</label>
+                      </div>
+                      {pdfOptions.includeBibliography && (
+                          <div className="pl-6 mt-2">
+                               <select value={pdfOptions.citationStyle} onChange={e => set('citationStyle', e.target.value)} className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800">
+                                   <option value="apa">{t('APA')}</option>
+                                   <option value="mla">{t('MLA')}</option>
+                               </select>
+                          </div>
+                      )}
+                  </div>
+               </div>
+            </fieldset>
+
+            <div className="border-t dark:border-gray-700 pt-6 space-y-4">
+                <div>
+                     <button onClick={onSaveDefaults} className="w-full text-left text-sm text-accent-600 dark:text-accent-400 hover:underline">{t('Save as Default Settings')}</button>
+                     <p className="text-xs text-gray-500 dark:text-gray-400">{t('Save the current export options as the new default for all future projects.')}</p>
+                </div>
+                <div className="flex gap-4">
+                    <button onClick={onGeneratePdf} disabled={isGeneratingPdf} className="flex-1 flex items-center justify-center gap-2 bg-accent-600 text-white px-4 py-2 rounded-lg hover:bg-accent-700 transition-colors font-semibold disabled:bg-gray-400">
+                        {isGeneratingPdf ? <Spinner light /> : <Icon name="download" className="w-5 h-5" />}
+                        {isGeneratingPdf ? t('Generating PDF...') : t('Generate PDF')}
+                    </button>
+                    <button onClick={onGenerateMarkdown} disabled={isGeneratingPdf} className="flex-1 flex items-center justify-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors font-semibold disabled:bg-gray-400">
+                        <Icon name="document" className="w-5 h-5" />
+                        {t('Export Markdown')}
+                    </button>
+                </div>
+            </div>
+          </div>
+      </div>
+    );
+};
 
 const CompilerRightPanel: React.FC<CompilerRightPanelProps> = ({
   project,
@@ -44,6 +215,7 @@ const CompilerRightPanel: React.FC<CompilerRightPanelProps> = ({
   setView,
   onGeneratePdf,
   onGenerateMarkdown,
+  isGeneratingPdf,
 }) => {
   const { t } = useTranslation();
   const { addToast } = useToasts();
@@ -60,15 +232,19 @@ const CompilerRightPanel: React.FC<CompilerRightPanelProps> = ({
   const [isAiEditorOpen, setIsAiEditorOpen] = useState(false);
   const [isEditingWithAi, setIsEditingWithAi] = useState(false);
   const [aiEditError, setAiEditError] = useState<string | null>(null);
-  const [editorInstance, setEditorInstance] = useState<Editor | null>(null); // To control the editor from modals
+  const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
 
   const { insights, isAnalyzing, analysisError, analyze, clearAnalysis } = useArticleAnalysis(
     activeArticleTitle && activeArticleContent ? { title: activeArticleTitle, html: activeArticleContent } : null
   );
   
   const [pdfOptions, setPdfOptions] = useState<PdfOptions>(settings.compiler.defaultPdfOptions);
+
+  // Fix: This callback receives the editor instance from the child component.
+  const handleEditorCreated = useCallback((editor: Editor) => {
+    setEditorInstance(editor);
+  }, []);
   
-  // Load article content when title changes
   useEffect(() => {
     const loadContent = async () => {
       if (activeArticleTitle) {
@@ -93,7 +269,6 @@ const CompilerRightPanel: React.FC<CompilerRightPanelProps> = ({
     loadContent();
   }, [activeArticleTitle, project.id, getArticleContent, clearAnalysis, setView, addToast]);
 
-  // Autosave debounced content
   useEffect(() => {
     const saveContent = async () => {
       if (isDirty && debouncedArticleContent && activeArticleTitle) {
@@ -111,7 +286,6 @@ const CompilerRightPanel: React.FC<CompilerRightPanelProps> = ({
     saveContent();
   }, [debouncedArticleContent, activeArticleTitle, isDirty, project.id, addToast, t]);
   
-  // Generate markdown preview
   useEffect(() => {
     const generatePreview = async () => {
       if (view === 'markdown' && project.articles.length > 0) {
@@ -185,7 +359,7 @@ const CompilerRightPanel: React.FC<CompilerRightPanelProps> = ({
     
     switch (view) {
         case 'article':
-            return activeArticleTitle && activeArticleContent !== null && (
+            return activeArticleTitle && activeArticleContent !== null ? (
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border dark:border-gray-700 relative">
                     <div className="flex justify-between items-start gap-4 mb-4 border-b pb-2 dark:border-gray-600">
                         <h2 className="text-3xl font-bold flex-grow">{activeArticleTitle}</h2>
@@ -206,6 +380,7 @@ const CompilerRightPanel: React.FC<CompilerRightPanelProps> = ({
                         content={activeArticleContent}
                         onUpdate={handleContentUpdate}
                         editable={true}
+                        onEditorCreated={handleEditorCreated}
                     />
                      <button 
                         onClick={() => setIsAiEditorOpen(true)}
@@ -216,7 +391,7 @@ const CompilerRightPanel: React.FC<CompilerRightPanelProps> = ({
                         <Icon name="sparkles" className="w-6 h-6"/>
                     </button>
                 </div>
-            );
+            ) : null;
         case 'markdown':
             return (
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border dark:border-gray-700">
@@ -229,7 +404,16 @@ const CompilerRightPanel: React.FC<CompilerRightPanelProps> = ({
             )
         case 'settings':
         default:
-             return <p>Settings moved</p>
+             return <ExportSettingsPanel 
+                project={project}
+                updateProject={updateProject}
+                pdfOptions={pdfOptions}
+                setPdfOptions={setPdfOptions}
+                onGeneratePdf={() => onGeneratePdf(pdfOptions)}
+                onGenerateMarkdown={onGenerateMarkdown}
+                onSaveDefaults={handleSaveDefaults}
+                isGeneratingPdf={isGeneratingPdf}
+             />
     }
   }
 

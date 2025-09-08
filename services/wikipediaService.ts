@@ -1,7 +1,15 @@
+import i18n from '../i18n';
 import { SearchResult, ArticleMetadata } from '../types';
 
-const WIKI_API_BASE = 'https://en.wikipedia.org/w/api.php';
-const WIKI_REST_BASE = 'https://en.wikipedia.org/api/rest_v1/page/html/';
+const getWikiBase = (): string => {
+    const lang = i18n.resolvedLanguage || 'en';
+    const supportedLangs = ['en', 'de'];
+    const finalLang = supportedLangs.includes(lang) ? lang : 'en';
+    return `https://${finalLang}.wikipedia.org`;
+}
+
+const getWikiApiBase = () => `${getWikiBase()}/w/api.php`;
+const getWikiRestBase = () => `${getWikiBase()}/api/rest_v1/page/html/`;
 
 export const searchArticles = async (query: string, limit: number = 10, sort: string = 'relevance'): Promise<SearchResult[]> => {
   if (!query) return [];
@@ -16,7 +24,7 @@ export const searchArticles = async (query: string, limit: number = 10, sort: st
     origin: '*',
   });
 
-  const response = await fetch(`${WIKI_API_BASE}?${params}`);
+  const response = await fetch(`${getWikiApiBase()}?${params}`);
   if (!response.ok) {
     throw new Error('Failed to fetch search results from Wikipedia');
   }
@@ -28,7 +36,7 @@ export const searchArticles = async (query: string, limit: number = 10, sort: st
 };
 
 export const getArticleHtml = async (title: string): Promise<string> => {
-  const response = await fetch(`${WIKI_REST_BASE}${encodeURIComponent(title)}`);
+  const response = await fetch(`${getWikiRestBase()}${encodeURIComponent(title)}`);
   if (!response.ok) {
     throw new Error(`Failed to fetch article: ${title}`);
   }
@@ -48,7 +56,7 @@ export const getArticleMetadata = async (titles: string[]): Promise<ArticleMetad
       origin: '*',
     });
   
-    const response = await fetch(`${WIKI_API_BASE}?${params}`);
+    const response = await fetch(`${getWikiApiBase()}?${params}`);
     if (!response.ok) {
       throw new Error('Failed to fetch article metadata from Wikipedia');
     }
