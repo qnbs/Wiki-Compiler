@@ -69,8 +69,6 @@ export interface ArticleInsights {
     readingTimeMinutes: number;
 }
 
-export type Theme = 'dark';
-
 export type AccentColor = 'blue' | 'purple' | 'green' | 'orange';
 
 export interface CustomCitation {
@@ -90,7 +88,6 @@ export interface ProjectArticleContent {
 }
 
 export interface AppSettings {
-  theme: Theme;
   language: string;
   accentColor: AccentColor;
   defaultView: View;
@@ -120,4 +117,22 @@ export interface ToastMessage {
   id: number;
   message: string;
   type: ToastType;
+}
+
+// Types for Wikipedia API responses for better type safety
+export interface WikipediaSearchItem {
+    ns: number;
+    title: string;
+    pageid: number;
+    size: number;
+    wordcount: number;
+    snippet: string;
+    timestamp: string;
+}
+
+export interface WikipediaQueryResponse {
+    batchcomplete: string;
+    query: {
+        search: WikipediaSearchItem[];
+    };
 }

@@ -10,6 +10,44 @@ import ArticleInsightsView from './ArticleInsightsView';
 import { useSettings } from '../hooks/useSettingsContext';
 import { useProjects } from '../hooks/useProjectsContext';
 
+interface SearchResultItemProps {
+  result: SearchResult;
+  isSelected: boolean;
+  isAdded: boolean;
+  wasJustAdded: boolean;
+  onSelect: (title: string) => void;
+  onQuickAdd: (title: string) => void;
+}
+
+const SearchResultItem: React.FC<SearchResultItemProps> = memo(({ result, isSelected, isAdded, wasJustAdded, onSelect, onQuickAdd }) => {
+  const { t } = useTranslation();
+  return (
+    <li
+      className={`group p-3 rounded-lg transition-colors flex justify-between items-center ${isSelected ? 'bg-accent-100 dark:bg-accent-900/50' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+    >
+      <div onClick={() => onSelect(result.title)} className="cursor-pointer flex-grow truncate pr-2">
+        <h3 className="font-semibold text-gray-800 dark:text-gray-200 truncate">{result.title}</h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{result.snippet}</p>
+        {result.timestamp && (
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+            {new Date(result.timestamp).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+        )}
+      </div>
+      <button
+        onClick={() => onQuickAdd(result.title)}
+        disabled={isAdded}
+        aria-label={t('Quick Add to Compilation')}
+        className={`flex-shrink-0 p-2 rounded-full transition-colors ${
+          isAdded ? 'text-green-500' : 'text-gray-400 hover:bg-accent-100 dark:hover:bg-accent-900/50 hover:text-accent-600'
+        } disabled:text-green-500 disabled:cursor-default disabled:hover:bg-transparent dark:disabled:hover:bg-transparent`}
+      >
+        <Icon name={isAdded || wasJustAdded ? 'check' : 'plus'} className="w-5 h-5" />
+      </button>
+    </li>
+  );
+});
+
 interface LibraryViewProps {
   getArticleContent: (title: string) => Promise<string>;
 }
@@ -139,36 +177,18 @@ const LibraryView: React.FC<LibraryViewProps> = ({ getArticleContent }) => {
           </div>
         )}
         <ul className="space-y-2">
-          {results.map((result) => {
-            const isAdded = articlesInProject.has(result.title);
-            const wasJustAdded = justAdded.has(result.title);
-            
-            return (
-              <li key={result.pageid}
-                className={`group p-3 rounded-lg transition-colors flex justify-between items-center ${selectedArticle?.title === result.title ? 'bg-accent-100 dark:bg-accent-900/50' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
-              >
-                <div onClick={() => handleSelectArticle(result.title)} className="cursor-pointer flex-grow truncate pr-2">
-                  <h3 className="font-semibold text-gray-800 dark:text-gray-200 truncate">{result.title}</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{result.snippet}</p>
-                   {result.timestamp && (
-                     <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                        {new Date(result.timestamp).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
-                     </p>
-                   )}
-                </div>
-                <button
-                  onClick={() => handleQuickAdd(result.title)}
-                  disabled={isAdded}
-                  aria-label={t('Quick Add to Compilation')}
-                  className={`flex-shrink-0 p-2 rounded-full transition-colors ${
-                    isAdded ? 'text-green-500' : 'text-gray-400 hover:bg-accent-100 dark:hover:bg-accent-900/50 hover:text-accent-600'
-                  } disabled:text-green-500 disabled:cursor-default disabled:hover:bg-transparent dark:disabled:hover:bg-transparent`}
-                >
-                  <Icon name={isAdded || wasJustAdded ? 'check' : 'plus'} className="w-5 h-5" />
-                </button>
-              </li>
-            );
-          })}
+          {results.map((result) => (
+              <SearchResultItem
+                key={result.pageid}
+                result={result}
+                isSelected={selectedArticle?.title === result.title}
+                isAdded={articlesInProject.has(result.title)}
+                wasJustAdded={justAdded.has(result.title)}
+                onSelect={handleSelectArticle}
+                onQuickAdd={handleQuickAdd}
+              />
+            )
+          )}
         </ul>
       </div>
 

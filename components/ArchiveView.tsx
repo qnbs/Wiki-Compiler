@@ -11,6 +11,53 @@ import ArticleInsightsView from './ArticleInsightsView';
 import { useSettings } from '../hooks/useSettingsContext';
 import { useProjects } from '../hooks/useProjectsContext';
 
+interface ArchiveItemProps {
+  article: ArticleContent;
+  isSelected: boolean;
+  isAdded: boolean;
+  wasJustAdded: boolean;
+  onSelect: (title: string) => void;
+  onQuickAdd: (title: string) => void;
+  onDelete: (title: string) => void;
+}
+
+const ArchiveItem: React.FC<ArchiveItemProps> = memo(({ article, isSelected, isAdded, wasJustAdded, onSelect, onQuickAdd, onDelete }) => {
+  const { t } = useTranslation();
+  return (
+    <li
+      className={`group p-3 rounded-lg transition-colors flex justify-between items-center ${isSelected ? 'bg-accent-100 dark:bg-accent-900/50' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+    >
+      <div onClick={() => onSelect(article.title)} className="cursor-pointer flex-grow truncate pr-2">
+        <h3 className="font-semibold text-gray-800 dark:text-gray-200 truncate">{article.title}</h3>
+        {article.metadata?.touched && (
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+            {new Date(article.metadata.touched).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+        )}
+      </div>
+      <div className="flex-shrink-0 flex items-center">
+        <button
+          onClick={() => onQuickAdd(article.title)}
+          disabled={isAdded}
+          aria-label={t('Quick Add to Compilation')}
+          className={`p-2 rounded-full transition-colors ${
+            isAdded ? 'text-green-500' : 'text-gray-400 hover:bg-accent-100 dark:hover:bg-accent-900/50 hover:text-accent-600'
+          } disabled:text-green-500 disabled:cursor-default disabled:hover:bg-transparent dark:disabled:hover:bg-transparent`}
+        >
+          <Icon name={isAdded || wasJustAdded ? 'check' : 'plus'} className="w-5 h-5" />
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete(article.title); }}
+          className="p-2 rounded-full text-gray-400 hover:bg-red-100 dark:hover:bg-red-900/50 hover:text-red-600 dark:hover:text-red-500 transition-opacity"
+          aria-label={t('Delete from Archive')}
+        >
+          <Icon name="trash" className="w-5 h-5" />
+        </button>
+      </div>
+    </li>
+  );
+});
+
 interface ArchiveViewProps {
   getArticleContent: (title: string) => Promise<string>;
 }
@@ -165,43 +212,18 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ getArticleContent }) => {
           {isLoading && <Spinner />}
           {!isLoading && filteredArticles.length > 0 && (
               <ul className="space-y-2">
-              {filteredArticles.map((article) => {
-                  const isAdded = articlesInProject.has(article.title);
-                  const wasJustAdded = justAdded.has(article.title);
-                  return (
-                      <li key={article.title}
-                          className={`group p-3 rounded-lg transition-colors flex justify-between items-center ${selectedArticle?.title === article.title ? 'bg-accent-100 dark:bg-accent-900/50' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
-                      >
-                          <div onClick={() => handleSelectArticle(article.title)} className="cursor-pointer flex-grow truncate pr-2">
-                             <h3 className="font-semibold text-gray-800 dark:text-gray-200 truncate">{article.title}</h3>
-                             {article.metadata?.touched && (
-                               <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                                  {new Date(article.metadata.touched).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
-                               </p>
-                             )}
-                          </div>
-                          <div className="flex-shrink-0 flex items-center">
-                              <button
-                                onClick={() => handleQuickAdd(article.title)}
-                                disabled={isAdded}
-                                aria-label={t('Quick Add to Compilation')}
-                                className={`p-2 rounded-full transition-colors ${
-                                  isAdded ? 'text-green-500' : 'text-gray-400 hover:bg-accent-100 dark:hover:bg-accent-900/50 hover:text-accent-600'
-                                } disabled:text-green-500 disabled:cursor-default disabled:hover:bg-transparent dark:disabled:hover:bg-transparent`}
-                              >
-                                <Icon name={isAdded || wasJustAdded ? 'check' : 'plus'} className="w-5 h-5" />
-                              </button>
-                              <button 
-                                  onClick={(e) => { e.stopPropagation(); handleDeleteArticle(article.title); }}
-                                  className="p-2 rounded-full text-gray-400 hover:bg-red-100 dark:hover:bg-red-900/50 hover:text-red-600 dark:hover:text-red-500 transition-opacity"
-                                  aria-label={t('Delete from Archive')}
-                              >
-                                  <Icon name="trash" className="w-5 h-5" />
-                              </button>
-                          </div>
-                      </li>
-                  )
-                })}
+              {filteredArticles.map((article) => (
+                    <ArchiveItem
+                        key={article.title}
+                        article={article}
+                        isSelected={selectedArticle?.title === article.title}
+                        isAdded={articlesInProject.has(article.title)}
+                        wasJustAdded={justAdded.has(article.title)}
+                        onSelect={handleSelectArticle}
+                        onQuickAdd={handleQuickAdd}
+                        onDelete={handleDeleteArticle}
+                    />
+                ))}
               </ul>
           )}
           {!isLoading && filteredArticles.length === 0 && (

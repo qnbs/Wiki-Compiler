@@ -205,6 +205,7 @@ const CompilerRightPanel: React.FC<CompilerRightPanelProps> = ({
                         onUpdate={handleContentUpdate}
                         editable={true}
                         onEditorCreated={handleEditorCreated}
+                        placeholder={t('Editable article content for {{title}}', { title: activeArticleTitle })}
                     />
                      <button 
                         onClick={() => setIsAiEditorOpen(true)}

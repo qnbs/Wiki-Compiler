@@ -3,8 +3,7 @@ import i18next from '../i18n';
 import { View, AppSettings, AccentColor } from '../types';
 import { getSettings, saveSettings } from '../services/dbService';
 
-const DEFAULT_SETTINGS: AppSettings = {
-  theme: 'dark',
+const DEFAULT_SETTINGS: Omit<AppSettings, 'theme'> = {
   language: 'en',
   accentColor: 'blue',
   defaultView: View.Library,
@@ -61,24 +60,57 @@ interface SettingsContextType {
 
 export const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
+/**
+ * Helper function to check if an item is a non-array object.
+ */
+const isObject = (item: any): item is Record<string, any> => {
+  return item && typeof item === 'object' && !Array.isArray(item);
+};
+
+/**
+ * Deeply merges a source object into a target object.
+ * This ensures that default settings are always present.
+ */
+const deepMerge = (target: any, source: any): any => {
+  if (!isObject(target) || !isObject(source)) {
+    return source !== undefined ? source : target;
+  }
+
+  const output = { ...target };
+
+  for (const key in source) {
+    if (isObject(source[key])) {
+      if (!(key in target) || !isObject(target[key])) {
+        Object.assign(output, { [key]: source[key] });
+      } else {
+        output[key] = deepMerge(target[key], source[key]);
+      }
+    } else if (source[key] !== undefined) {
+      Object.assign(output, { [key]: source[key] });
+    }
+  }
+
+  return output;
+};
+
+
 export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<AppSettings | null>(null);
 
   const loadInitialSettings = useCallback(async () => {
-    let dbSettings = await getSettings();
-    if (!dbSettings) {
-      dbSettings = DEFAULT_SETTINGS;
-    } else {
-      dbSettings.theme = 'dark';
-      if (!dbSettings.citations) dbSettings.citations = { customCitations: [] };
-      if (!dbSettings.library?.aiAssistant?.focus) {
-        dbSettings.library = { ...dbSettings.library, aiAssistant: { ...dbSettings.library.aiAssistant, focus: { summary: true, keyConcepts: true, researchQuestions: true }}};
-      }
-    }
-    await saveSettings(dbSettings);
-    setSettings(dbSettings);
-    if (i18next.language !== dbSettings.language) {
-      i18next.changeLanguage(dbSettings.language);
+    const dbSettings = await getSettings();
+
+    // Start with a fresh, deep copy of the defaults.
+    const defaults = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
+    
+    // Robustly merge the saved settings (if any) over the defaults.
+    const mergedSettings: AppSettings = deepMerge(defaults, dbSettings || {});
+
+    setSettings(mergedSettings);
+    await saveSettings(mergedSettings);
+
+    if (i18next.language !== mergedSettings.language) {
+        i18next.changeLanguage(mergedSettings.language);
     }
   }, []);
 

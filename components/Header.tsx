@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from '../types';
 import Icon from './Icon';
@@ -20,22 +20,49 @@ const Header: React.FC<HeaderProps> = ({ view, setView, openCommandPalette }) =>
     setActiveProjectId,
     createNewProject,
     deleteProject,
+    renameProject,
   } = useProjects();
   
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [projectSearch, setProjectSearch] = useState('');
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+  const [editingProjectName, setEditingProjectName] = useState('');
   
   const projectDropdownRef = useRef<HTMLDivElement>(null);
   const moreMenuRef = useRef<HTMLDivElement>(null);
+  const editInputRef = useRef<HTMLInputElement>(null);
 
-  useClickOutside(projectDropdownRef, () => setIsProjectDropdownOpen(false));
+  useClickOutside(projectDropdownRef, () => {
+    if (editingProjectId) handleRenameSubmit();
+    setIsProjectDropdownOpen(false)
+  });
   useClickOutside(moreMenuRef, () => setIsMoreMenuOpen(false));
 
+  useEffect(() => {
+    if (editingProjectId && editInputRef.current) {
+      editInputRef.current.focus();
+    }
+  }, [editingProjectId]);
+
   const closeAllMenus = () => {
+    if (editingProjectId) handleRenameSubmit();
     setIsProjectDropdownOpen(false);
     setIsMoreMenuOpen(false);
     setProjectSearch('');
+  };
+
+  const handleRenameClick = (project: (typeof projects)[0]) => {
+    setEditingProjectId(project.id);
+    setEditingProjectName(project.name);
+  };
+
+  const handleRenameSubmit = () => {
+    if (editingProjectId && editingProjectName.trim()) {
+      renameProject(editingProjectId, editingProjectName.trim());
+    }
+    setEditingProjectId(null);
+    setEditingProjectName('');
   };
 
   const filteredProjects = projects.filter(p => 
@@ -61,20 +88,46 @@ const Header: React.FC<HeaderProps> = ({ view, setView, openCommandPalette }) =>
       <ul className="py-1 max-h-60 overflow-y-auto">
         {filteredProjects.map(project => (
           <li key={project.id}>
-            <a href="#" onClick={(e) => { e.preventDefault(); setActiveProjectId(project.id); closeAllMenus(); }}
-               className={`flex justify-between items-center px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700/60 ${project.id === activeProjectId ? 'text-accent-600 dark:text-accent-400 font-semibold' : 'text-gray-700 dark:text-gray-300'}`}
+            <div
+               className={`flex justify-between items-center px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700/60 ${project.id === activeProjectId ? 'text-accent-600 dark:text-accent-400' : 'text-gray-700 dark:text-gray-300'}`}
             >
-              <span className="truncate pr-2">{project.name}</span>
-              {projects.length > 1 && (
-                <button 
-                  onClick={(e) => { e.stopPropagation(); deleteProject(project.id); }} 
-                  className="flex-shrink-0 p-1 rounded-full text-gray-400 hover:bg-red-100 dark:hover:bg-red-900/50 hover:text-red-600 dark:hover:text-red-500"
-                  aria-label={`Delete ${project.name}`}
-                 >
-                  <Icon name="trash" className="w-4 h-4" />
-                </button>
+              {editingProjectId === project.id ? (
+                <input
+                  ref={editInputRef}
+                  type="text"
+                  value={editingProjectName}
+                  onChange={(e) => setEditingProjectName(e.target.value)}
+                  onBlur={handleRenameSubmit}
+                  onKeyDown={(e) => e.key === 'Enter' && handleRenameSubmit()}
+                  className="w-full bg-transparent outline-none ring-1 ring-accent-500 rounded px-1 -ml-1"
+                />
+              ) : (
+                <>
+                  <a href="#" onClick={(e) => { e.preventDefault(); setActiveProjectId(project.id); }} className="flex-grow flex items-center gap-2 truncate">
+                    {project.id === activeProjectId && <Icon name="check" className="w-4 h-4 text-accent-500" />}
+                    <span className="truncate pr-2">{project.name}</span>
+                  </a>
+                  <div className="flex items-center">
+                    <button 
+                      onClick={() => handleRenameClick(project)} 
+                      className="flex-shrink-0 p-1 rounded-full text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-600 dark:hover:text-gray-200"
+                      aria-label={`Rename ${project.name}`}
+                    >
+                      <Icon name="pencil" className="w-4 h-4" />
+                    </button>
+                    {projects.length > 1 && (
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); deleteProject(project.id); }} 
+                        className="flex-shrink-0 p-1 rounded-full text-gray-400 hover:bg-red-100 dark:hover:bg-red-900/50 hover:text-red-600 dark:hover:text-red-500"
+                        aria-label={`Delete ${project.name}`}
+                      >
+                        <Icon name="trash" className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </>
               )}
-            </a>
+            </div>
           </li>
         ))}
       </ul>

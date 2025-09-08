@@ -10,14 +10,15 @@ interface ArticleEditorProps {
   onUpdate: (html: string) => void;
   editable: boolean;
   onEditorCreated: (editor: Editor) => void;
+  placeholder?: string;
 }
 
-const ArticleEditor: React.FC<ArticleEditorProps> = ({ content, onUpdate, editable, onEditorCreated }) => {
+const ArticleEditor: React.FC<ArticleEditorProps> = ({ content, onUpdate, editable, onEditorCreated, placeholder }) => {
   const editor = useEditor({
     extensions: [
       StarterKit,
       Placeholder.configure({
-        placeholder: 'Article content appears here...',
+        placeholder: placeholder || 'Article content appears here...',
       }),
       Focus.configure({
         className: 'has-focus',
@@ -29,7 +30,7 @@ const ArticleEditor: React.FC<ArticleEditorProps> = ({ content, onUpdate, editab
     onUpdate: ({ editor }) => {
       onUpdate(editor.getHTML());
     },
-  }, [content, editable]); // Re-initialize editor if content or editable prop changes
+  }, [content, editable, placeholder]); // Re-initialize editor if content or editable prop changes
 
   // Fix: Pass the editor instance to the parent component once it's created.
   useEffect(() => {

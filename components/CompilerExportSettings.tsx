@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Project, PdfOptions, AppSettings } from '../types';
-import { useToasts } from '../hooks/useToasts';
+import { useToasts } from '../../hooks/useToasts';
+import { useDebounce } from '../../hooks/useDebounce';
 import Icon from './Icon';
 import Spinner from './Spinner';
 import PdfOptionsForm from './settings/PdfOptionsForm';
@@ -28,6 +29,18 @@ const CompilerExportSettings: React.FC<CompilerExportSettingsProps> = ({
     const { t } = useTranslation();
     const { addToast } = useToasts();
     const [pdfOptions, setPdfOptions] = useState<PdfOptions>(settings.compiler.defaultPdfOptions);
+    const [projectName, setProjectName] = useState(project.name);
+    const debouncedProjectName = useDebounce(projectName, 500);
+
+    useEffect(() => {
+        setProjectName(project.name);
+    }, [project.name]);
+
+    useEffect(() => {
+        if (debouncedProjectName && debouncedProjectName !== project.name) {
+            updateProject({ ...project, name: debouncedProjectName });
+        }
+    }, [debouncedProjectName, project, updateProject]);
 
     const handleOptionChange = (path: string, value: any) => {
         setPdfOptions(prev => {
@@ -54,7 +67,12 @@ const CompilerExportSettings: React.FC<CompilerExportSettingsProps> = ({
       <div className="bg-white dark:bg-gray-800/50 p-6 rounded-lg shadow-sm space-y-8">
         <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('Document Title')}</label>
-            <input type="text" value={project.name} onChange={e => updateProject({ ...project, name: e.target.value })} className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800" />
+            <input 
+              type="text" 
+              value={projectName} 
+              onChange={e => setProjectName(e.target.value)} 
+              className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800" 
+            />
         </div>
         
         <PdfOptionsForm options={pdfOptions} onOptionChange={handleOptionChange} />

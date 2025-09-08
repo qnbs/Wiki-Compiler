@@ -15,10 +15,11 @@ const GeneralSettings: React.FC = () => {
       { name: 'green', className: 'bg-green-500', label: 'Green' },
       { name: 'orange', className: 'bg-orange-500', label: 'Orange' },
     ];
-
+    
     return (
         <div className="space-y-8">
             <h2 className="text-xl font-semibold mb-6 pb-2 border-b dark:border-gray-600 text-gray-800 dark:text-gray-200">{t('General')}</h2>
+
             <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('Accent Color')}</label>
                 <p className="text-xs text-gray-500 dark:text-gray-400">{t('Customize the UI highlights, buttons, and active states throughout the application.')}</p>

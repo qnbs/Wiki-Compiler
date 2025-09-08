@@ -10,6 +10,7 @@ interface ProjectsContextType {
   activeProject: Project | undefined;
   setActiveProjectId: (id: string) => void;
   updateProject: (updatedProject: Project) => Promise<void>;
+  renameProject: (projectId: string, newName: string) => Promise<void>;
   addArticleToProject: (title: string) => void;
   createNewProject: (callback?: () => void) => Promise<void>;
   deleteProject: (projectId: string) => Promise<void>;
@@ -57,6 +58,14 @@ export const ProjectsProvider: React.FC<{ children: ReactNode }> = ({ children }
     );
     await saveProject(updatedProject);
   }, []);
+  
+  const renameProject = useCallback(async (projectId: string, newName: string) => {
+    const projectToUpdate = projects.find(p => p.id === projectId);
+    if (projectToUpdate) {
+        const updatedProject = { ...projectToUpdate, name: newName };
+        await updateProject(updatedProject);
+    }
+  }, [projects, updateProject]);
 
   const addArticleToProject = useCallback((title: string) => {
     if (activeProject) {
@@ -96,9 +105,14 @@ export const ProjectsProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
     if (window.confirm(t('Delete Project Confirmation'))) {
         await dbDeleteProject(projectId);
-        setProjects(prevProjects => prevProjects.filter(p => p.id !== projectId));
+        const remainingProjects = projects.filter(p => p.id !== projectId);
+        setProjects(remainingProjects);
+
+        if (activeProjectId === projectId) {
+            setActiveProjectId(remainingProjects.length > 0 ? remainingProjects[0].id : null);
+        }
     }
-  }, [projects, t, addToast]);
+  }, [projects, activeProjectId, t, addToast]);
 
   const value = {
     projects,
@@ -106,6 +120,7 @@ export const ProjectsProvider: React.FC<{ children: ReactNode }> = ({ children }
     activeProject,
     setActiveProjectId,
     updateProject,
+    renameProject,
     addArticleToProject,
     createNewProject,
     deleteProject,

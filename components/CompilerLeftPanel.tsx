@@ -88,6 +88,7 @@ const CompilerLeftPanel: React.FC<CompilerLeftPanelProps> = ({
       </div>
       <h2 className="text-2xl font-bold mb-4">{t('Compilation Articles')}</h2>
       {articles.length > 0 ? (
+        <>
         <ul ref={listRef} className="space-y-2">
           {articles.map((article, index) => (
             <li
@@ -144,6 +145,10 @@ const CompilerLeftPanel: React.FC<CompilerLeftPanelProps> = ({
             </li>
           ))}
         </ul>
+        <p className="text-xs text-center text-gray-500 dark:text-gray-400 mt-4 italic">
+          {t('Press Ctrl + Arrow Up or Down to reorder.')}
+        </p>
+        </>
       ) : (
         <div className="flex flex-col items-center justify-center text-center text-gray-500 dark:text-gray-400 p-8 rounded-lg border-2 border-dashed dark:border-gray-700">
           <Icon name="compiler" className="w-12 h-12 mb-2"/>

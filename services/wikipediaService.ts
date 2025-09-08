@@ -1,5 +1,5 @@
 import i18n from '../i18n';
-import { SearchResult, ArticleMetadata } from '../types';
+import { SearchResult, ArticleMetadata, WikipediaQueryResponse, WikipediaSearchItem } from '../types';
 
 const getWikiBase = (): string => {
     const lang = i18n.resolvedLanguage || 'en';
@@ -28,8 +28,8 @@ export const searchArticles = async (query: string, limit: number = 10, sort: st
   if (!response.ok) {
     throw new Error('Failed to fetch search results from Wikipedia');
   }
-  const data = await response.json();
-  return data.query.search.map((item: any) => ({
+  const data: WikipediaQueryResponse = await response.json();
+  return data.query.search.map((item: WikipediaSearchItem) => ({
       ...item,
       snippet: item.snippet.replace(/<[^>]*>/g, '') // strip html tags
   }));
