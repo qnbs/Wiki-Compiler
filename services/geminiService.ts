@@ -10,6 +10,8 @@ if (API_KEY) {
     console.warn("API_KEY is not set. AI features will be disabled.");
 }
 
+export const isAiConfigured = !!ai;
+
 interface AnalysisFocus {
   summary: boolean;
   keyConcepts: boolean;
@@ -49,7 +51,7 @@ const baseInsightsSchema = {
 
 export const getArticleInsights = async (text: string, systemInstruction: string | undefined, focus: AnalysisFocus): Promise<ArticleInsights> => {
     if (!ai) {
-        throw new Error("AI Service is not configured. Please set your API key.");
+        throw new Error("AI Service is not configured. Please set an API key in your environment.");
     }
 
     // Limit text size to avoid overly large requests
@@ -110,7 +112,7 @@ export const getArticleInsights = async (text: string, systemInstruction: string
         if (error instanceof SyntaxError) {
              throw new Error("Failed to parse AI response. The format might be invalid.");
         }
-        if (error instanceof Error && error.message.toLowerCase().includes('api key')) {
+        if (error instanceof Error && (error.message.toLowerCase().includes('api key') || error.message.toLowerCase().includes('credential'))) {
             throw new Error("Invalid or missing API Key for Gemini. Please check your configuration.");
         }
         throw new Error("Could not generate insights at this time. The service may be unavailable.");
@@ -119,7 +121,7 @@ export const getArticleInsights = async (text: string, systemInstruction: string
 
 export const editTextWithAi = async (instruction: string, textToEdit: string): Promise<string> => {
     if (!ai) {
-        throw new Error("AI Service is not configured. Please set your API key.");
+        throw new Error("AI Service is not configured. Please set an API key in your environment.");
     }
 
     if (!textToEdit.trim()) {
@@ -141,7 +143,7 @@ export const editTextWithAi = async (instruction: string, textToEdit: string): P
 
     } catch (error) {
         console.error("Error editing text with Gemini API:", error);
-        if (error instanceof Error && error.message.toLowerCase().includes('api key')) {
+        if (error instanceof Error && (error.message.toLowerCase().includes('api key') || error.message.toLowerCase().includes('credential'))) {
             throw new Error("Invalid or missing API Key for Gemini. Please check your configuration.");
         }
         throw new Error("Could not perform AI edit at this time. The service may be unavailable.");

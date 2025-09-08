@@ -8,9 +8,17 @@ interface ArticleInsightsViewProps {
   insights: ArticleInsights | null;
   isAnalyzing: boolean;
   analysisError: string | null;
+  onAddToProject?: () => void;
+  isArticleInProject?: boolean;
 }
 
-const ArticleInsightsView: React.FC<ArticleInsightsViewProps> = ({ insights, isAnalyzing, analysisError }) => {
+const ArticleInsightsView: React.FC<ArticleInsightsViewProps> = ({ 
+  insights, 
+  isAnalyzing, 
+  analysisError,
+  onAddToProject,
+  isArticleInProject
+}) => {
   const { t } = useTranslation();
 
   if (!isAnalyzing && !insights && !analysisError) {
@@ -63,6 +71,18 @@ const ArticleInsightsView: React.FC<ArticleInsightsViewProps> = ({ insights, isA
                    <ul className="list-disc pl-5 space-y-1 prose prose-sm max-w-none dark:text-gray-300">
                        {insights.researchQuestions.map(q => <li key={q}>{q}</li>)}
                    </ul>
+                </div>
+              )}
+              {onAddToProject && (
+                <div className="pt-4 border-t border-purple-200 dark:border-purple-800/50">
+                   <button
+                        onClick={onAddToProject}
+                        disabled={isArticleInProject}
+                        className="w-full flex items-center justify-center gap-2 bg-accent-600 text-white px-4 py-2 rounded-lg hover:bg-accent-700 transition-colors text-sm font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    >
+                        <Icon name={isArticleInProject ? 'check' : 'plus'} className="w-4 h-4"/>
+                        {t('Add to Compilation')}
+                    </button>
                 </div>
               )}
           </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArticleContent } from '../types';
 import { getAllArticles, deleteArticleFromCache } from '../services/dbService';
+import { isAiConfigured } from '../services/geminiService';
 import { useArticleAnalysis } from '../hooks/useArticleAnalysis';
 import { useDebounce } from '../hooks/useDebounce';
 import Icon from './Icon';
@@ -158,6 +159,9 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ getArticleContent }) => {
 
   if (!settings) return <Spinner />;
 
+  const aiEnabled = settings.library.aiAssistant.enabled && isAiConfigured;
+  const isSelectedArticleInProject = selectedArticle ? articlesInProject.has(selectedArticle.title) : false;
+
   return (
     <>
       <Modal
@@ -242,21 +246,22 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ getArticleContent }) => {
               <div className="flex justify-between items-start gap-4 mb-4 border-b pb-2 dark:border-gray-600">
                 <h2 className="text-3xl font-bold flex-grow">{selectedArticle.title}</h2>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                    {settings.library.aiAssistant.enabled && (
-                    <button
-                        onClick={analyze}
-                        disabled={isAnalyzing}
-                        className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    >
-                        <Icon name="beaker" className="w-4 h-4"/>
-                        {isAnalyzing ? t('Analyzing...') : t('Analyze with AI')}
-                    </button>
-                    )}
+                    <div className="relative" title={!isAiConfigured ? t('Invalid or missing API Key for Gemini. Please check your configuration.') : undefined}>
+                        <button
+                            onClick={analyze}
+                            disabled={isAnalyzing || !aiEnabled}
+                            className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        >
+                            <Icon name="beaker" className="w-4 h-4"/>
+                            {isAnalyzing ? t('Analyzing...') : t('Analyze with AI')}
+                        </button>
+                    </div>
                     <button
                         onClick={() => addArticleToProject(selectedArticle.title)}
-                        className="flex items-center gap-2 bg-accent-600 text-white px-4 py-2 rounded-lg hover:bg-accent-700 transition-colors text-sm font-semibold"
+                        disabled={isSelectedArticleInProject}
+                        className="flex items-center gap-2 bg-accent-600 text-white px-4 py-2 rounded-lg hover:bg-accent-700 transition-colors text-sm font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
-                        <Icon name="plus" className="w-4 h-4"/>
+                        <Icon name={isSelectedArticleInProject ? 'check' : 'plus'} className="w-4 h-4"/>
                         {t('Add to Compilation')}
                     </button>
                 </div>
@@ -265,6 +270,8 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ getArticleContent }) => {
                 insights={insights}
                 isAnalyzing={isAnalyzing}
                 analysisError={analysisError}
+                onAddToProject={() => addArticleToProject(selectedArticle.title)}
+                isArticleInProject={isSelectedArticleInProject}
               />
               <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: selectedArticle.html }} />
             </div>

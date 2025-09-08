@@ -8,7 +8,7 @@ import { RightPaneView } from './CompilerView';
 import { useArticleAnalysis } from '../hooks/useArticleAnalysis';
 import { useDebounce } from '../hooks/useDebounce';
 import { getProjectArticleContent, saveProjectArticleContent } from '../services/dbService';
-import { editTextWithAi } from '../services/geminiService';
+import { editTextWithAi, isAiConfigured } from '../services/geminiService';
 import { generateMarkdownContent } from '../services/exportService';
 import { useToasts } from '../hooks/useToasts';
 
@@ -60,6 +60,7 @@ const CompilerRightPanel: React.FC<CompilerRightPanelProps> = ({
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
 
   const [isAiEditorOpen, setIsAiEditorOpen] = useState(false);
+  const [aiEditorSelectedText, setAiEditorSelectedText] = useState('');
   const [isEditingWithAi, setIsEditingWithAi] = useState(false);
   const [aiEditError, setAiEditError] = useState<string | null>(null);
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
@@ -144,6 +145,14 @@ const CompilerRightPanel: React.FC<CompilerRightPanelProps> = ({
     setIsCitationModalOpen(false);
   };
 
+  const handleOpenAiEditor = () => {
+    if (!editorInstance) return;
+    const { from, to, empty } = editorInstance.state.selection;
+    const selectedText = empty ? '' : editorInstance.state.doc.textBetween(from, to);
+    setAiEditorSelectedText(selectedText);
+    setIsAiEditorOpen(true);
+  }
+
   const handleRunAiEdit = async (prompt: string) => {
     if (!editorInstance) return;
 
@@ -165,14 +174,17 @@ const CompilerRightPanel: React.FC<CompilerRightPanelProps> = ({
         ? editorInstance.chain().focus().selectAll().insertContent(editedText)
         : editorInstance.chain().focus().insertContentAt({ from, to }, editedText);
       transaction.run();
+      setIsAiEditorOpen(false);
     } catch (error) {
       setAiEditError(error instanceof Error ? error.message : "An unknown error occurred.");
     } finally {
       setIsEditingWithAi(false);
-      setIsAiEditorOpen(false);
     }
   };
   
+  const aiEnabled = settings.library.aiAssistant.enabled && isAiConfigured;
+  const aiDisabledTooltip = !isAiConfigured ? t('Invalid or missing API Key for Gemini. Please check your configuration.') : undefined;
+
   const renderContent = () => {
     if (isLoadingArticle) return <div className="flex justify-center items-center h-full"><Spinner /></div>
     
@@ -183,12 +195,12 @@ const CompilerRightPanel: React.FC<CompilerRightPanelProps> = ({
                     <div className="flex justify-between items-start gap-4 mb-4 border-b pb-2 dark:border-gray-600">
                         <h2 className="text-3xl font-bold flex-grow">{activeArticleTitle}</h2>
                         <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
-                            {settings.library.aiAssistant.enabled && (
-                                <button onClick={analyze} disabled={isAnalyzing} className="bg-purple-600 text-white px-3 py-1.5 rounded-lg hover:bg-purple-700 text-sm font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-1.5">
+                            <div className="relative" title={aiDisabledTooltip}>
+                                <button onClick={analyze} disabled={isAnalyzing || !aiEnabled} className="bg-purple-600 text-white px-3 py-1.5 rounded-lg hover:bg-purple-700 text-sm font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-1.5">
                                     <Icon name="beaker" className="w-4 h-4" />
                                     {isAnalyzing ? t('Analyzing...') : t('Analyze Article')}
                                 </button>
-                            )}
+                            </div>
                             <button onClick={() => setIsCitationModalOpen(true)} className="bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 text-sm font-semibold flex items-center gap-1.5">
                                 <Icon name="plus" className="w-4 h-4"/>
                                 {t('Insert Citation')}
@@ -207,14 +219,16 @@ const CompilerRightPanel: React.FC<CompilerRightPanelProps> = ({
                         onEditorCreated={handleEditorCreated}
                         placeholder={t('Editable article content for {{title}}', { title: activeArticleTitle })}
                     />
-                     <button 
-                        onClick={() => setIsAiEditorOpen(true)}
-                        className="absolute bottom-4 right-4 bg-purple-600 text-white p-3 rounded-full shadow-lg hover:bg-purple-700 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 dark:focus:ring-offset-gray-800"
-                        aria-label={t('Edit with AI')}
-                        title={t('Edit with AI')}
-                    >
-                        <Icon name="sparkles" className="w-6 h-6"/>
-                    </button>
+                    <div className="absolute bottom-4 right-4" title={aiDisabledTooltip}>
+                        <button 
+                            onClick={handleOpenAiEditor}
+                            disabled={!aiEnabled}
+                            className="bg-purple-600 text-white p-3 rounded-full shadow-lg hover:bg-purple-700 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 dark:focus:ring-offset-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none"
+                            aria-label={t('Edit with AI')}
+                        >
+                            <Icon name="sparkles" className="w-6 h-6"/>
+                        </button>
+                    </div>
                 </div>
             ) : null;
         case 'markdown':
@@ -249,6 +263,7 @@ const CompilerRightPanel: React.FC<CompilerRightPanelProps> = ({
             onRunAiEdit={handleRunAiEdit}
             isEditing={isEditingWithAi}
             error={aiEditError}
+            selectedText={aiEditorSelectedText}
         />
         <CitationModal 
             isOpen={isCitationModalOpen}

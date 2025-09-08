@@ -10,9 +10,10 @@ interface AIEditorModalProps {
   onRunAiEdit: (prompt: string) => void;
   isEditing: boolean;
   error: string | null;
+  selectedText?: string;
 }
 
-const AIEditorModal: React.FC<AIEditorModalProps> = ({ isOpen, onClose, onRunAiEdit, isEditing, error }) => {
+const AIEditorModal: React.FC<AIEditorModalProps> = ({ isOpen, onClose, onRunAiEdit, isEditing, error, selectedText }) => {
   const { t } = useTranslation();
   const [prompt, setPrompt] = useState('');
 
@@ -51,6 +52,11 @@ const AIEditorModal: React.FC<AIEditorModalProps> = ({ isOpen, onClose, onRunAiE
       }
     >
       <div className="space-y-4">
+        {selectedText && (
+          <div className="max-h-24 overflow-y-auto p-2 border rounded-md bg-gray-50 dark:bg-gray-700/50 dark:border-gray-600">
+            <p className="text-xs text-gray-500 dark:text-gray-400 italic line-clamp-4">{selectedText}</p>
+          </div>
+        )}
         <div>
           <label htmlFor="ai-prompt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('Your Instruction')}</label>
           <textarea

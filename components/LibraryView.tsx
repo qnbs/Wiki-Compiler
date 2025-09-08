@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useDebounce } from '../hooks/useDebounce';
 import { SearchResult, ArticleContent } from '../types';
 import { searchArticles } from '../services/wikipediaService';
+import { isAiConfigured } from '../services/geminiService';
 import { useArticleAnalysis } from '../hooks/useArticleAnalysis';
 import Icon from './Icon';
 import Spinner from './Spinner';
@@ -138,6 +139,9 @@ const LibraryView: React.FC<LibraryViewProps> = ({ getArticleContent }) => {
   
   if (!settings) return <Spinner />;
 
+  const aiEnabled = settings.library.aiAssistant.enabled && isAiConfigured;
+  const isSelectedArticleInProject = selectedArticle ? articlesInProject.has(selectedArticle.title) : false;
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-[calc(100vh-120px)]">
       {/* Search and Results Column */}
@@ -200,21 +204,22 @@ const LibraryView: React.FC<LibraryViewProps> = ({ getArticleContent }) => {
             <div className="flex justify-between items-start gap-4 mb-4 border-b pb-2 dark:border-gray-600">
                 <h2 className="text-3xl font-bold flex-grow">{selectedArticle.title}</h2>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                    {settings.library.aiAssistant.enabled && (
+                    <div className="relative" title={!isAiConfigured ? t('Invalid or missing API Key for Gemini. Please check your configuration.') : undefined}>
                         <button
                             onClick={analyze}
-                            disabled={isAnalyzing}
+                            disabled={isAnalyzing || !aiEnabled}
                             className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
                         >
                             <Icon name="beaker" className="w-4 h-4"/>
                             {isAnalyzing ? t('Analyzing...') : t('Analyze with AI')}
                         </button>
-                    )}
+                    </div>
                     <button
                         onClick={() => addArticleToProject(selectedArticle.title)}
-                        className="flex items-center gap-2 bg-accent-600 text-white px-4 py-2 rounded-lg hover:bg-accent-700 transition-colors text-sm font-semibold"
+                        disabled={isSelectedArticleInProject}
+                        className="flex items-center gap-2 bg-accent-600 text-white px-4 py-2 rounded-lg hover:bg-accent-700 transition-colors text-sm font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
-                        <Icon name="plus" className="w-4 h-4"/>
+                        <Icon name={isSelectedArticleInProject ? 'check' : 'plus'} className="w-4 h-4"/>
                         {t('Add to Compilation')}
                     </button>
                 </div>
@@ -224,6 +229,8 @@ const LibraryView: React.FC<LibraryViewProps> = ({ getArticleContent }) => {
               insights={insights}
               isAnalyzing={isAnalyzing}
               analysisError={analysisError}
+              onAddToProject={() => addArticleToProject(selectedArticle.title)}
+              isArticleInProject={isSelectedArticleInProject}
             />
 
             <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: selectedArticle.html }} />

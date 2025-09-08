@@ -28,6 +28,7 @@ const Header: React.FC<HeaderProps> = ({ view, setView, openCommandPalette }) =>
   const [projectSearch, setProjectSearch] = useState('');
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [editingProjectName, setEditingProjectName] = useState('');
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
   
   const projectDropdownRef = useRef<HTMLDivElement>(null);
   const moreMenuRef = useRef<HTMLDivElement>(null);
@@ -39,11 +40,22 @@ const Header: React.FC<HeaderProps> = ({ view, setView, openCommandPalette }) =>
   });
   useClickOutside(moreMenuRef, () => setIsMoreMenuOpen(false));
 
+  const filteredProjects = projects.filter(p => 
+    p.name.toLowerCase().includes(projectSearch.toLowerCase())
+  );
+
   useEffect(() => {
     if (editingProjectId && editInputRef.current) {
       editInputRef.current.focus();
     }
   }, [editingProjectId]);
+  
+  useEffect(() => {
+    if (!isProjectDropdownOpen) {
+      setHighlightedIndex(0);
+      setProjectSearch('');
+    }
+  }, [isProjectDropdownOpen]);
 
   const closeAllMenus = () => {
     if (editingProjectId) handleRenameSubmit();
@@ -65,31 +77,54 @@ const Header: React.FC<HeaderProps> = ({ view, setView, openCommandPalette }) =>
     setEditingProjectName('');
   };
 
-  const filteredProjects = projects.filter(p => 
-    p.name.toLowerCase().includes(projectSearch.toLowerCase())
-  );
-
   const handleCreateNewProject = () => {
     createNewProject(() => setView(View.Compiler));
     closeAllMenus();
   }
 
+  const handleDropdownKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setHighlightedIndex(prev => (prev + 1) % filteredProjects.length);
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setHighlightedIndex(prev => (prev - 1 + filteredProjects.length) % filteredProjects.length);
+    } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const selectedProject = filteredProjects[highlightedIndex];
+        if (selectedProject) {
+            setActiveProjectId(selectedProject.id);
+            closeAllMenus();
+        }
+    } else if (e.key === 'Escape') {
+        closeAllMenus();
+    }
+  };
+
   const projectDropdownContent = (
-    <>
+    <div onKeyDown={handleDropdownKeyDown}>
       <div className="p-2 border-b border-gray-200 dark:border-gray-700">
         <input
           type="text"
-          placeholder="Search projects..."
+          placeholder={t('Search projects...')}
           value={projectSearch}
-          onChange={(e) => setProjectSearch(e.target.value)}
+          onChange={(e) => {
+            setProjectSearch(e.target.value);
+            setHighlightedIndex(0);
+          }}
           className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-900/50 focus:ring-1 focus:ring-accent-500 outline-none"
         />
       </div>
       <ul className="py-1 max-h-60 overflow-y-auto">
-        {filteredProjects.map(project => (
-          <li key={project.id}>
+        {filteredProjects.map((project, index) => (
+          <li 
+            key={project.id} 
+            onMouseMove={() => setHighlightedIndex(index)}
+          >
             <div
-               className={`flex justify-between items-center px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700/60 ${project.id === activeProjectId ? 'text-accent-600 dark:text-accent-400' : 'text-gray-700 dark:text-gray-300'}`}
+               className={`flex justify-between items-center px-3 py-2 text-sm ${
+                 index === highlightedIndex ? 'bg-gray-100 dark:bg-gray-700/60' : ''
+               } ${project.id === activeProjectId ? 'text-accent-600 dark:text-accent-400' : 'text-gray-700 dark:text-gray-300'}`}
             >
               {editingProjectId === project.id ? (
                 <input
@@ -98,7 +133,10 @@ const Header: React.FC<HeaderProps> = ({ view, setView, openCommandPalette }) =>
                   value={editingProjectName}
                   onChange={(e) => setEditingProjectName(e.target.value)}
                   onBlur={handleRenameSubmit}
-                  onKeyDown={(e) => e.key === 'Enter' && handleRenameSubmit()}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleRenameSubmit();
+                    if (e.key === 'Escape') setEditingProjectId(null);
+                  }}
                   className="w-full bg-transparent outline-none ring-1 ring-accent-500 rounded px-1 -ml-1"
                 />
               ) : (
@@ -137,7 +175,7 @@ const Header: React.FC<HeaderProps> = ({ view, setView, openCommandPalette }) =>
           {t('Create New Project')}
         </button>
       </div>
-    </>
+    </div>
   );
 
   return (

@@ -3,6 +3,9 @@ import { ArticleContent, ArticleInsights } from '../types';
 import { getArticleInsights } from '../services/geminiService';
 import { useSettings } from './useSettingsContext';
 
+// Memoize the element used for stripping HTML to avoid creating it on every call.
+const textExtractor = document.createElement('div');
+
 export const useArticleAnalysis = (
     article: ArticleContent | null
 ) => {
@@ -18,9 +21,8 @@ export const useArticleAnalysis = (
         setInsights(null);
         setAnalysisError(null);
 
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = article.html;
-        const textContent = tempDiv.textContent || tempDiv.innerText || "";
+        textExtractor.innerHTML = article.html;
+        const textContent = textExtractor.textContent || textExtractor.innerText || "";
 
         try {
             const resultInsights = await getArticleInsights(
