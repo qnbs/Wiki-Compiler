@@ -39,6 +39,12 @@ export interface PdfOptions {
   includeBibliography: boolean;
   citationStyle: 'apa' | 'mla';
   typography: TypographyOptions;
+  margins: 'normal' | 'narrow' | 'wide';
+  lineSpacing: number;
+  headerContent: 'title' | 'custom' | 'none';
+  footerContent: 'pageNumber' | 'custom' | 'none';
+  customHeaderText?: string;
+  customFooterText?: string;
 }
 
 export interface ArticleMetadata {

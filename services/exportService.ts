@@ -36,7 +36,8 @@ export const generatePdf = async (
         if (options.includeTOC) {
             tocHtml = `<div class="p-12" style="page-break-after: always;"><h1 class="text-4xl text-center mb-8">Table of Contents</h1><ul class="list-none space-y-2">`;
             allArticleHtml.forEach((article, index) => {
-                tocHtml += `<li class="text-lg"><a href="#article-toc-${index}">${article.title}</a></li>`;
+                const anchor = article.title.replace(/[^a-zA-Z0-9]/g, '') + index;
+                tocHtml += `<li class="text-lg"><a href="#${anchor}">${article.title}</a></li>`;
             });
             tocHtml += `</ul></div>`;
         }
@@ -50,8 +51,9 @@ export const generatePdf = async (
         }
         
         const articlesHtml = allArticleHtml.map((article, index) => {
+            const anchor = article.title.replace(/[^a-zA-Z0-9]/g, '') + index;
             return `<div class="p-12" style="page-break-after: always;">
-                        <h2 class="text-3xl font-bold mb-6 border-b pb-2" id="article-toc-${index}">${article.title}</h2>
+                        <h2 class="text-3xl font-bold mb-6 border-b pb-2" id="${anchor}">${article.title}</h2>
                         <div class="prose max-w-none">${article.html}</div>
                     </div>`;
         }).join('');
@@ -66,7 +68,7 @@ export const generatePdf = async (
             body, .prose { 
                 font-family: ${fonts[fontPair].body}; 
                 font-size: ${fontSize}px;
-                line-height: 1.6;
+                line-height: ${options.lineSpacing};
             }
             h1, h2, h3, h4, h5, h6 {
                 font-family: ${fonts[fontPair].heading};
@@ -110,14 +112,56 @@ export const generatePdf = async (
         `;
         contentContainer.innerHTML = finalHtml;
     
+        const marginMap = {
+            normal: 0.75,
+            narrow: 0.5,
+            wide: 1.0,
+        };
+        const marginInInches = marginMap[options.margins];
+
         // @ts-ignore
-        await html2pdf().set({
-          margin: 0.5,
+        const worker = html2pdf().set({
+          margin: marginInInches,
           filename: `${project.name.replace(/ /g, '_')}.pdf`,
           image: { type: 'jpeg', quality: 0.98 },
           html2canvas: { scale: 2, useCORS: true, logging: false },
           jsPDF: { unit: 'in', format: options.paperSize, orientation: 'portrait' }
-        }).from(contentContainer).save();
+        }).from(contentContainer).toPdf();
+
+        const pdf = await worker.get('pdf');
+        const totalPages = pdf.internal.getNumberOfPages();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        
+        // Don't add header/footer to Title page, TOC, or Bibliography
+        const firstContentPage = 1 + (options.includeTOC ? 1 : 0) + 1;
+        const lastContentPage = totalPages - (options.includeBibliography ? 1 : 0);
+
+        for (let i = firstContentPage; i <= lastContentPage; i++) {
+            pdf.setPage(i);
+            pdf.setFontSize(10);
+            pdf.setTextColor(100); // gray color
+
+            // Header
+            if (options.headerContent === 'title') {
+                pdf.text(project.name, marginInInches, marginInInches / 1.5);
+            } else if (options.headerContent === 'custom' && options.customHeaderText) {
+                pdf.text(options.customHeaderText, marginInInches, marginInInches / 1.5);
+            }
+
+            // Footer
+            if (options.footerContent === 'pageNumber') {
+                const pageNumText = `${i}`;
+                const textWidth = pdf.getStringUnitWidth(pageNumText) * 10 / pdf.internal.scaleFactor;
+                pdf.text(pageNumText, (pageWidth / 2) - (textWidth / 2), pageHeight - marginInInches / 2);
+            } else if (options.footerContent === 'custom' && options.customFooterText) {
+                const text = options.customFooterText;
+                const textWidth = pdf.getStringUnitWidth(text) * 10 / pdf.internal.scaleFactor;
+                pdf.text(text, (pageWidth / 2) - (textWidth / 2), pageHeight - marginInInches / 2);
+            }
+        }
+
+        await pdf.save();
 
     } finally {
         document.body.removeChild(contentContainer);

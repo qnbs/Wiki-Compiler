@@ -1,19 +1,22 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'https://esm.sh/react-i18next@14.1.2';
-import { Project, PdfOptions, ArticleContent } from '../types';
+import { Project, PdfOptions, ArticleContent, AppSettings, ArticleInsights } from '../types';
+import { getArticleInsights } from '../services/geminiService';
 import Icon from './Icon';
 import Spinner from './Spinner';
 import { generatePdf, generateMarkdown } from '../services/exportService';
 import CompilerSettings from './CompilerSettings';
+import ArticleInsightsView from './ArticleInsightsView';
 
 
 interface CompilerViewProps {
   project: Project;
   updateProject: (project: Project) => void;
   getArticleContent: (title: string) => Promise<string>;
+  settings: AppSettings;
 }
 
-const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, getArticleContent }) => {
+const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, getArticleContent, settings }) => {
   const { t } = useTranslation();
   const [articles, setArticles] = useState(project.articles);
   const [projectName, setProjectName] = useState(project.name);
@@ -21,18 +24,11 @@ const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, get
   const [selectedArticle, setSelectedArticle] = useState<ArticleContent | null>(null);
   const [isLoadingArticle, setIsLoadingArticle] = useState(false);
   const [isSettingsCollapsed, setIsSettingsCollapsed] = useState(true);
+  const [insights, setInsights] = useState<ArticleInsights | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
 
-  const [pdfOptions, setPdfOptions] = useState<PdfOptions>({
-    paperSize: 'letter',
-    layout: 'single',
-    includeTOC: true,
-    includeBibliography: true,
-    citationStyle: 'apa',
-    typography: {
-      fontPair: 'modern',
-      fontSize: 16,
-    }
-  });
+  const [pdfOptions, setPdfOptions] = useState<PdfOptions>(settings.compiler.defaultPdfOptions);
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
 
@@ -74,6 +70,17 @@ const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, get
       }
   };
 
+  const moveArticle = (index: number, direction: 'up' | 'down') => {
+    const newArticles = [...articles];
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= newArticles.length) return;
+    
+    [newArticles[index], newArticles[newIndex]] = [newArticles[newIndex], newArticles[index]];
+    
+    setArticles(newArticles);
+    updateProject({ ...project, articles: newArticles });
+  };
+
   const handleSelectArticle = async (title: string) => {
     if (selectedArticle?.title === title) {
         setSelectedArticle(null);
@@ -81,6 +88,9 @@ const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, get
     }
     setIsLoadingArticle(true);
     setSelectedArticle(null);
+    setInsights(null);
+    setAnalysisError(null);
+    setIsAnalyzing(false);
     try {
         const html = await getArticleContent(title);
         setSelectedArticle({ title, html });
@@ -88,6 +98,28 @@ const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, get
         console.error("Failed to load article:", error);
     }
     setIsLoadingArticle(false);
+  };
+
+  const handleAnalyzeSelectedArticle = async () => {
+    if (!selectedArticle) return;
+    
+    setIsAnalyzing(true);
+    setInsights(null);
+    setAnalysisError(null);
+    
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = selectedArticle.html;
+    const textContent = tempDiv.textContent || tempDiv.innerText || "";
+    
+    try {
+        const resultInsights = await getArticleInsights(textContent, settings.library.aiAssistant.systemInstruction);
+        setInsights(resultInsights);
+    } catch (error) {
+        console.error("Analysis failed:", error);
+        setAnalysisError(error instanceof Error ? error.message : String(error));
+    } finally {
+        setIsAnalyzing(false);
+    }
   };
 
   const handleGeneratePdf = useCallback(async () => {
@@ -125,6 +157,9 @@ const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, get
       onGenerateMarkdown={handleGenerateMarkdown}
       isGenerating={isGenerating}
       canGenerate={articles.length > 0}
+      onAnalyze={handleAnalyzeSelectedArticle}
+      isAnalyzing={isAnalyzing}
+      isArticleSelected={!!selectedArticle}
     />
   );
 
@@ -144,19 +179,37 @@ const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, get
                 onDragEnd={handleSort}
                 onDragOver={(e) => e.preventDefault()}
                 onClick={() => handleSelectArticle(article.title)}
-                className={`flex items-center justify-between p-3 rounded-lg shadow-sm transition-colors ${selectedArticle?.title === article.title ? 'bg-blue-100 dark:bg-blue-900/50 ring-2 ring-blue-500' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'} cursor-pointer`}
+                className={`group flex items-center justify-between p-3 rounded-lg shadow-sm transition-colors ${selectedArticle?.title === article.title ? 'bg-blue-100 dark:bg-blue-900/50 ring-2 ring-blue-500' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'} cursor-pointer`}
               >
-                <div className="flex items-center gap-3">
-                  <Icon name="grip" className="w-5 h-5 text-gray-400 cursor-grab active:cursor-grabbing" />
-                  <span className="font-medium">{article.title}</span>
+                <div className="flex items-center gap-3 truncate">
+                  <Icon name="grip" className="w-5 h-5 text-gray-400 cursor-grab active:cursor-grabbing flex-shrink-0" />
+                  <span className="font-medium truncate">{article.title}</span>
                 </div>
-                <button 
-                  onClick={(e) => { e.stopPropagation(); removeArticle(index); }}
-                  className="p-1 rounded-full text-gray-400 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/50"
-                  aria-label={`Remove ${article.title}`}
-                >
-                    <Icon name="trash" className="w-5 h-5"/>
-                </button>
+                <div className="flex items-center flex-shrink-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+                    <button
+                        onClick={(e) => { e.stopPropagation(); moveArticle(index, 'up'); }}
+                        disabled={index === 0}
+                        className="p-1 rounded-full text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                        aria-label={t('Move article up', { articleTitle: article.title })}
+                    >
+                        <Icon name="arrow-up" className="w-5 h-5" />
+                    </button>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); moveArticle(index, 'down'); }}
+                        disabled={index === articles.length - 1}
+                        className="p-1 rounded-full text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                        aria-label={t('Move article down', { articleTitle: article.title })}
+                    >
+                        <Icon name="arrow-down" className="w-5 h-5" />
+                    </button>
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); removeArticle(index); }}
+                        className="p-1 rounded-full text-gray-500 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/50"
+                        aria-label={t('Remove article', { articleTitle: article.title })}
+                    >
+                        <Icon name="trash" className="w-5 h-5"/>
+                    </button>
+                </div>
               </li>
             ))}
           </ul>
@@ -201,6 +254,11 @@ const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, get
 
             <div className="relative bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border dark:border-gray-700">
               <h2 className="text-3xl font-bold mb-4 border-b pb-2 dark:border-gray-600">{selectedArticle.title}</h2>
+              <ArticleInsightsView
+                insights={insights}
+                isAnalyzing={isAnalyzing}
+                analysisError={analysisError}
+              />
               <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: selectedArticle.html }} />
             </div>
           </div>

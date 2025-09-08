@@ -42,8 +42,11 @@ interface CompilerSettingsProps {
     setPdfOptions: React.Dispatch<React.SetStateAction<PdfOptions>>;
     onGeneratePdf: () => void;
     onGenerateMarkdown: () => void;
+    onAnalyze: () => void;
     isGenerating: boolean;
+    isAnalyzing: boolean;
     canGenerate: boolean;
+    isArticleSelected: boolean;
 }
 
 const CompilerSettings: React.FC<CompilerSettingsProps> = ({
@@ -54,8 +57,11 @@ const CompilerSettings: React.FC<CompilerSettingsProps> = ({
     setPdfOptions,
     onGeneratePdf,
     onGenerateMarkdown,
+    onAnalyze,
     isGenerating,
-    canGenerate
+    isAnalyzing,
+    canGenerate,
+    isArticleSelected
 }) => {
     const { t } = useTranslation();
 
@@ -95,6 +101,52 @@ const CompilerSettings: React.FC<CompilerSettingsProps> = ({
                        </div>
                    </div>
                </fieldset>
+
+               <fieldset>
+                   <legend className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200 border-b dark:border-gray-600 pb-2">{t('Page Setup')}</legend>
+                   <div className="space-y-4">
+                       <div>
+                           <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('Margins')}</span>
+                           <div className="flex gap-4">
+                               <RadioOption id="margin-normal" name="margins" value="normal" checked={pdfOptions.margins === 'normal'} onChange={e => setPdfOptions({...pdfOptions, margins: e.target.value as 'normal' | 'narrow' | 'wide'})} label={t('Normal')}/>
+                               <RadioOption id="margin-narrow" name="margins" value="narrow" checked={pdfOptions.margins === 'narrow'} onChange={e => setPdfOptions({...pdfOptions, margins: e.target.value as 'normal' | 'narrow' | 'wide'})} label={t('Narrow')}/>
+                               <RadioOption id="margin-wide" name="margins" value="wide" checked={pdfOptions.margins === 'wide'} onChange={e => setPdfOptions({...pdfOptions, margins: e.target.value as 'normal' | 'narrow' | 'wide'})} label={t('Wide')}/>
+                           </div>
+                       </div>
+                        <div>
+                           <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('Line Spacing')}</span>
+                           <div className="flex gap-4">
+                               <RadioOption id="ls-115" name="lineSpacing" value="1.15" checked={pdfOptions.lineSpacing === 1.15} onChange={e => setPdfOptions({...pdfOptions, lineSpacing: parseFloat(e.target.value)})} label={t('Single (1.15)')}/>
+                               <RadioOption id="ls-15" name="lineSpacing" value="1.5" checked={pdfOptions.lineSpacing === 1.5} onChange={e => setPdfOptions({...pdfOptions, lineSpacing: parseFloat(e.target.value)})} label={t('One and a half (1.5)')}/>
+                               <RadioOption id="ls-20" name="lineSpacing" value="2.0" checked={pdfOptions.lineSpacing === 2.0} onChange={e => setPdfOptions({...pdfOptions, lineSpacing: parseFloat(e.target.value)})} label={t('Double (2.0)')}/>
+                           </div>
+                       </div>
+                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                           <div>
+                                <label htmlFor="headerContent" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('Header Content')}</label>
+                                <select id="headerContent" value={pdfOptions.headerContent} onChange={e => setPdfOptions({...pdfOptions, headerContent: e.target.value as 'title' | 'custom' | 'none'})} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                                    <option value="none">{t('None')}</option>
+                                    <option value="title">{t('Document Title')}</option>
+                                    <option value="custom">{t('Custom')}</option>
+                                </select>
+                                {pdfOptions.headerContent === 'custom' && (
+                                    <input type="text" placeholder={t('Custom Header Text')} value={pdfOptions.customHeaderText} onChange={e => setPdfOptions({...pdfOptions, customHeaderText: e.target.value})} className="mt-2 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"/>
+                                )}
+                           </div>
+                           <div>
+                                <label htmlFor="footerContent" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('Footer Content')}</label>
+                                <select id="footerContent" value={pdfOptions.footerContent} onChange={e => setPdfOptions({...pdfOptions, footerContent: e.target.value as 'pageNumber' | 'custom' | 'none'})} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                                    <option value="none">{t('None')}</option>
+                                    <option value="pageNumber">{t('Page Number')}</option>
+                                    <option value="custom">{t('Custom')}</option>
+                                </select>
+                                {pdfOptions.footerContent === 'custom' && (
+                                    <input type="text" placeholder={t('Custom Footer Text')} value={pdfOptions.customFooterText} onChange={e => setPdfOptions({...pdfOptions, customFooterText: e.target.value})} className="mt-2 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"/>
+                                )}
+                           </div>
+                       </div>
+                   </div>
+               </fieldset>
                
                <fieldset>
                    <legend className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200 border-b dark:border-gray-600 pb-2">{t('Typography')}</legend>
@@ -107,8 +159,19 @@ const CompilerSettings: React.FC<CompilerSettingsProps> = ({
                            </div>
                        </div>
                        <div>
-                          <label htmlFor="fontSize" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('Base Font Size')}</label>
-                          <input type="number" id="fontSize" value={pdfOptions.typography.fontSize} onChange={e => setPdfOptions({...pdfOptions, typography: {...pdfOptions.typography, fontSize: parseInt(e.target.value, 10)}})} className="w-24 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800"/>
+                            <label htmlFor="fontSize" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                {t('Base Font Size')}: <span className="font-bold">{pdfOptions.typography.fontSize}px</span>
+                            </label>
+                            <input 
+                                type="range" 
+                                id="fontSize" 
+                                min="10" 
+                                max="24" 
+                                step="1"
+                                value={pdfOptions.typography.fontSize} 
+                                onChange={e => setPdfOptions({...pdfOptions, typography: {...pdfOptions.typography, fontSize: parseInt(e.target.value, 10)}})} 
+                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                            />
                        </div>
                    </div>
                </fieldset>
@@ -170,6 +233,22 @@ const CompilerSettings: React.FC<CompilerSettingsProps> = ({
                         {t('Export Markdown')}
                     </>
                 )}
+                </button>
+                <button
+                    onClick={onAnalyze}
+                    disabled={isGenerating || isAnalyzing || !isArticleSelected}
+                    className="w-full flex items-center justify-center gap-2 bg-purple-600 text-white px-4 py-3 rounded-lg hover:bg-purple-700 transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    >
+                    {isAnalyzing ? (
+                        <>
+                        <Spinner light /> {t('Analyzing Article...')}
+                        </>
+                    ) : (
+                        <>
+                            <Icon name="beaker" className="w-5 h-5"/>
+                            {t('Analyze Article')}
+                        </>
+                    )}
                 </button>
             </div>
         </div>

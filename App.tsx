@@ -36,7 +36,13 @@ const DEFAULT_SETTINGS: AppSettings = {
       typography: {
         fontPair: 'modern',
         fontSize: 16,
-      }
+      },
+      margins: 'normal',
+      lineSpacing: 1.5,
+      headerContent: 'title',
+      footerContent: 'pageNumber',
+      customHeaderText: '',
+      customFooterText: '',
     }
   }
 };
@@ -210,7 +216,7 @@ const App: React.FC = () => {
         case View.Archive:
             return activeProject && <ArchiveView addArticleToProject={addArticleToProject} getArticleContent={getArticleContent} />;
         case View.Compiler:
-            return activeProject && <CompilerView project={activeProject} updateProject={updateActiveProject} getArticleContent={getArticleContent} />;
+            return activeProject && <CompilerView project={activeProject} updateProject={updateActiveProject} getArticleContent={getArticleContent} settings={settings} />;
         case View.Settings:
             return <SettingsView settings={settings} updateSettings={updateSettings} reloadApp={loadInitialData} />;
         case View.Help:

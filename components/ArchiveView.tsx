@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'https://esm.sh/react-i18next@14.1.2';
 import { ArticleContent } from '../types';
 import { getAllArticles, deleteArticleFromCache } from '../services/dbService';
+import { useDebounce } from '../hooks/useDebounce';
 import Icon from './Icon';
 import Spinner from './Spinner';
 import Modal from './Modal';
@@ -21,6 +22,8 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ addArticleToProject, getArtic
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [articleToDelete, setArticleToDelete] = useState<string | null>(null);
   
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
   const loadArticles = useCallback(async () => {
     setIsLoading(true);
     const articlesFromDb = await getAllArticles();
@@ -36,12 +39,12 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ addArticleToProject, getArtic
   }, [loadArticles]);
 
   useEffect(() => {
-    const lowercasedFilter = searchTerm.toLowerCase();
+    const lowercasedFilter = debouncedSearchTerm.toLowerCase();
     const filteredData = allArticles.filter(item =>
       item.title.toLowerCase().includes(lowercasedFilter)
     );
     setFilteredArticles(filteredData);
-  }, [searchTerm, allArticles]);
+  }, [debouncedSearchTerm, allArticles]);
 
   const handleSelectArticle = useCallback(async (title: string) => {
     // We already have the HTML from the initial load, so we just find it.
