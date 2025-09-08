@@ -7,8 +7,6 @@ import { useClickOutside } from '../hooks/useClickOutside';
 interface HeaderProps {
   view: View;
   setView: (view: View) => void;
-  isDarkMode: boolean;
-  toggleDarkMode: () => void;
   projectName: string;
   projects: Project[];
   activeProjectId: string | null;
@@ -19,7 +17,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ 
-  view, setView, isDarkMode, toggleDarkMode, projectName,
+  view, setView, projectName,
   projects, activeProjectId, setActiveProjectId, createNewProject, deleteProject,
   openCommandPalette
 }) => {
@@ -119,7 +117,6 @@ const Header: React.FC<HeaderProps> = ({
             <IconButton onClick={openCommandPalette} icon="command" label={t('Open command palette')} />
             <IconButton onClick={() => setView(View.Help)} icon="help" label={t('Help')} />
             <IconButton onClick={() => setView(View.Settings)} icon="settings" label={t('Settings')} />
-            <IconButton onClick={toggleDarkMode} icon={isDarkMode ? 'sun' : 'moon'} label={t('Toggle dark mode')} />
           </div>
 
           {/* Mobile "More" Menu */}
@@ -131,7 +128,6 @@ const Header: React.FC<HeaderProps> = ({
                   <MenuItem icon="command" label={t('Open command palette')} onClick={() => { openCommandPalette(); closeAllMenus(); }} />
                   <MenuItem icon="help" label={t('Help')} onClick={() => { setView(View.Help); closeAllMenus(); }} />
                   <MenuItem icon="settings" label={t('Settings')} onClick={() => { setView(View.Settings); closeAllMenus(); }} />
-                  <MenuItem icon={isDarkMode ? 'sun' : 'moon'} label={t('Toggle dark mode')} onClick={() => { toggleDarkMode(); closeAllMenus(); }} />
                 </ul>
               </div>
             )}

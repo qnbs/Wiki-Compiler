@@ -148,11 +148,6 @@ const SettingsView: React.FC<SettingsViewProps> = ({ settings, updateSettings, r
 
 const GeneralSettings = ({ settings, onChange, onNestedChange }: { settings: AppSettings, onChange: Function, onNestedChange: Function }) => {
     const { t } = useTranslation();
-    const themeOptions: {value: AppSettings['theme'], label: string, icon: string}[] = [
-        { value: 'light', label: t('Light'), icon: 'sun'},
-        { value: 'dark', label: t('Dark'), icon: 'moon'},
-        { value: 'system', label: t('System'), icon: 'desktop'},
-    ];
     const accentColors: { name: AccentColor, className: string, label: string }[] = [
       { name: 'blue', className: 'bg-blue-500', label: 'Blue' },
       { name: 'purple', className: 'bg-purple-500', label: 'Purple' },
@@ -162,17 +157,6 @@ const GeneralSettings = ({ settings, onChange, onNestedChange }: { settings: App
     return (
         <div className="space-y-8">
             <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">{t('General')}</h2>
-            <div className="space-y-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('Theme')}</label>
-                <div className="flex w-full sm:w-auto p-1 space-x-1 bg-gray-100 dark:bg-gray-700/50 rounded-lg">
-                    {themeOptions.map(option => (
-                        <button key={option.value} onClick={() => onChange('theme', option.value)}
-                            className={`w-full flex justify-center items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-800 focus:ring-accent-500 ${settings.theme === option.value ? 'bg-white dark:bg-gray-800 text-accent-600 dark:text-accent-300 shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:bg-white/60 dark:hover:bg-gray-900/20'}`}>
-                            <Icon name={option.icon} className="w-5 h-5"/> {option.label}
-                        </button>
-                    ))}
-                </div>
-            </div>
             <div className="space-y-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('Accent Color')}</label>
                 <div className="flex gap-3">

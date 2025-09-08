@@ -14,7 +14,6 @@ const resources = {
       "Go to Library": "Go to Library",
       "Go to Archive": "Go to Archive",
       "Go to Compiler": "Go to Compiler",
-      "Toggle Dark Mode": "Toggle Dark Mode",
       "Create New Project": "Create New Project",
       "Enter new project name:": "Enter new project name:",
       "New Compilation": "New Compilation",

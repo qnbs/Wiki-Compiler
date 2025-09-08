@@ -17,7 +17,7 @@ import { useProjects } from './hooks/useProjects';
 import Spinner from './components/Spinner';
 
 const DEFAULT_SETTINGS: AppSettings = {
-  theme: 'system',
+  theme: 'dark',
   language: 'en',
   accentColor: 'blue',
   defaultView: View.Library,
@@ -70,7 +70,7 @@ const App: React.FC = () => {
   const [view, setView] = useState<View>(View.Library);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [settings, setSettings] = useState<AppSettings | null>(null);
-  const [isDarkMode] = useDarkMode(settings?.theme);
+  useDarkMode(settings?.theme);
   const { 
     projects, 
     activeProjectId, 
@@ -87,8 +87,11 @@ const App: React.FC = () => {
     let dbSettings = await getSettings();
     if (!dbSettings) {
       dbSettings = DEFAULT_SETTINGS;
-      await saveSettings(dbSettings);
+    } else {
+      // Force dark theme to override any previously saved user preference.
+      dbSettings.theme = 'dark';
     }
+    await saveSettings(dbSettings); // Persist the change.
     setSettings(dbSettings);
     setView(dbSettings.defaultView);
     if (i18next.language !== dbSettings.language) {
@@ -116,19 +119,14 @@ const App: React.FC = () => {
   }, [settings?.accentColor]);
   
   const updateSettings = useCallback(async (newSettings: AppSettings) => {
-    setSettings(newSettings);
-    if (i18next.language !== newSettings.language) {
-      await i18next.changeLanguage(newSettings.language);
+    // Ensure that any settings update always enforces dark mode.
+    const forcedDarkSettings: AppSettings = { ...newSettings, theme: 'dark' };
+    setSettings(forcedDarkSettings);
+    if (i18next.language !== forcedDarkSettings.language) {
+      await i18next.changeLanguage(forcedDarkSettings.language);
     }
-    await saveSettings(newSettings);
+    await saveSettings(forcedDarkSettings);
   }, []);
-
-  const toggleDarkMode = useCallback(() => {
-    if (settings) {
-      const newTheme: Theme = isDarkMode ? 'light' : 'dark';
-      updateSettings({ ...settings, theme: newTheme });
-    }
-  }, [isDarkMode, settings, updateSettings]);
 
   const addArticleToProject = useCallback((title: string) => {
     if (activeProject) {
@@ -166,9 +164,8 @@ const App: React.FC = () => {
     { id: 'goto-compiler', label: 'Go to Compiler', action: () => setView(View.Compiler), icon: 'compiler' },
     { id: 'goto-settings', label: 'Settings', action: () => setView(View.Settings), icon: 'settings' },
     { id: 'goto-help', label: 'Help', action: () => setView(View.Help), icon: 'help' },
-    { id: 'toggle-dark-mode', label: 'Toggle Dark Mode', action: toggleDarkMode, icon: isDarkMode ? 'sun' : 'moon' },
     { id: 'create-project', label: 'Create New Project', action: createNewProject, icon: 'plus' },
-  ], [isDarkMode, toggleDarkMode, createNewProject]);
+  ], [createNewProject]);
 
   if (!settings || !activeProject) {
     return (
@@ -201,8 +198,6 @@ const App: React.FC = () => {
       <Header 
         view={view} 
         setView={setView} 
-        isDarkMode={isDarkMode} 
-        toggleDarkMode={toggleDarkMode}
         projectName={activeProject.name}
         projects={projects}
         activeProjectId={activeProjectId}
