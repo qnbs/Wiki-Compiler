@@ -29,7 +29,7 @@
         }
       }
     </script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:wght@400;500;600&display=swap" rel="stylesheet">
@@ -50,14 +50,20 @@
       body { font-family: 'Inter', sans-serif; }
       .font-serif { font-family: 'Lora', serif; }
       /* Custom styles for rendered Wikipedia content */
-      .prose { @apply text-gray-800 dark:text-gray-300; }
-      .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 { @apply font-semibold text-gray-900 dark:text-gray-100; }
-      .prose a { @apply text-blue-600 dark:text-blue-400 hover:underline; }
-      .prose a.new { @apply text-red-600 dark:text-red-400; }
-      .prose table { @apply w-full my-4 border-collapse border border-gray-300 dark:border-gray-600; }
-      .prose th, .prose td { @apply border border-gray-300 dark:border-gray-600 p-2 text-left; }
-      .prose th { @apply bg-gray-100 dark:bg-gray-800; }
-      .prose .infobox { @apply border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 float-right w-64 text-sm p-2 ml-4 mb-4; }
+      .prose .infobox {
+        border: 1px solid #e2e8f0;
+        background-color: #f8fafc;
+        float: right;
+        width: 256px;
+        font-size: 0.875rem; /* text-sm */
+        padding: 0.5rem; /* p-2 */
+        margin-left: 1rem; /* ml-4 */
+        margin-bottom: 1rem; /* mb-4 */
+      }
+      .dark .prose .infobox {
+        border-color: #374151; /* dark:border-gray-700 */
+        background-color: rgba(31, 41, 55, 0.5); /* dark:bg-gray-800/50 */
+      }
     </style>
   <script type="importmap">
 {

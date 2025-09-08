@@ -42,12 +42,9 @@ interface CompilerSettingsProps {
     setPdfOptions: React.Dispatch<React.SetStateAction<PdfOptions>>;
     onGeneratePdf: () => void;
     onGenerateMarkdown: () => void;
-    onAnalyze: () => void;
     onSaveDefaults: () => void;
     isExporting: boolean;
-    isAnalyzing: boolean;
     canGenerate: boolean;
-    isArticleSelected: boolean;
 }
 
 const CompilerSettings: React.FC<CompilerSettingsProps> = ({
@@ -58,12 +55,9 @@ const CompilerSettings: React.FC<CompilerSettingsProps> = ({
     setPdfOptions,
     onGeneratePdf,
     onGenerateMarkdown,
-    onAnalyze,
     onSaveDefaults,
     isExporting,
-    isAnalyzing,
     canGenerate,
-    isArticleSelected
 }) => {
     const { t } = useTranslation();
 
@@ -246,22 +240,6 @@ const CompilerSettings: React.FC<CompilerSettingsProps> = ({
                         {t('Export Markdown')}
                     </>
                 )}
-                </button>
-                <button
-                    onClick={onAnalyze}
-                    disabled={isExporting || isAnalyzing || !isArticleSelected}
-                    className="w-full flex items-center justify-center gap-2 bg-purple-600 text-white px-4 py-3 rounded-lg hover:bg-purple-700 transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    >
-                    {isAnalyzing ? (
-                        <>
-                        <Spinner light /> {t('Analyzing Article...')}
-                        </>
-                    ) : (
-                        <>
-                            <Icon name="beaker" className="w-5 h-5"/>
-                            {t('Analyze Article')}
-                        </>
-                    )}
                 </button>
             </div>
         </div>

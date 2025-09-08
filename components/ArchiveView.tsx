@@ -229,7 +229,7 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ addArticleToProject, getArtic
                 isAnalyzing={isAnalyzing}
                 analysisError={analysisError}
               />
-              <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: selectedArticle.html }} />
+              <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: selectedArticle.html }} />
             </div>
           )}
           {!selectedArticle && (

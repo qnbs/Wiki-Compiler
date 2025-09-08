@@ -156,10 +156,11 @@ const GeneralSettings = ({ settings, onChange, onNestedChange }: { settings: App
     ]
     return (
         <div className="space-y-8">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">{t('General')}</h2>
-            <div className="space-y-4">
+            <h2 className="text-xl font-semibold mb-6 pb-2 border-b dark:border-gray-600 text-gray-800 dark:text-gray-200">{t('General')}</h2>
+            <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('Accent Color')}</label>
-                <div className="flex gap-3">
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t('Customize the UI highlights, buttons, and active states throughout the application.')}</p>
+                <div className="flex gap-3 pt-2">
                     {accentColors.map(color => (
                         <button key={color.name} onClick={() => onChange('accentColor', color.name)}
                             className={`w-8 h-8 rounded-full ${color.className} transition-transform hover:scale-110 ${settings.accentColor === color.name ? 'ring-2 ring-offset-2 ring-offset-white dark:ring-offset-gray-800 ring-accent-500' : ''}`}
@@ -168,8 +169,9 @@ const GeneralSettings = ({ settings, onChange, onNestedChange }: { settings: App
                     ))}
                 </div>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('Default View on Startup')}</label>
+                 <p className="text-xs text-gray-500 dark:text-gray-400">{t('Choose which view the application opens to on startup.')}</p>
                 <select value={settings.defaultView} onChange={e => onChange('defaultView', e.target.value)} className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 outline-none">
                     <option value={View.Library}>{t('Library')}</option>
                     <option value={View.Archive}>{t('Archive')}</option>
@@ -184,21 +186,23 @@ const LibrarySettings = ({ settings, onNestedChange }: { settings: AppSettings, 
     const { t } = useTranslation();
     return (
         <div className="space-y-8">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">{t('Library Settings')}</h2>
-            <div className="space-y-4">
+            <h2 className="text-xl font-semibold mb-6 pb-2 border-b dark:border-gray-600 text-gray-800 dark:text-gray-200">{t('Library Settings')}</h2>
+            <div className="space-y-2">
                 <label htmlFor="searchLimit" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('Search Result Limit')}</label>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t('Set the maximum number of results to return for a Wikipedia search.')}</p>
                 <input id="searchLimit" type="number" min="5" max="50" step="5" value={settings.library.searchResultLimit} onChange={e => onNestedChange('library.searchResultLimit', parseInt(e.target.value, 10))} className="w-24 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800" />
             </div>
-            <div className="space-y-4">
+            <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('AI Assistant')}</label>
-                <div className="flex items-center">
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t('Enable AI-powered summaries, key concept extraction, and research questions for articles.')}</p>
+                <div className="flex items-center pt-2">
                     <input id="aiEnabled" type="checkbox" checked={settings.library.aiAssistant.enabled} onChange={e => onNestedChange('library.aiAssistant.enabled', e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-accent-600 focus:ring-accent-500"/>
                     <label htmlFor="aiEnabled" className="ml-2 block text-sm text-gray-900 dark:text-gray-200">{t('Enable AI Research Assistant')}</label>
                 </div>
                 {settings.library.aiAssistant.enabled && (
-                    <div className="pl-6">
-                        <label htmlFor="aiInstruction" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mt-2">{t('AI System Instruction')}</label>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('Optional. Guide the AI with specific instructions for analysis.')}</p>
+                    <div className="pl-6 pt-2 space-y-2">
+                        <label htmlFor="aiInstruction" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('AI System Instruction')}</label>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{t('Provide specific instructions to the AI to tailor its analysis style (e.g., "focus on economic impacts").')}</p>
                         <textarea id="aiInstruction" rows={3} value={settings.library.aiAssistant.systemInstruction} onChange={e => onNestedChange('library.aiAssistant.systemInstruction', e.target.value)} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800" placeholder={t('e.g., "Analyze from the perspective of a historian."')}></textarea>
                     </div>
                 )}
@@ -213,24 +217,27 @@ const CompilerDefaults = ({ settings, onNestedChange }: { settings: PdfOptions, 
     
     return (
       <div className="space-y-8">
-        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">{t('Compiler Settings')}</h2>
+        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 pb-2 border-b dark:border-gray-600">{t('Compiler Settings')}</h2>
         <div>
-          <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300">{t('Default Export Options')}</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{t('These settings will be the default for new projects.')}</p>
+          <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mt-4">{t('Default Export Options')}</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">{t('All settings in this section apply to the default options when you create a new project.')}</p>
           
-          <div className="space-y-6">
+          <div className="space-y-8">
             <fieldset>
-               <legend className="text-md font-semibold mb-2 text-gray-800 dark:text-gray-200">{t('Layout')}</legend>
-               <div className="space-y-3 pl-2">
+               <legend className="text-md font-semibold text-gray-800 dark:text-gray-200">{t('Layout')}</legend>
+               <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{t('Control the overall page structure of your exported PDF.')}</p>
+               <div className="space-y-4 pl-2">
                    <div>
-                       <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('Paper Size')}</span>
+                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('Paper Size')}</label>
+                       <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{t('Choose the page dimensions for your PDF export. Letter is standard in the US, A4 is standard elsewhere.')}</p>
                        <select value={settings.paperSize} onChange={e => set('paperSize', e.target.value)} className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800">
                            <option value="letter">{t('Letter')}</option>
                            <option value="a4">{t('A4')}</option>
                        </select>
                    </div>
                     <div>
-                       <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('Columns')}</span>
+                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('Columns')}</label>
+                       <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{t('Select a single column for traditional documents or a two-column layout for a magazine-style feel.')}</p>
                         <select value={settings.layout} onChange={e => set('layout', e.target.value)} className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800">
                            <option value="single">{t('Single Column')}</option>
                            <option value="two">{t('Two Column')}</option>
@@ -240,10 +247,11 @@ const CompilerDefaults = ({ settings, onNestedChange }: { settings: PdfOptions, 
            </fieldset>
 
            <fieldset>
-               <legend className="text-md font-semibold mb-2 text-gray-800 dark:text-gray-200">{t('Page Setup')}</legend>
-               <div className="space-y-3 pl-2">
+               <legend className="text-md font-semibold text-gray-800 dark:text-gray-200">{t('Page Setup')}</legend>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{t('Fine-tune the margins, spacing, and page headers/footers.')}</p>
+               <div className="space-y-4 pl-2">
                    <div>
-                       <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('Margins')}</span>
+                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('Margins')}</label>
                        <select value={settings.margins} onChange={e => set('margins', e.target.value)} className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800">
                            <option value="normal">{t('Normal')}</option>
                            <option value="narrow">{t('Narrow')}</option>
@@ -251,7 +259,8 @@ const CompilerDefaults = ({ settings, onNestedChange }: { settings: PdfOptions, 
                        </select>
                    </div>
                     <div>
-                       <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('Line Spacing')}</span>
+                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('Line Spacing')}</label>
+                       <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{t('Set the spacing for the text body. 1.5 is recommended for readability.')}</p>
                        <select value={settings.lineSpacing} onChange={e => set('lineSpacing', parseFloat(e.target.value))} className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800">
                            <option value="1.15">{t('Single (1.15)')}</option>
                            <option value="1.5">{t('One and a half (1.5)')}</option>
@@ -262,10 +271,11 @@ const CompilerDefaults = ({ settings, onNestedChange }: { settings: PdfOptions, 
            </fieldset>
            
            <fieldset>
-               <legend className="text-md font-semibold mb-2 text-gray-800 dark:text-gray-200">{t('Typography')}</legend>
-               <div className="space-y-3 pl-2">
+               <legend className="text-md font-semibold text-gray-800 dark:text-gray-200">{t('Typography')}</legend>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{t('Customize the look and feel of the text in your document.')}</p>
+               <div className="space-y-4 pl-2">
                     <div>
-                       <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('Font Pairing')}</span>
+                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('Font Pairing')}</label>
                        <select value={settings.typography.fontPair} onChange={e => set('typography.fontPair', e.target.value)} className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800">
                             <option value="modern">{t('Modern (Inter)')}</option>
                             <option value="classic">{t('Classic (Lora)')}</option>
@@ -281,8 +291,9 @@ const CompilerDefaults = ({ settings, onNestedChange }: { settings: PdfOptions, 
            </fieldset>
            
             <fieldset>
-               <legend className="text-md font-semibold mb-2 text-gray-800 dark:text-gray-200">{t('Content')}</legend>
-              <div className="space-y-3 pl-2">
+               <legend className="text-md font-semibold text-gray-800 dark:text-gray-200">{t('Content')}</legend>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{t('Select which structural elements to include in your export.')}</p>
+              <div className="space-y-4 pl-2">
                     <div className="flex items-center">
                         <input id="includeTOC" type="checkbox" checked={settings.includeTOC} onChange={e => set('includeTOC', e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-accent-600 focus:ring-accent-500"/>
                         <label htmlFor="includeTOC" className="ml-2 block text-sm text-gray-900 dark:text-gray-200">{t('Include Table of Contents')}</label>
@@ -321,13 +332,13 @@ const StorageSettings = ({ cacheInfo, onClearCache, onExport, onImport }: { cach
     }
     return (
         <div className="space-y-8">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">{t('Data & Storage')}</h2>
+            <h2 className="text-xl font-semibold mb-6 pb-2 border-b dark:border-gray-600 text-gray-800 dark:text-gray-200">{t('Data & Storage')}</h2>
             <div className="p-4 bg-gray-50 dark:bg-gray-900/40 rounded-lg">
                 <h3 className="font-semibold">{t('Cache Usage')}</h3>
                 <p className="text-gray-600 dark:text-gray-300">{t('{{count}} articles cached, using', { count: cacheInfo.count })} {formatBytes(cacheInfo.size)}</p>
                 <button onClick={onClearCache} className="mt-2 text-sm text-red-600 hover:underline">{t('Clear Article Cache')}</button>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-6">
                 <div>
                     <h3 className="font-semibold">{t('Export All Data')}</h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">{t('Save a backup of all your projects, cached articles, and settings to a JSON file.')}</p>
@@ -337,7 +348,7 @@ const StorageSettings = ({ cacheInfo, onClearCache, onExport, onImport }: { cach
                 </div>
                  <div>
                     <h3 className="font-semibold">{t('Import Data')}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">{t('Import a backup file. This will overwrite all existing data.')}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">{t('Restore your application from a backup file. WARNING: This will overwrite all current projects, articles, and settings.')}</p>
                     <button onClick={onImport} className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm font-semibold">
                         <Icon name="upload" className="w-4 h-4" /> {t('Import...')}
                     </button>
@@ -351,10 +362,15 @@ const AboutSettings = () => {
     const { t } = useTranslation();
     return (
         <div className="space-y-8">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">{t('About Wiki Compiler')}</h2>
+            <h2 className="text-xl font-semibold mb-6 pb-2 border-b dark:border-gray-600 text-gray-800 dark:text-gray-200">{t('About Wiki Compiler')}</h2>
             <p className="text-gray-600 dark:text-gray-400">{t('A premium knowledge management and research environment designed to curate, customize, and consume knowledge from Wikipedia. Transform passive reading into an active, creative act of knowledge assembly.')}</p>
-            <div>
-                <span className="font-semibold">{t('Version')}:</span> 1.0.0
+            <div className="space-y-1">
+                <div>
+                    <span className="font-semibold">{t('Version')}:</span> 1.0.0
+                </div>
+                 <div>
+                    <a href="#" className="font-semibold text-accent-600 dark:text-accent-400 hover:underline">{t('Official Website')}</a>
+                </div>
             </div>
         </div>
     );

@@ -30,16 +30,13 @@ const RightPaneSettings: React.FC<{
     setPdfOptions: React.Dispatch<React.SetStateAction<PdfOptions>>,
     handleGeneratePdf: () => void,
     handleGenerateMarkdown: () => void,
-    analyze: () => void,
     handleSaveDefaults: () => void,
     isExporting: boolean,
-    isAnalyzing: boolean,
     canGenerate: boolean,
-    isArticleSelected: boolean
 }> = ({
     projectName, onProjectNameChange, onProjectNameBlur, pdfOptions, setPdfOptions,
-    handleGeneratePdf, handleGenerateMarkdown, analyze, handleSaveDefaults,
-    isExporting, isAnalyzing, canGenerate, isArticleSelected
+    handleGeneratePdf, handleGenerateMarkdown, handleSaveDefaults,
+    isExporting, canGenerate
 }) => {
     const { t } = useTranslation();
     return (
@@ -53,12 +50,9 @@ const RightPaneSettings: React.FC<{
                 setPdfOptions={setPdfOptions}
                 onGeneratePdf={handleGeneratePdf}
                 onGenerateMarkdown={handleGenerateMarkdown}
-                onAnalyze={analyze}
                 onSaveDefaults={handleSaveDefaults}
                 isExporting={isExporting}
-                isAnalyzing={isAnalyzing}
                 canGenerate={canGenerate}
-                isArticleSelected={isArticleSelected}
             />
         </div>
     );
@@ -68,17 +62,32 @@ const RightPaneArticlePreview: React.FC<{
     selectedArticle: ArticleContent,
     insights: ArticleInsights | null,
     isAnalyzing: boolean,
-    analysisError: string | null
-}> = ({ selectedArticle, insights, isAnalyzing, analysisError }) => {
+    analysisError: string | null,
+    analyze: () => void,
+    aiEnabled: boolean,
+}> = ({ selectedArticle, insights, isAnalyzing, analysisError, analyze, aiEnabled }) => {
+    const { t } = useTranslation();
     return (
         <div className="relative bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border dark:border-gray-700">
-            <h2 className="text-3xl font-bold mb-4 border-b pb-2 dark:border-gray-600">{selectedArticle.title}</h2>
+            {aiEnabled && (
+                <div className="absolute top-4 right-6 z-10">
+                    <button
+                        onClick={analyze}
+                        disabled={isAnalyzing}
+                        className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    >
+                        <Icon name="beaker" className="w-4 h-4"/>
+                        {isAnalyzing ? t('Analyzing...') : t('Analyze with AI')}
+                    </button>
+                </div>
+            )}
+            <h2 className="text-3xl font-bold mb-4 border-b pb-2 dark:border-gray-600 pr-48">{selectedArticle.title}</h2>
             <ArticleInsightsView
                 insights={insights}
                 isAnalyzing={isAnalyzing}
                 analysisError={analysisError}
             />
-            <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: selectedArticle.html }} />
+            <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: selectedArticle.html }} />
         </div>
     );
 };
@@ -93,7 +102,7 @@ const RightPaneMarkdownPreview: React.FC<{
             <h2 className="text-3xl font-bold mb-4 border-b pb-2 dark:border-gray-600">{projectName}</h2>
             {isGeneratingPreview
                 ? <div className="flex justify-center items-center h-full"><Spinner /></div>
-                : <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: markdownPreview }} />
+                : <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: markdownPreview }} />
             }
         </div>
     );
@@ -280,6 +289,8 @@ const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, get
                     insights={insights}
                     isAnalyzing={isAnalyzing}
                     analysisError={analysisError}
+                    analyze={analyze}
+                    aiEnabled={settings.library.aiAssistant.enabled}
                 />
             );
         case 'markdown':
@@ -301,12 +312,9 @@ const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, get
                     setPdfOptions={setPdfOptions}
                     handleGeneratePdf={handleGeneratePdf}
                     handleGenerateMarkdown={handleGenerateMarkdown}
-                    analyze={analyze}
                     handleSaveDefaults={handleSaveDefaults}
                     isExporting={isExporting}
-                    isAnalyzing={isAnalyzing}
                     canGenerate={articles.length > 0}
-                    isArticleSelected={!!selectedArticle}
                 />
              )
     }

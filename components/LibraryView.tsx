@@ -21,6 +21,7 @@ const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArtic
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedArticle, setSelectedArticle] = useState<ArticleContent | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [isLoadingArticle, setIsLoadingArticle] = useState(false);
   const [justAdded, setJustAdded] = useState<Set<string>>(new Set());
   const [sortOption, setSortOption] = useState('relevance');
@@ -37,29 +38,38 @@ const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArtic
     const search = async () => {
       if (debouncedSearchTerm) {
         setIsSearching(true);
-        const isTitleSort = sortOption === 'az' || sortOption === 'za';
-        const apiSort = isTitleSort ? 'relevance' : sortOption;
-
-        let searchResults = await searchArticles(debouncedSearchTerm, settings.library.searchResultLimit, apiSort);
-        
-        if (isTitleSort) {
-          searchResults.sort((a, b) => {
-              if (sortOption === 'az') {
-                  return a.title.localeCompare(b.title);
-              } else {
-                  return b.title.localeCompare(a.title);
-              }
-          });
+        setSearchError(null);
+        try {
+            const isTitleSort = sortOption === 'az' || sortOption === 'za';
+            const apiSort = isTitleSort ? 'relevance' : sortOption;
+    
+            let searchResults = await searchArticles(debouncedSearchTerm, settings.library.searchResultLimit, apiSort);
+            
+            if (isTitleSort) {
+              searchResults.sort((a, b) => {
+                  if (sortOption === 'az') {
+                      return a.title.localeCompare(b.title);
+                  } else {
+                      return b.title.localeCompare(a.title);
+                  }
+              });
+            }
+            
+            setResults(searchResults);
+        } catch (error) {
+            console.error("Failed to search articles:", error);
+            setSearchError(t('Search failed. Please check your connection.'));
+            setResults([]);
+        } finally {
+            setIsSearching(false);
         }
-        
-        setResults(searchResults);
-        setIsSearching(false);
       } else {
         setResults([]);
+        setSearchError(null);
       }
     };
     search();
-  }, [debouncedSearchTerm, settings.library.searchResultLimit, sortOption]);
+  }, [debouncedSearchTerm, settings.library.searchResultLimit, sortOption, t]);
 
   const handleSelectArticle = useCallback(async (title: string) => {
     setIsLoadingArticle(true);
@@ -118,7 +128,8 @@ const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArtic
             </select>
         </div>
         {isSearching && <Spinner />}
-        {!isSearching && debouncedSearchTerm && results.length === 0 && (
+        {searchError && <p className="text-red-500 text-sm text-center my-4">{searchError}</p>}
+        {!isSearching && debouncedSearchTerm && results.length === 0 && !searchError && (
           <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
             <p>{t('No results found for "{{term}}"', { term: debouncedSearchTerm })}</p>
           </div>
@@ -189,7 +200,7 @@ const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArtic
               analysisError={analysisError}
             />
 
-            <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: selectedArticle.html }} />
+            <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: selectedArticle.html }} />
           </div>
         )}
         {!isLoadingArticle && !selectedArticle && (
