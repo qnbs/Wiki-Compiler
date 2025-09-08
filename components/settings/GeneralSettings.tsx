@@ -5,7 +5,7 @@ import { useSettings } from '../../hooks/useSettingsContext';
 
 const GeneralSettings: React.FC = () => {
     const { t } = useTranslation();
-    const { settings, updateSettings, accentColorMap } = useSettings();
+    const { settings, updateSettings } = useSettings();
 
     if (!settings) return null;
 
