@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTranslation } from 'https://esm.sh/react-i18next@14.1.2';
+import { useTranslation } from 'react-i18next';
 import { View } from '../types';
 import Icon from './Icon';
 

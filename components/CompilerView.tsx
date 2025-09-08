@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { useTranslation } from 'https://esm.sh/react-i18next@14.1.2';
+import { useTranslation } from 'react-i18next';
+import { marked } from 'marked';
 import { Project, PdfOptions, ArticleContent, AppSettings, ArticleInsights } from '../types';
 import { getArticleInsights } from '../services/geminiService';
 import Icon from './Icon';
 import Spinner from './Spinner';
-import { generatePdf, generateMarkdown } from '../services/exportService';
+import { generatePdf, generateMarkdown, generateMarkdownContent } from '../services/exportService';
 import CompilerSettings from './CompilerSettings';
 import ArticleInsightsView from './ArticleInsightsView';
 
@@ -16,6 +17,8 @@ interface CompilerViewProps {
   settings: AppSettings;
 }
 
+type RightPaneView = 'settings' | 'article' | 'markdown';
+
 const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, getArticleContent, settings }) => {
   const { t } = useTranslation();
   const [articles, setArticles] = useState(project.articles);
@@ -23,23 +26,46 @@ const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, get
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<ArticleContent | null>(null);
   const [isLoadingArticle, setIsLoadingArticle] = useState(false);
-  const [isSettingsCollapsed, setIsSettingsCollapsed] = useState(true);
   const [insights, setInsights] = useState<ArticleInsights | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+
+  const [rightPaneView, setRightPaneView] = useState<RightPaneView>('settings');
+  const [markdownPreview, setMarkdownPreview] = useState('');
+  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
 
   const [pdfOptions, setPdfOptions] = useState<PdfOptions>(settings.compiler.defaultPdfOptions);
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
 
   useEffect(() => {
-      setArticles(project.articles);
-      setProjectName(project.name);
-      // If the selected article is no longer in the project, deselect it.
-      if (selectedArticle && !project.articles.some(a => a.title === selectedArticle.title)) {
-        setSelectedArticle(null);
-      }
+    setArticles(project.articles);
+    setProjectName(project.name);
+    // If the selected article is no longer in the project, deselect it and switch view.
+    if (selectedArticle && !project.articles.some(a => a.title === selectedArticle.title)) {
+      setSelectedArticle(null);
+      setRightPaneView('settings');
+    }
   }, [project, selectedArticle]);
+  
+  useEffect(() => {
+    const generatePreview = async () => {
+        if (rightPaneView === 'markdown' && project.articles.length > 0) {
+            setIsGeneratingPreview(true);
+            try {
+                const markdown = await generateMarkdownContent(project, getArticleContent);
+                const html = await marked.parse(markdown);
+                setMarkdownPreview(html as string);
+            } catch (error) {
+                console.error("Failed to generate markdown preview:", error);
+                setMarkdownPreview('<p>Error generating preview.</p>');
+            } finally {
+                setIsGeneratingPreview(false);
+            }
+        }
+    };
+    generatePreview();
+  }, [rightPaneView, project, getArticleContent]);
 
   const handleProjectNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setProjectName(e.target.value);
@@ -84,6 +110,7 @@ const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, get
   const handleSelectArticle = async (title: string) => {
     if (selectedArticle?.title === title) {
         setSelectedArticle(null);
+        setRightPaneView('settings');
         return;
     }
     setIsLoadingArticle(true);
@@ -91,11 +118,13 @@ const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, get
     setInsights(null);
     setAnalysisError(null);
     setIsAnalyzing(false);
+    setRightPaneView('article');
     try {
         const html = await getArticleContent(title);
         setSelectedArticle({ title, html });
     } catch (error) {
         console.error("Failed to load article:", error);
+        setRightPaneView('settings');
     }
     setIsLoadingArticle(false);
   };
@@ -146,22 +175,57 @@ const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, get
     }
   }, [project, getArticleContent]);
 
-  const settingsPanel = (
-    <CompilerSettings
-      projectName={projectName}
-      onProjectNameChange={handleProjectNameChange}
-      onProjectNameBlur={handleProjectNameBlur}
-      pdfOptions={pdfOptions}
-      setPdfOptions={setPdfOptions}
-      onGeneratePdf={handleGeneratePdf}
-      onGenerateMarkdown={handleGenerateMarkdown}
-      isGenerating={isGenerating}
-      canGenerate={articles.length > 0}
-      onAnalyze={handleAnalyzeSelectedArticle}
-      isAnalyzing={isAnalyzing}
-      isArticleSelected={!!selectedArticle}
-    />
-  );
+  const renderRightPane = () => {
+    if (isLoadingArticle) {
+        return <div className="flex justify-center items-center h-full"><Spinner /></div>
+    }
+    
+    switch (rightPaneView) {
+        case 'article':
+            return selectedArticle && (
+                <div className="relative bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border dark:border-gray-700">
+                  <h2 className="text-3xl font-bold mb-4 border-b pb-2 dark:border-gray-600">{selectedArticle.title}</h2>
+                  <ArticleInsightsView
+                    insights={insights}
+                    isAnalyzing={isAnalyzing}
+                    analysisError={analysisError}
+                  />
+                  <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: selectedArticle.html }} />
+                </div>
+            );
+        case 'markdown':
+            return (
+                 <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border dark:border-gray-700">
+                    <h2 className="text-3xl font-bold mb-4 border-b pb-2 dark:border-gray-600">{projectName}</h2>
+                    {isGeneratingPreview 
+                        ? <div className="flex justify-center items-center h-full"><Spinner /></div> 
+                        : <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: markdownPreview }} />
+                    }
+                </div>
+            )
+        case 'settings':
+        default:
+             return (
+                <div className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-lg">
+                    <h2 className="text-2xl font-bold mb-6">{t('Settings & Export')}</h2>
+                    <CompilerSettings
+                        projectName={projectName}
+                        onProjectNameChange={handleProjectNameChange}
+                        onProjectNameBlur={handleProjectNameBlur}
+                        pdfOptions={pdfOptions}
+                        setPdfOptions={setPdfOptions}
+                        onGeneratePdf={handleGeneratePdf}
+                        onGenerateMarkdown={handleGenerateMarkdown}
+                        onAnalyze={handleAnalyzeSelectedArticle}
+                        isGenerating={isGenerating}
+                        isAnalyzing={isAnalyzing}
+                        canGenerate={articles.length > 0}
+                        isArticleSelected={!!selectedArticle}
+                    />
+                </div>
+             )
+    }
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-[calc(100vh-120px)]">
@@ -224,48 +288,38 @@ const CompilerView: React.FC<CompilerViewProps> = ({ project, updateProject, get
 
       {/* Settings or Article Preview Column */}
       <div className="md:col-span-7 lg:col-span-8 overflow-y-auto">
-        {isLoadingArticle && <div className="flex justify-center items-center h-full"><Spinner /></div>}
-        
-        {!isLoadingArticle && !selectedArticle && (
-          <div className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-lg">
-            <h2 className="text-2xl font-bold mb-6">{t('Settings & Export')}</h2>
-            {settingsPanel}
-          </div>
-        )}
-
-        {!isLoadingArticle && selectedArticle && (
-          <div className="space-y-6">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700">
-              <button
-                onClick={() => setIsSettingsCollapsed(!isSettingsCollapsed)}
-                className="w-full flex justify-between items-center p-4"
-                aria-expanded={!isSettingsCollapsed}
-                aria-controls="export-settings-panel"
-              >
-                <h3 className="text-xl font-semibold">{t('Settings & Export')}</h3>
-                <Icon name="chevron-down" className={`w-5 h-5 transition-transform duration-200 ${isSettingsCollapsed ? '' : 'rotate-180'}`} />
-              </button>
-              {!isSettingsCollapsed && (
-                <div id="export-settings-panel" className="p-6 border-t border-gray-200 dark:border-gray-700">
-                  {settingsPanel}
-                </div>
-              )}
-            </div>
-
-            <div className="relative bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border dark:border-gray-700">
-              <h2 className="text-3xl font-bold mb-4 border-b pb-2 dark:border-gray-600">{selectedArticle.title}</h2>
-              <ArticleInsightsView
-                insights={insights}
-                isAnalyzing={isAnalyzing}
-                analysisError={analysisError}
-              />
-              <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: selectedArticle.html }} />
-            </div>
-          </div>
-        )}
+        <div className="flex items-center gap-2 border-b dark:border-gray-700 mb-4">
+             <PaneToggleButton label={t('Settings & Export')} view="settings" currentView={rightPaneView} setView={setRightPaneView} />
+             <PaneToggleButton label={t('Article Preview')} view="article" currentView={rightPaneView} setView={setRightPaneView} disabled={!selectedArticle} />
+             <PaneToggleButton label={t('Markdown Preview')} view="markdown" currentView={rightPaneView} setView={setRightPaneView} disabled={articles.length === 0} />
+        </div>
+        {renderRightPane()}
       </div>
     </div>
   );
 };
+
+interface PaneToggleButtonProps {
+    label: string;
+    view: RightPaneView;
+    currentView: RightPaneView;
+    setView: (view: RightPaneView) => void;
+    disabled?: boolean;
+}
+
+const PaneToggleButton: React.FC<PaneToggleButtonProps> = ({ label, view, currentView, setView, disabled = false }) => (
+    <button
+        onClick={() => setView(view)}
+        disabled={disabled}
+        className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            currentView === view 
+            ? 'border-blue-500 text-blue-600 dark:text-blue-400' 
+            : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+        } disabled:opacity-40 disabled:cursor-not-allowed`}
+    >
+        {label}
+    </button>
+)
+
 
 export default CompilerView;

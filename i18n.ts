@@ -1,6 +1,6 @@
-import i18next from 'https://esm.sh/i18next@23.11.5';
-import { initReactI18next } from 'https://esm.sh/react-i18next@14.1.2';
-import LanguageDetector from 'https://esm.sh/i18next-browser-languagedetector@8.0.0';
+import i18next from 'i18next';
+import { initReactI18next } from 'react-i18next';
+import LanguageDetector from 'i18next-browser-languagedetector';
 
 const resources = {
   en: {
@@ -21,6 +21,9 @@ const resources = {
       'Open command palette': 'Open command palette',
       'None': 'None',
       'More options': 'More options',
+      'Sort by': 'Sort by',
+      'Title (A-Z)': 'Title (A-Z)',
+      'Title (Z-A)': 'Title (Z-A)',
       
       // Command Palette
       'Type a command or search...': 'Type a command or search...',
@@ -36,6 +39,7 @@ const resources = {
       'Analyze with AI': 'Analyze with AI',
       'Analyzing...': 'Analyzing...',
       'Add to Compilation': 'Add to Compilation',
+      'Quick Add to Compilation': 'Quick Add to Compilation',
       'AI Research Assistant': 'AI Research Assistant',
       'Thinking...': 'Thinking...',
       'Search for an article to begin': 'Search for an article to begin',
@@ -60,6 +64,8 @@ const resources = {
       'Your compilation is empty.': 'Your compilation is empty.',
       'Go to the Library to add articles.': 'Go to the Library to add articles.',
       'Settings & Export': 'Settings & Export',
+      'Article Preview': 'Article Preview',
+      'Markdown Preview': 'Markdown Preview',
       'Document Title': 'Document Title',
       'Layout': 'Layout',
       'Paper Size': 'Paper Size',
@@ -118,6 +124,10 @@ const resources = {
       'Failed to clear cache.': 'Failed to clear cache.',
       'This will remove all locally stored Wikipedia articles to save space. It will not affect your projects. Articles will be re-downloaded when needed.': 'This will remove all locally stored Wikipedia articles to save space. It will not affect your projects. Articles will be re-downloaded when needed.',
       'Accent Color': 'Accent Color',
+      'Blue': 'Blue',
+      'Purple': 'Purple',
+      'Green': 'Green',
+      'Orange': 'Orange',
       'Default View on Startup': 'Default View on Startup',
       'Library Settings': 'Library Settings',
       'Search Result Limit': 'Search Result Limit',
@@ -204,6 +214,9 @@ const resources = {
       'Open command palette': 'Befehlspalette öffnen',
       'None': 'Keine',
       'More options': 'Weitere Optionen',
+      'Sort by': 'Sortieren nach',
+      'Title (A-Z)': 'Titel (A-Z)',
+      'Title (Z-A)': 'Titel (Z-A)',
 
       // Command Palette
       'Type a command or search...': 'Befehl eingeben oder suchen...',
@@ -219,6 +232,7 @@ const resources = {
       'Analyze with AI': 'Mit KI analysieren',
       'Analyzing...': 'Analysiere...',
       'Add to Compilation': 'Zur Kompilation hinzufügen',
+      'Quick Add to Compilation': 'Schnell zur Kompilation hinzufügen',
       'AI Research Assistant': 'KI-Forschungsassistent',
       'Thinking...': 'Denke...',
       'Search for an article to begin': 'Suchen Sie einen Artikel, um zu beginnen',
@@ -243,6 +257,8 @@ const resources = {
       'Your compilation is empty.': 'Ihre Kompilation ist leer.',
       'Go to the Library to add articles.': 'Gehen Sie zur Bibliothek, um Artikel hinzuzufügen.',
       'Settings & Export': 'Einstellungen & Export',
+      'Article Preview': 'Artikel-Vorschau',
+      'Markdown Preview': 'Markdown-Vorschau',
       'Document Title': 'Dokumententitel',
       'Layout': 'Layout',
       'Paper Size': 'Papiergröße',
@@ -301,6 +317,10 @@ const resources = {
       'Failed to clear cache.': 'Cache konnte nicht geleert werden.',
       'This will remove all locally stored Wikipedia articles to save space. It will not affect your projects. Articles will be re-downloaded when needed.': 'Dies entfernt alle lokal gespeicherten Wikipedia-Artikel, um Speicherplatz zu sparen. Ihre Projekte sind davon nicht betroffen. Artikel werden bei Bedarf erneut heruntergeladen.',
       'Accent Color': 'Akzentfarbe',
+      'Blue': 'Blau',
+      'Purple': 'Lila',
+      'Green': 'Grün',
+      'Orange': 'Orange',
       'Default View on Startup': 'Standardansicht beim Start',
       'Library Settings': 'Bibliothekseinstellungen',
       'Search Result Limit': 'Limit für Suchergebnisse',
@@ -387,6 +407,9 @@ const resources = {
       'Open command palette': 'Abrir paleta de comandos',
       'None': 'Ninguno',
       'More options': 'Más opciones',
+      'Sort by': 'Ordenar por',
+      'Title (A-Z)': 'Título (A-Z)',
+      'Title (Z-A)': 'Título (Z-A)',
       
       // Command Palette
       'Type a command or search...': 'Escriba un comando o busque...',
@@ -402,6 +425,7 @@ const resources = {
       'Analyze with AI': 'Analizar con IA',
       'Analyzing...': 'Analizando...',
       'Add to Compilation': 'Añadir a la Compilación',
+      'Quick Add to Compilation': 'Añadir rápidamente a la Compilación',
       'AI Research Assistant': 'Asistente de Investigación de IA',
       'Thinking...': 'Pensando...',
       'Search for an article to begin': 'Busque un artículo para comenzar',
@@ -426,6 +450,8 @@ const resources = {
       'Your compilation is empty.': 'Tu compilación está vacía.',
       'Go to the Library to add articles.': 'Ve a la Biblioteca para añadir artículos.',
       'Settings & Export': 'Ajustes y Exportación',
+      'Article Preview': 'Vista Previa del Artículo',
+      'Markdown Preview': 'Vista Previa de Markdown',
       'Document Title': 'Título del Documento',
       'Layout': 'Diseño',
       'Paper Size': 'Tamaño del Papel',
@@ -484,6 +510,10 @@ const resources = {
       'Failed to clear cache.': 'Error al limpiar el caché.',
       'This will remove all locally stored Wikipedia articles to save space. It will not affect your projects. Articles will be re-downloaded when needed.': 'Esto eliminará todos los artículos de Wikipedia almacenados localmente para ahorrar espacio. No afectará a tus proyectos. Los artículos se volverán a descargar cuando sea necesario.',
       'Accent Color': 'Color de Acento',
+      'Blue': 'Azul',
+      'Purple': 'Púrpura',
+      'Green': 'Verde',
+      'Orange': 'Naranja',
       'Default View on Startup': 'Vista Predeterminada al Iniciar',
       'Library Settings': 'Ajustes de la Biblioteca',
       'Search Result Limit': 'Límite de Resultados de Búsqueda',

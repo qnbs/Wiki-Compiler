@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useTranslation } from 'https://esm.sh/react-i18next@14.1.2';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useDebounce } from '../hooks/useDebounce';
-import { SearchResult, ArticleContent, ArticleInsights, AppSettings } from '../types';
+import { SearchResult, ArticleContent, ArticleInsights, AppSettings, Project } from '../types';
 import { searchArticles } from '../services/wikipediaService';
 import { getArticleInsights } from '../services/geminiService';
 import Icon from './Icon';
@@ -12,9 +12,10 @@ interface LibraryViewProps {
   addArticleToProject: (title: string) => void;
   getArticleContent: (title: string) => Promise<string>;
   settings: AppSettings;
+  activeProject: Project;
 }
 
-const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArticleContent, settings }) => {
+const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArticleContent, settings, activeProject }) => {
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -24,14 +25,29 @@ const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArtic
   const [insights, setInsights] = useState<ArticleInsights | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [justAdded, setJustAdded] = useState<Set<string>>(new Set());
+  const [sortOrder, setSortOrder] = useState<'az' | 'za'>('az');
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  const articlesInProject = useMemo(() => 
+    new Set(activeProject.articles.map(a => a.title)),
+  [activeProject]);
 
   useEffect(() => {
     const search = async () => {
       if (debouncedSearchTerm) {
         setIsSearching(true);
-        const searchResults = await searchArticles(debouncedSearchTerm, settings.library.searchResultLimit);
+        let searchResults = await searchArticles(debouncedSearchTerm, settings.library.searchResultLimit);
+        
+        searchResults.sort((a, b) => {
+            if (sortOrder === 'az') {
+                return a.title.localeCompare(b.title);
+            } else {
+                return b.title.localeCompare(a.title);
+            }
+        });
+        
         setResults(searchResults);
         setIsSearching(false);
       } else {
@@ -39,7 +55,7 @@ const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArtic
       }
     };
     search();
-  }, [debouncedSearchTerm, settings.library.searchResultLimit]);
+  }, [debouncedSearchTerm, settings.library.searchResultLimit, sortOrder]);
 
   const handleSelectArticle = useCallback(async (title: string) => {
     setIsLoadingArticle(true);
@@ -54,6 +70,18 @@ const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArtic
     }
     setIsLoadingArticle(false);
   }, [getArticleContent]);
+
+  const handleQuickAdd = (title: string) => {
+    addArticleToProject(title);
+    setJustAdded(prev => new Set(prev).add(title));
+    setTimeout(() => {
+      setJustAdded(prev => {
+        const next = new Set(prev);
+        next.delete(title);
+        return next;
+      });
+    }, 2000);
+  };
 
   const handleAnalyze = async () => {
     if (!selectedArticle) return;
@@ -81,7 +109,7 @@ const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArtic
     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-[calc(100vh-120px)]">
       {/* Search and Results Column */}
       <div className="md:col-span-4 lg:col-span-3 overflow-y-auto border-r border-gray-200 dark:border-gray-700 pr-4">
-        <div className="relative mb-4">
+        <div className="relative mb-2">
           <input
             type="text"
             placeholder={t('Search Wikipedia...')}
@@ -93,16 +121,45 @@ const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArtic
             <Icon name="search" className="w-5 h-5 text-gray-400" />
           </div>
         </div>
+        <div className="mb-4 text-sm">
+            <label htmlFor="sort-library" className="font-medium text-gray-700 dark:text-gray-400 mr-2">{t('Sort by')}:</label>
+            <select
+                id="sort-library"
+                value={sortOrder}
+                onChange={e => setSortOrder(e.target.value as 'az' | 'za')}
+                className="py-1 px-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-sm focus:ring-1 focus:ring-blue-500 outline-none"
+            >
+                <option value="az">{t('Title (A-Z)')}</option>
+                <option value="za">{t('Title (Z-A)')}</option>
+            </select>
+        </div>
         {isSearching && <Spinner />}
         <ul className="space-y-2">
-          {results.map((result) => (
-            <li key={result.pageid} onClick={() => handleSelectArticle(result.title)}
-              className={`p-3 rounded-lg cursor-pointer transition-colors ${selectedArticle?.title === result.title ? 'bg-blue-100 dark:bg-blue-900/50' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
-            >
-              <h3 className="font-semibold text-gray-800 dark:text-gray-200">{result.title}</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{result.snippet}</p>
-            </li>
-          ))}
+          {results.map((result) => {
+            const isAdded = articlesInProject.has(result.title);
+            const wasJustAdded = justAdded.has(result.title);
+            
+            return (
+              <li key={result.pageid}
+                className={`group p-3 rounded-lg transition-colors flex justify-between items-center ${selectedArticle?.title === result.title ? 'bg-blue-100 dark:bg-blue-900/50' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+              >
+                <div onClick={() => handleSelectArticle(result.title)} className="cursor-pointer flex-grow truncate pr-2">
+                  <h3 className="font-semibold text-gray-800 dark:text-gray-200 truncate">{result.title}</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{result.snippet}</p>
+                </div>
+                <button
+                  onClick={() => handleQuickAdd(result.title)}
+                  disabled={isAdded}
+                  aria-label={t('Quick Add to Compilation')}
+                  className={`flex-shrink-0 p-2 rounded-full transition-colors ${
+                    isAdded ? 'text-green-500' : 'text-gray-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 hover:text-blue-600'
+                  } disabled:text-green-500 disabled:cursor-default disabled:hover:bg-transparent dark:disabled:hover:bg-transparent`}
+                >
+                  <Icon name={isAdded || wasJustAdded ? 'check' : 'plus'} className="w-5 h-5" />
+                </button>
+              </li>
+            );
+          })}
         </ul>
       </div>
 

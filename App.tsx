@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useTranslation } from 'https://esm.sh/react-i18next@14.1.2';
+import { useTranslation } from 'react-i18next';
 import i18next from './i18n';
 import { Project, View, Theme, AppSettings, AccentColor } from './types';
 import { getProjects, saveProject, deleteProject as dbDeleteProject, getArticleCache, saveArticleCache, getSettings, saveSettings } from './services/dbService';
@@ -107,7 +107,6 @@ const App: React.FC = () => {
       const root = document.documentElement;
       const colors = accentColorMap[settings.accentColor];
       for (const [shade, value] of Object.entries(colors)) {
-        // FIX: Argument of type 'unknown' is not assignable to parameter of type 'string'.
         root.style.setProperty(`--color-accent-${shade}`, String(value));
       }
     }
@@ -151,8 +150,9 @@ const App: React.FC = () => {
 
   const addArticleToProject = useCallback((title: string) => {
     if (activeProject) {
+      // Silently return if article is already in the project.
+      // The UI will handle user feedback.
       if (activeProject.articles.some(a => a.title === title)) {
-        alert(t('Article already in compilation.'));
         return;
       }
       const newArticle = { title };
@@ -162,7 +162,7 @@ const App: React.FC = () => {
       };
       updateActiveProject(updatedProject);
     }
-  }, [activeProject, updateActiveProject, t]);
+  }, [activeProject, updateActiveProject]);
 
   const getArticleContent = useCallback(async (title: string): Promise<string> => {
     let html = await getArticleCache(title);
@@ -212,9 +212,9 @@ const App: React.FC = () => {
     }
     switch (view) {
         case View.Library:
-            return activeProject && <LibraryView addArticleToProject={addArticleToProject} getArticleContent={getArticleContent} settings={settings} />;
+            return activeProject && <LibraryView addArticleToProject={addArticleToProject} getArticleContent={getArticleContent} settings={settings} activeProject={activeProject} />;
         case View.Archive:
-            return activeProject && <ArchiveView addArticleToProject={addArticleToProject} getArticleContent={getArticleContent} />;
+            return activeProject && <ArchiveView addArticleToProject={addArticleToProject} getArticleContent={getArticleContent} activeProject={activeProject} />;
         case View.Compiler:
             return activeProject && <CompilerView project={activeProject} updateProject={updateActiveProject} getArticleContent={getArticleContent} settings={settings} />;
         case View.Settings:

@@ -1,4 +1,4 @@
-import TurndownService from 'https://esm.sh/turndown@7.1.3';
+import TurndownService from 'turndown';
 import { Project, PdfOptions, ProjectArticle } from '../types';
 import { formatBibliography } from './citationService';
 
@@ -168,10 +168,10 @@ export const generatePdf = async (
     }
 };
 
-export const generateMarkdown = async (
+export const generateMarkdownContent = async (
     project: Project,
     getArticleContent: (title: string) => Promise<string>
-): Promise<void> => {
+): Promise<string> => {
     const allArticleHtml = await fetchAllArticles(project.articles, getArticleContent);
     
     const markdownContent = allArticleHtml.map(article => {
@@ -179,7 +179,15 @@ export const generateMarkdown = async (
         return `# ${article.title}\n\n${markdown}`;
     }).join('\n\n---\n\n');
 
-    const fullMarkdown = `# ${project.name}\n\n${markdownContent}`;
+    return `# ${project.name}\n\n${markdownContent}`;
+};
+
+
+export const generateMarkdown = async (
+    project: Project,
+    getArticleContent: (title: string) => Promise<string>
+): Promise<void> => {
+    const fullMarkdown = await generateMarkdownContent(project, getArticleContent);
 
     const blob = new Blob([fullMarkdown], { type: 'text/markdown;charset=utf-8' });
     const url = URL.createObjectURL(blob);

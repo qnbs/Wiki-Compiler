@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import { I18nextProvider } from 'https://esm.sh/react-i18next@14.1.2';
+import { I18nextProvider } from 'react-i18next';
 import i18next from './i18n';
 
 const rootElement = document.getElementById('root');
