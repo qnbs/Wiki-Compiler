@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useProjects } from '../hooks/useProjectsContext';
 import { useSettings } from '../hooks/useSettingsContext';
 import { useToasts } from '../hooks/useToasts';
-import { generatePdf, generateMarkdown, generateJsonFile, generateDocx } from '../services/exportService';
+import { generateMarkdown, generateJsonFile, generateDocx, generateOdt } from '../services/exportService';
 import Spinner from './Spinner';
 import CompilerLeftPanel from './CompilerLeftPanel';
 import CompilerRightPanel from './CompilerRightPanel';
@@ -21,7 +21,6 @@ const CompilerView: React.FC<CompilerViewProps> = ({ getArticleContent }) => {
   
   const [activeArticleTitle, setActiveArticleTitle] = useState<string | null>(null);
   const [rightPaneView, setRightPaneView] = useState<RightPaneView>('settings');
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   useEffect(() => {
     if (activeProject) {
@@ -53,19 +52,6 @@ const CompilerView: React.FC<CompilerViewProps> = ({ getArticleContent }) => {
         setRightPaneView('article');
     }
   };
-  
-  const handleGeneratePdf = useCallback(async (options: any) => {
-    if (!activeProject || !settings) return;
-    setIsGeneratingPdf(true);
-    try {
-      await generatePdf(activeProject, options, settings, getArticleContent, addToast);
-    } catch (error) {
-      console.error("PDF generation failed:", error);
-      addToast('PDF generation failed.', 'error');
-    } finally {
-      setIsGeneratingPdf(false);
-    }
-  }, [activeProject, settings, getArticleContent, addToast]);
 
   const handleGenerateMarkdown = useCallback(async () => {
     if (!activeProject) return;
@@ -97,6 +83,16 @@ const CompilerView: React.FC<CompilerViewProps> = ({ getArticleContent }) => {
     }
   }, [activeProject, getArticleContent, addToast]);
 
+  const handleGenerateOdt = useCallback(async () => {
+    if (!activeProject) return;
+    try {
+        await generateOdt(activeProject, getArticleContent);
+    } catch (error) {
+        console.error("ODT export failed:", error);
+        addToast('ODT export failed.', 'error');
+    }
+  }, [activeProject, getArticleContent, addToast]);
+
 
   if (!activeProject || !settings) {
     return (
@@ -107,13 +103,6 @@ const CompilerView: React.FC<CompilerViewProps> = ({ getArticleContent }) => {
   }
 
   return (
-    <>
-     {isGeneratingPdf && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-70 z-50 flex flex-col justify-center items-center" aria-live="assertive">
-            <Spinner light />
-            <p className="text-white text-lg mt-4">Generating your PDF... This may take a moment.</p>
-        </div>
-      )}
     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-[calc(100vh-120px)]">
       <CompilerLeftPanel
         project={activeProject}
@@ -131,14 +120,12 @@ const CompilerView: React.FC<CompilerViewProps> = ({ getArticleContent }) => {
         updateSettings={updateSettings}
         view={rightPaneView}
         setView={setRightPaneView}
-        onGeneratePdf={handleGeneratePdf}
         onGenerateMarkdown={handleGenerateMarkdown}
         onGenerateJson={handleGenerateJson}
         onGenerateDocx={handleGenerateDocx}
-        isGeneratingPdf={isGeneratingPdf}
+        onGenerateOdt={handleGenerateOdt}
       />
     </div>
-    </>
   );
 };
 

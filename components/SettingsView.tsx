@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import Icon from './Icon';
 import GeneralSettings from './settings/GeneralSettings';
 import LibrarySettings from './settings/LibrarySettings';
-import CompilerDefaultsSettings from './settings/CompilerDefaultsSettings';
 import CitationSettings from './settings/CitationSettings';
 import StorageSettings from './settings/StorageSettings';
 import AboutSettings from './settings/AboutSettings';
@@ -19,7 +18,6 @@ const SettingsView: React.FC<SettingsViewProps> = ({ reloadApp }) => {
   const sections = {
     general: { label: 'General', icon: 'settings', component: <GeneralSettings /> },
     library: { label: 'Library', icon: 'book', component: <LibrarySettings /> },
-    compiler: { label: 'Compiler', icon: 'compiler', component: <CompilerDefaultsSettings /> },
     citations: { label: 'Citations', icon: 'key', component: <CitationSettings /> },
     storage: { label: 'Storage', icon: 'archive-box', component: <StorageSettings reloadApp={reloadApp} /> },
     about: { label: 'About', icon: 'info', component: <AboutSettings /> },

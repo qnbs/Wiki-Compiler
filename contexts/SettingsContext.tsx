@@ -19,27 +19,9 @@ const DEFAULT_SETTINGS: Omit<AppSettings, 'theme'> = {
       },
     },
   },
-  compiler: {
-    defaultPdfOptions: {
-      paperSize: 'letter',
-      layout: 'single',
-      includeTOC: true,
-      includeBibliography: true,
-      citationStyle: 'apa',
-      typography: {
-        fontPair: 'modern',
-        fontSize: 16,
-      },
-      margins: 'normal',
-      lineSpacing: 1.5,
-      headerContent: 'title',
-      footerContent: 'pageNumber',
-      customHeaderText: '',
-      customFooterText: '',
-    }
-  },
   citations: {
     customCitations: [],
+    citationStyle: 'apa',
   }
 };
 

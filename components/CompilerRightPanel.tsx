@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { marked } from 'marked';
 import type { Editor } from '@tiptap/core';
 
-import { Project, AppSettings, CustomCitation, ProjectArticleContent, PdfOptions } from '../types';
+import { Project, AppSettings, CustomCitation, ProjectArticleContent } from '../types';
 import { RightPaneView } from './CompilerView';
 import { useArticleAnalysis } from '../hooks/useArticleAnalysis';
 import { useDebounce } from '../hooks/useDebounce';
@@ -30,11 +30,10 @@ interface CompilerRightPanelProps {
   updateSettings: (settings: AppSettings) => void;
   view: RightPaneView;
   setView: (view: RightPaneView) => void;
-  onGeneratePdf: (options: PdfOptions) => void;
   onGenerateMarkdown: () => void;
   onGenerateJson: () => void;
   onGenerateDocx: () => void;
-  isGeneratingPdf: boolean;
+  onGenerateOdt: () => void;
 }
 
 const countWords = (htmlString: string): number => {
@@ -46,7 +45,7 @@ const countWords = (htmlString: string): number => {
 };
 
 const CompilerRightPanel: React.FC<CompilerRightPanelProps> = (props) => {
-  const { project, updateProject, activeArticleTitle, getArticleContent, settings, view, setView } = props;
+  const { project, activeArticleTitle, getArticleContent, settings, view, setView } = props;
   const { t } = useTranslation();
   const { addToast } = useToasts();
   
@@ -62,25 +61,10 @@ const CompilerRightPanel: React.FC<CompilerRightPanelProps> = (props) => {
   const [isEditingWithAi, setIsEditingWithAi] = useState(false);
   const [aiEditError, setAiEditError] = useState<string | null>(null);
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
-
-  const [pdfOptions, setPdfOptions] = useState<PdfOptions>(project.pdfOptions || settings.compiler.defaultPdfOptions);
-  const debouncedPdfOptions = useDebounce(pdfOptions, 1000);
   
   const handleEditorCreated = useCallback((editor: Editor | null) => {
     setEditorInstance(editor);
   }, []);
-  
-  // Effect to load project-specific settings or reset to defaults
-  useEffect(() => {
-    setPdfOptions(project.pdfOptions || settings.compiler.defaultPdfOptions);
-  }, [project.id, project.pdfOptions, settings.compiler.defaultPdfOptions]);
-
-  // Effect to save updated pdfOptions to the project
-  useEffect(() => {
-      if (JSON.stringify(debouncedPdfOptions) !== JSON.stringify(project.pdfOptions)) {
-          updateProject({ ...project, pdfOptions: debouncedPdfOptions });
-      }
-  }, [debouncedPdfOptions, project, updateProject]);
   
   useEffect(() => {
     const loadContent = async () => {
@@ -180,7 +164,6 @@ const CompilerRightPanel: React.FC<CompilerRightPanelProps> = (props) => {
             return <ArticlePane 
                 activeArticleTitle={activeArticleTitle}
                 activeArticleContent={activeArticleContent}
-                pdfOptions={pdfOptions}
                 onContentUpdate={handleContentUpdate}
                 onEditorCreated={handleEditorCreated}
                 onOpenCitationModal={() => setIsCitationModalOpen(true)}
@@ -191,7 +174,7 @@ const CompilerRightPanel: React.FC<CompilerRightPanelProps> = (props) => {
             return <MarkdownPane project={project} getArticleContent={getArticleContent} />
         case 'settings':
         default:
-             return <SettingsPane {...props} pdfOptions={pdfOptions} setPdfOptions={setPdfOptions} />
+             return <SettingsPane {...props} />
     }
   }
 
@@ -227,13 +210,12 @@ const CompilerRightPanel: React.FC<CompilerRightPanelProps> = (props) => {
 const ArticlePane: React.FC<{
     activeArticleTitle: string | null;
     activeArticleContent: string | null;
-    pdfOptions: PdfOptions;
     onContentUpdate: (html: string) => void;
     onEditorCreated: (editor: Editor | null) => void;
     onOpenCitationModal: () => void;
     onOpenAiEditor: () => void;
     onSetView: (view: RightPaneView) => void;
-}> = ({ activeArticleTitle, activeArticleContent, pdfOptions, onContentUpdate, onEditorCreated, onOpenCitationModal, onOpenAiEditor, onSetView }) => {
+}> = ({ activeArticleTitle, activeArticleContent, onContentUpdate, onEditorCreated, onOpenCitationModal, onOpenAiEditor, onSetView }) => {
     const { t } = useTranslation();
     const [wordCount, setWordCount] = useState(0);
 
@@ -246,18 +228,6 @@ const ArticlePane: React.FC<{
             setWordCount(countWords(activeArticleContent));
         }
     }, [activeArticleContent]);
-
-    const fonts = {
-        modern: { body: "'Inter', sans-serif" },
-        classic: { body: "'Lora', serif" },
-    };
-    const previewStyles: React.CSSProperties = {
-        fontFamily: fonts[pdfOptions.typography.fontPair].body,
-        fontSize: `${pdfOptions.typography.fontSize}px`,
-        lineHeight: pdfOptions.lineSpacing,
-        columnCount: pdfOptions.layout === 'two' ? 2 : 1,
-        columnGap: '2rem',
-    };
 
     if (!activeArticleTitle || activeArticleContent === null) {
         return <SkeletonLoader />;
@@ -288,7 +258,7 @@ const ArticlePane: React.FC<{
                 </div>
             </div>
             <ArticleInsightsView insights={insights} isAnalyzing={isAnalyzing} analysisError={analysisError} />
-            <div style={previewStyles}>
+            <div>
                 <ArticleEditor
                     content={activeArticleContent}
                     onUpdate={onContentUpdate}
@@ -345,10 +315,10 @@ const MarkdownPane: React.FC<{ project: Project; getArticleContent: (title: stri
     );
 };
 
-const SettingsPane: React.FC<CompilerRightPanelProps & { pdfOptions: PdfOptions; setPdfOptions: (options: PdfOptions) => void; }> = (props) => {
+const SettingsPane: React.FC<Omit<CompilerRightPanelProps, 'view' | 'setView' | 'activeArticleTitle'>> = (props) => {
     const { 
-        project, updateProject, settings, updateSettings, onGeneratePdf, onGenerateMarkdown, 
-        onGenerateJson, onGenerateDocx, isGeneratingPdf, pdfOptions, setPdfOptions 
+        project, onGenerateMarkdown, 
+        onGenerateJson, onGenerateDocx, onGenerateOdt, settings
     } = props;
     const { t } = useTranslation();
     const { addToast } = useToasts();
@@ -358,17 +328,7 @@ const SettingsPane: React.FC<CompilerRightPanelProps & { pdfOptions: PdfOptions;
     const [isGeneratingPlainText, setIsGeneratingPlainText] = useState(false);
     const [isGeneratingJson, setIsGeneratingJson] = useState(false);
     const [isGeneratingDocx, setIsGeneratingDocx] = useState(false);
-
-    const onPdfOptionsChange = (path: string, value: any) => {
-        const keys = path.split('.');
-        const newOptions = JSON.parse(JSON.stringify(pdfOptions));
-        let current = newOptions;
-        for (let i = 0; i < keys.length - 1; i++) {
-            current = current[keys[i]];
-        }
-        current[keys[keys.length - 1]] = value;
-        setPdfOptions(newOptions);
-    };
+    const [isGeneratingOdt, setIsGeneratingOdt] = useState(false);
 
     const handleGenerateMarkdownWrapper = useCallback(async () => {
         setIsGeneratingMarkdown(true);
@@ -379,10 +339,10 @@ const SettingsPane: React.FC<CompilerRightPanelProps & { pdfOptions: PdfOptions;
     const handleGenerateHtml = useCallback(async () => {
         setIsGeneratingHtml(true);
         addToast(t('Exporting HTML...'), 'info');
-        try { await generateHtmlFile(project, pdfOptions, settings, props.getArticleContent); } 
+        try { await generateHtmlFile(project, settings, props.getArticleContent); } 
         catch (e) { addToast(t('HTML export failed.'), 'error'); } 
         finally { setIsGeneratingHtml(false); }
-    }, [project, pdfOptions, settings, props.getArticleContent, addToast, t]);
+    }, [project, settings, props.getArticleContent, addToast, t]);
 
     const handleGeneratePlainText = useCallback(async () => {
         setIsGeneratingPlainText(true);
@@ -403,26 +363,28 @@ const SettingsPane: React.FC<CompilerRightPanelProps & { pdfOptions: PdfOptions;
         addToast(t('Exporting DOCX...'), 'info');
         try { await onGenerateDocx(); } finally { setIsGeneratingDocx(false); }
     }, [onGenerateDocx, addToast, t]);
+    
+    const handleGenerateOdtWrapper = useCallback(async () => {
+        setIsGeneratingOdt(true);
+        addToast(t('Exporting ODT...'), 'info');
+        try { await onGenerateOdt(); } finally { setIsGeneratingOdt(false); }
+    }, [onGenerateOdt, addToast, t]);
 
     return <CompilerExportSettings
-        project={project}
-        updateProject={updateProject}
-        settings={settings}
-        updateSettings={updateSettings}
-        pdfOptions={pdfOptions}
-        onPdfOptionsChange={onPdfOptionsChange}
-        onGeneratePdf={onGeneratePdf}
+        project={props.project}
+        updateProject={props.updateProject}
         onGenerateMarkdown={handleGenerateMarkdownWrapper}
         onGenerateHtml={handleGenerateHtml}
         onGeneratePlainText={handleGeneratePlainText}
         onGenerateJson={handleGenerateJsonWrapper}
         onGenerateDocx={handleGenerateDocxWrapper}
-        isGeneratingPdf={isGeneratingPdf}
+        onGenerateOdt={handleGenerateOdtWrapper}
         isGeneratingMarkdown={isGeneratingMarkdown}
         isGeneratingHtml={isGeneratingHtml}
         isGeneratingPlainText={isGeneratingPlainText}
         isGeneratingJson={isGeneratingJson}
         isGeneratingDocx={isGeneratingDocx}
+        isGeneratingOdt={isGeneratingOdt}
     />
 };
 

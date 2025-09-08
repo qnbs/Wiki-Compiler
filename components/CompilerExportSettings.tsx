@@ -1,56 +1,45 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Project, PdfOptions, AppSettings } from '../types';
-import { useToasts } from '../../hooks/useToasts';
+import { Project } from '../types';
 import { useDebounce } from '../../hooks/useDebounce';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import Icon from './Icon';
 import Spinner from './Spinner';
-import PdfOptionsForm from './settings/PdfOptionsForm';
 
 interface CompilerExportSettingsProps {
     project: Project;
     updateProject: (project: Project) => void;
-    settings: AppSettings;
-    updateSettings: (settings: AppSettings) => void;
-    pdfOptions: PdfOptions;
-    onPdfOptionsChange: (path: string, value: any) => void;
-    onGeneratePdf: (options: PdfOptions) => void;
     onGenerateMarkdown: () => void;
     onGenerateHtml: () => void;
     onGeneratePlainText: () => void;
     onGenerateJson: () => void;
     onGenerateDocx: () => void;
-    isGeneratingPdf: boolean;
+    onGenerateOdt: () => void;
     isGeneratingMarkdown: boolean;
     isGeneratingHtml: boolean;
     isGeneratingPlainText: boolean;
     isGeneratingJson: boolean;
     isGeneratingDocx: boolean;
+    isGeneratingOdt: boolean;
 }
 
 const CompilerExportSettings: React.FC<CompilerExportSettingsProps> = ({ 
     project, 
     updateProject, 
-    settings,
-    updateSettings,
-    pdfOptions,
-    onPdfOptionsChange,
-    onGeneratePdf, 
     onGenerateMarkdown, 
     onGenerateHtml,
     onGeneratePlainText,
     onGenerateJson,
     onGenerateDocx,
-    isGeneratingPdf,
+    onGenerateOdt,
     isGeneratingMarkdown,
     isGeneratingHtml,
     isGeneratingPlainText,
     isGeneratingJson,
     isGeneratingDocx,
+    isGeneratingOdt,
 }) => {
     const { t } = useTranslation();
-    const { addToast } = useToasts();
     const [projectName, setProjectName] = useState(project.name);
     const debouncedProjectName = useDebounce(projectName, 500);
     const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
@@ -68,15 +57,7 @@ const CompilerExportSettings: React.FC<CompilerExportSettingsProps> = ({
         }
     }, [debouncedProjectName, project, updateProject]);
 
-    const handleSaveDefaults = () => {
-        if (window.confirm(t('Are you sure you want to overwrite your default export settings with the current ones?'))) {
-            const newSettings = { ...settings, compiler: { ...settings.compiler, defaultPdfOptions: pdfOptions } };
-            updateSettings(newSettings);
-            addToast(t('Default settings updated successfully.'), 'success');
-        }
-    };
-
-    const isExporting = isGeneratingPdf || isGeneratingMarkdown || isGeneratingHtml || isGeneratingPlainText || isGeneratingJson || isGeneratingDocx;
+    const isExporting = isGeneratingMarkdown || isGeneratingHtml || isGeneratingPlainText || isGeneratingJson || isGeneratingDocx || isGeneratingOdt;
 
     return (
       <div className="bg-white dark:bg-gray-800/50 p-6 rounded-lg shadow-sm space-y-8">
@@ -90,25 +71,18 @@ const CompilerExportSettings: React.FC<CompilerExportSettingsProps> = ({
             />
         </div>
         
-        <PdfOptionsForm options={pdfOptions} onOptionChange={onPdfOptionsChange} />
-
         <div className="border-t dark:border-gray-700 pt-6 space-y-4">
-            <div>
-                 <button onClick={handleSaveDefaults} disabled={isExporting} className="w-full text-left text-sm text-accent-600 dark:text-accent-400 hover:underline disabled:opacity-50 disabled:cursor-not-allowed">{t('Save as Default Settings')}</button>
-                 <p className="text-xs text-gray-500 dark:text-gray-400">{t('Save the current export options as the new default for all future projects.')}</p>
-            </div>
             <div className="flex gap-4">
-                <button onClick={() => onGeneratePdf(pdfOptions)} disabled={isExporting} className="flex-1 flex items-center justify-center gap-2 bg-accent-600 text-white px-4 py-2 rounded-lg hover:bg-accent-700 transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed">
-                    {isGeneratingPdf ? <Spinner light /> : <Icon name="download" className="w-5 h-5" />}
-                    {isGeneratingPdf ? t('Generating PDF...') : t('Generate PDF')}
+                <button onClick={onGenerateDocx} disabled={isExporting} className="flex-1 flex items-center justify-center gap-2 bg-accent-600 text-white px-4 py-2 rounded-lg hover:bg-accent-700 transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed">
+                    {isGeneratingDocx ? <Spinner light /> : <Icon name="download" className="w-5 h-5" />}
+                    {isGeneratingDocx ? t('Exporting DOCX...') : t('Export DOCX')}
                 </button>
-                <div className="flex-1 relative" ref={exportMenuRef}>
+                <div className="relative" ref={exportMenuRef}>
                     <button 
                         onClick={() => setIsExportMenuOpen(p => !p)} 
                         disabled={isExporting} 
-                        className="w-full flex items-center justify-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        className="w-full h-full flex items-center justify-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
-                        <Icon name="document" className="w-5 h-5" />
                         <span>{t('Export As...')}</span>
                         <Icon name="chevron-down" className={`w-4 h-4 transition-transform ${isExportMenuOpen ? 'rotate-180' : ''}`} />
                     </button>
@@ -118,6 +92,9 @@ const CompilerExportSettings: React.FC<CompilerExportSettingsProps> = ({
                                 <li onClick={!isExporting ? () => { onGenerateMarkdown(); setIsExportMenuOpen(false); } : undefined} className={`flex justify-between items-center px-4 py-2 ${isExporting ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer'}`}>
                                     {t('Markdown (.md)')} {isGeneratingMarkdown && <Spinner />}
                                 </li>
+                                <li onClick={!isExporting ? () => { onGenerateOdt(); setIsExportMenuOpen(false); } : undefined} className={`flex justify-between items-center px-4 py-2 ${isExporting ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer'}`}>
+                                    {t('ODT (.odt)')} {isGeneratingOdt && <Spinner />}
+                                </li>
                                 <li onClick={!isExporting ? () => { onGenerateHtml(); setIsExportMenuOpen(false); } : undefined} className={`flex justify-between items-center px-4 py-2 ${isExporting ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer'}`}>
                                     {t('HTML (.html)')} {isGeneratingHtml && <Spinner />}
                                 </li>
@@ -126,9 +103,6 @@ const CompilerExportSettings: React.FC<CompilerExportSettingsProps> = ({
                                 </li>
                                 <li onClick={!isExporting ? () => { onGenerateJson(); setIsExportMenuOpen(false); } : undefined} className={`flex justify-between items-center px-4 py-2 ${isExporting ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer'}`}>
                                     {t('JSON (.json)')} {isGeneratingJson && <Spinner />}
-                                </li>
-                                <li onClick={!isExporting ? () => { onGenerateDocx(); setIsExportMenuOpen(false); } : undefined} className={`flex justify-between items-center px-4 py-2 ${isExporting ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer'}`}>
-                                    {t('DOCX (.docx)')} {isGeneratingDocx && <Spinner />}
                                 </li>
                             </ul>
                         </div>

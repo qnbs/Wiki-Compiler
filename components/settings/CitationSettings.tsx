@@ -61,7 +61,23 @@ const CitationSettings: React.FC = () => {
 
     return (
         <div className="space-y-8">
-            <h2 className="text-xl font-semibold mb-2 pb-2 border-b dark:border-gray-600 text-gray-800 dark:text-gray-200">{t('Custom Citations')}</h2>
+            <h2 className="text-xl font-semibold mb-2 pb-2 border-b dark:border-gray-600 text-gray-800 dark:text-gray-200">{t('Citations')}</h2>
+            
+             <div className="space-y-2">
+                <label htmlFor="citation-style-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('Default Bibliography Style')}</label>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t('Choose the citation format for generated bibliographies.')}</p>
+                <select 
+                    id="citation-style-select" 
+                    value={settings.citations.citationStyle} 
+                    onChange={e => updateSettings({ ...settings, citations: { ...settings.citations, citationStyle: e.target.value as 'apa' | 'mla' }})} 
+                    className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-accent-500"
+                >
+                    <option value="apa">{t('APA')}</option>
+                    <option value="mla">{t('MLA')}</option>
+                </select>
+            </div>
+            
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{t('Custom Citations')}</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 -mt-6">{t('Manage your custom sources for bibliographies. These can be inserted into articles in the Compiler view.')}</p>
             
             <div className="space-y-4">

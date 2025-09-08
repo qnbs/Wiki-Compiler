@@ -22,7 +22,6 @@ export interface Project {
   name: string;
   articles: ProjectArticle[];
   notes?: string;
-  pdfOptions?: PdfOptions;
   lastActiveView?: RightPaneView;
 }
 
@@ -32,26 +31,6 @@ export enum View {
   Compiler = 'compiler',
   Settings = 'settings',
   Help = 'help'
-}
-
-export interface TypographyOptions {
-  fontPair: 'modern' | 'classic';
-  fontSize: number;
-}
-
-export interface PdfOptions {
-  paperSize: 'letter' | 'a4';
-  layout: 'single' | 'two';
-  includeTOC: boolean;
-  includeBibliography: boolean;
-  citationStyle: 'apa' | 'mla';
-  typography: TypographyOptions;
-  margins: 'normal' | 'narrow' | 'wide';
-  lineSpacing: number;
-  headerContent: 'title' | 'custom' | 'none';
-  footerContent: 'pageNumber' | 'custom' | 'none';
-  customHeaderText?: string;
-  customFooterText?: string;
 }
 
 export interface ArticleMetadata {
@@ -107,11 +86,9 @@ export interface AppSettings {
       };
     };
   };
-  compiler: {
-    defaultPdfOptions: PdfOptions;
-  };
   citations: {
     customCitations: CustomCitation[];
+    citationStyle: 'apa' | 'mla';
   };
 }
 

@@ -30,12 +30,12 @@ In the age of information overload, Wiki Compiler offers a focused sanctuary for
 
 ### 📚 Professional Publishing & Export
 *   **Advanced Citation Management**: Add, manage, and insert custom external sources (books, websites, etc.) as in-text citations within your articles.
-*   **Customizable PDF Exports**: Create polished PDF documents from your compilations with extensive formatting controls.
-    *   **Layout**: A4/Letter paper sizes, single or two-column layouts.
-    *   **Typography**: Modern (sans-serif) & classic (serif) font pairings with adjustable base font size and line spacing.
-    *   **Page Setup**: Fine-tune margins and add custom headers and footers (page numbers, titles, etc.).
-*   **Automatic Bibliography**: Automatically generate a formatted bibliography in **APA** or **MLA** style, including both Wikipedia articles and your custom citations.
-*   **Markdown Export**: Export your entire compilation as a clean, portable single Markdown file, complete with links back to the original source articles.
+*   **Automatic Bibliography**: Automatically generate a formatted bibliography in **APA** or **MLA** style for HTML exports, including both Wikipedia articles and your custom citations.
+*   **Multiple Export Formats**:
+    *   **DOCX**: Export your compilation to a professional Microsoft Word document.
+    *   **Markdown**: Export your entire compilation as a clean, portable single Markdown file, complete with links back to the original source articles.
+    *   **HTML**: Get a standalone HTML file of your compilation.
+    *   **JSON / Plain Text**: Export your data for portability and easy reuse.
 
 ### 🎨 Personalized & Efficient Workflow
 *   **Focused Dark Mode**: A beautiful dark mode for focused, late-night research sessions.
@@ -57,7 +57,7 @@ This application is built with a modern, client-centric tech stack designed for 
 *   **Styling**: **Tailwind CSS** (via CDN) for rapid, utility-first styling, enabling a consistent and modern design system.
 *   **Client-Side Storage**: **IndexedDB** (using the `idb` library) provides a large, asynchronous, and persistent local database. This is crucial for the offline article archive, project storage, and user settings.
 *   **AI Integration**: **Google Gemini API** (`@google/genai`) is the core of the AI Research Assistant, providing powerful generative capabilities for content analysis and editing.
-*   **PDF Generation**: **`html2pdf.js`** runs on the client to convert the compiled HTML content into a downloadable PDF, allowing for complex layouts and customization without server-side processing.
+*   **DOCX Generation**: **`docx`** library is used to generate professional Word documents on the client-side.
 *   **HTML to Markdown**: **`turndown`** is used to convert the rich HTML content from Wikipedia articles into clean, readable Markdown for export.
 *   **Internationalization**: **`i18next`**, **`react-i18next`**, and **`i18next-browser-languagedetector`** are used to provide full localization support.
 
@@ -142,12 +142,12 @@ Im Zeitalter der Informationsüberflutung bietet Wiki Compiler einen fokussierte
 
 ### 📚 Professionelles Publizieren & Export
 *   **Erweitertes Zitatmanagement**: Fügen Sie benutzerdefinierte externe Quellen (Bücher, Websites usw.) hinzu, verwalten Sie sie und fügen Sie sie als In-Text-Zitate in Ihre Artikel ein.
-*   **Anpassbare PDF-Exporte**: Erstellen Sie ausgefeilte PDF-Dokumente aus Ihren Kompilationen mit umfangreichen Formatierungssteuerungen.
-    *   **Layout**: Papierformate A4/Letter, ein- oder zweispaltige Layouts.
-    *   **Typografie**: Moderne (Sans-Serif) & klassische (Serif) Schriftart-Paarungen mit anpassbarer Basisschriftgröße und Zeilenabstand.
-    *   **Seiteneinrichtung**: Feinabstimmung der Ränder und Hinzufügen von benutzerdefinierten Kopf- und Fußzeilen (Seitenzahlen, Titel usw.).
-*   **Automatische Bibliografie**: Generieren Sie automatisch eine formatierte Bibliografie im **APA**- oder **MLA**-Stil, die sowohl Wikipedia-Artikel als auch Ihre benutzerdefinierten Zitate enthält.
-*   **Markdown-Export**: Exportieren Sie Ihre gesamte Kompilation als saubere, portable einzelne Markdown-Datei, komplett mit Links zu den ursprünglichen Quellartikeln.
+*   **Automatische Bibliografie**: Generieren Sie automatisch eine formatierte Bibliografie im **APA**- oder **MLA**-Stil für HTML-Exporte, die sowohl Wikipedia-Artikel als auch Ihre benutzerdefinierten Zitate enthält.
+*   **Mehrere Exportformate**:
+    *   **DOCX**: Exportieren Sie Ihre Kompilation in ein professionelles Microsoft Word-Dokument.
+    *   **Markdown**: Exportieren Sie Ihre gesamte Kompilation als saubere, portable einzelne Markdown-Datei, komplett mit Links zu den ursprünglichen Quellartikeln.
+    *   **HTML**: Erhalten Sie eine eigenständige HTML-Datei Ihrer Kompilation.
+    *   **JSON / Klartext**: Exportieren Sie Ihre Daten zur Portabilität und einfachen Wiederverwendung.
 
 ### 🎨 Personalisierter & effizienter Workflow
 *   **Fokussierter Dunkelmodus**: Ein schöner Dunkelmodus für konzentrierte, nächtliche Forschungssitzungen.
@@ -169,7 +169,7 @@ Diese Anwendung wurde mit einem modernen, client-zentrierten Technologie-Stack e
 *   **Styling**: **Tailwind CSS** (über CDN) für schnelles, Utility-First-Styling, das ein konsistentes und modernes Designsystem ermöglicht.
 *   **Client-seitiger Speicher**: **IndexedDB** (unter Verwendung der `idb`-Bibliothek) bietet eine große, asynchrone und persistente lokale Datenbank. Dies ist entscheidend für das Offline-Artikelarchiv, die Projektspeicherung und die Benutzereinstellungen.
 *   **KI-Integration**: **Google Gemini API** (`@google/genai`) ist der Kern des KI-Forschungsassistenten und bietet leistungsstarke generative Fähigkeiten zur Inhaltsanalyse und -bearbeitung.
-*   **PDF-Generierung**: **`html2pdf.js`** läuft auf dem Client, um den kompilierten HTML-Inhalt in ein herunterladbares PDF zu konvertieren, was komplexe Layouts und Anpassungen ohne serverseitige Verarbeitung ermöglicht.
+*   **DOCX-Generierung**: Die **`docx`**-Bibliothek wird verwendet, um professionelle Word-Dokumente auf der Client-Seite zu erstellen.
 *   **HTML zu Markdown**: **`turndown`** wird verwendet, um den reichhaltigen HTML-Inhalt von Wikipedia-Artikeln für den Export in sauberes, lesbares Markdown zu konvertieren.
 *   **Internationalisierung**: **`i18next`**, **`react-i18next`** und **`i18next-browser-languagedetector`** werden verwendet, um vollständige Lokalisierungsunterstützung zu bieten.
 

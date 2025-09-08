@@ -1,8 +1,10 @@
 import TurndownService from 'turndown';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, IParagraphOptions, IRunOptions } from 'docx';
-import { Project, PdfOptions, AppSettings, CustomCitation, ToastType } from '../types';
+import { Project, AppSettings, CustomCitation, ToastType } from '../types';
 import { formatBibliography } from './citationService';
 import { getProjectArticleContent } from './dbService';
+
+declare var JSZip: any;
 
 // Turndown service instantiated once and configured for all markdown exports
 // @ts-ignore
@@ -48,201 +50,83 @@ const fetchAllArticleContent = async (
     );
 };
 
-const buildExportHtml = async (
+const generateHtmlContent = async (
     project: Project,
-    options: PdfOptions,
     settings: AppSettings,
     getArticleContent: (title: string) => Promise<string>
 ): Promise<string> => {
     const allArticleContent = await fetchAllArticleContent(project, getArticleContent);
         
-    let tocHtml = '';
-    if (options.includeTOC) {
-        tocHtml = `<div class="p-12" style="page-break-after: always;"><h1 class="text-4xl text-center mb-8">Table of Contents</h1><ul class="list-none space-y-2">`;
-        allArticleContent.forEach((article, index) => {
-            const anchor = article.title.replace(/[^a-zA-Z0-9]/g, '') + index;
-            tocHtml += `<li class="text-lg"><a href="#${anchor}">${article.title}</a></li>`;
-        });
-        tocHtml += `</ul></div>`;
-    }
+    let tocHtml = `<div><h2>Table of Contents</h2><ul>`;
+    allArticleContent.forEach((article, index) => {
+        const anchor = article.title.replace(/[^a-zA-Z0-9]/g, '') + index;
+        tocHtml += `<li><a href="#${anchor}">${article.title}</a></li>`;
+    });
+    tocHtml += `</ul></div>`;
 
-    let bibliographyHtml = '';
-    if (options.includeBibliography) {
-        const citationKeyRegex = /<cite data-citation-key="([^"]+)">/g;
-        const usedCitationKeys = new Set<string>();
-        const wikiArticleTitles = new Set<string>(project.articles.map(a => a.title));
+    const citationKeyRegex = /<cite data-citation-key="([^"]+)">/g;
+    const usedCitationKeys = new Set<string>();
+    const wikiArticleTitles = new Set<string>(project.articles.map(a => a.title));
 
-        for (const article of allArticleContent) {
-            let match;
-            while ((match = citationKeyRegex.exec(article.html)) !== null) {
-                usedCitationKeys.add(match[1]);
-            }
+    for (const article of allArticleContent) {
+        let match;
+        while ((match = citationKeyRegex.exec(article.html)) !== null) {
+            usedCitationKeys.add(match[1]);
         }
-
-        const customCitationsToInclude: CustomCitation[] = [];
-        usedCitationKeys.forEach(key => {
-            const found = settings.citations.customCitations.find(c => c.key === key);
-            if (found) {
-                customCitationsToInclude.push(found);
-            } else {
-                // Assuming if not found in custom, it might be a project article title used as a key
-                // This logic may need refinement based on citation implementation
-                wikiArticleTitles.add(key); 
-            }
-        });
-
-        bibliographyHtml = await formatBibliography(
-            Array.from(wikiArticleTitles), 
-            customCitationsToInclude,
-            options.citationStyle
-        );
     }
+
+    const customCitationsToInclude: CustomCitation[] = [];
+    usedCitationKeys.forEach(key => {
+        const found = settings.citations.customCitations.find(c => c.key === key);
+        if (found) {
+            customCitationsToInclude.push(found);
+        } else {
+            wikiArticleTitles.add(key); 
+        }
+    });
+
+    const bibliographyHtml = await formatBibliography(
+        Array.from(wikiArticleTitles), 
+        customCitationsToInclude,
+        settings.citations.citationStyle
+    );
     
     const articlesHtml = allArticleContent.map((article, index) => {
         const anchor = article.title.replace(/[^a-zA-Z0-9]/g, '') + index;
-        return `<div class="p-12" style="page-break-after: always;">
-                    <h2 class="text-3xl font-bold mb-6 border-b pb-2" id="${anchor}">${article.title}</h2>
-                    <div class="prose max-w-none">${article.html}</div>
+        return `<div style="margin-bottom: 2rem;">
+                    <h2 id="${anchor}">${article.title}</h2>
+                    <div class="prose">${article.html}</div>
                 </div>`;
     }).join('');
-
-    const { fontPair, fontSize } = options.typography;
-    const fonts = {
-        modern: { body: "'Inter', sans-serif", heading: "'Inter', sans-serif" },
-        classic: { body: "'Lora', serif", heading: "'Lora', serif" },
-    };
-    
-    const typographyStyles = `
-        body, .prose { 
-            font-family: ${fonts[fontPair].body}; 
-            font-size: ${fontSize}px;
-            line-height: ${options.lineSpacing};
-            widows: 3;
-            orphans: 3;
-        }
-        h1, h2, h3, h4, h5, h6 {
-            font-family: ${fonts[fontPair].heading};
-        }
-        .prose figure, .prose table, .prose blockquote {
-             page-break-inside: avoid;
-        }
-    `;
-
-    const columnStyles = options.layout === 'two' ? `
-      .prose { 
-        column-count: 2; 
-        column-gap: 2rem;
-      }
-      .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
-        column-span: all;
-      }
-    ` : '';
     
     return `
+      <!DOCTYPE html>
       <html>
         <head>
+          <meta charset="UTF-8">
           <title>${project.name}</title>
-          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:wght@400;500;600&display=swap" rel="stylesheet">
           <style>
-            body { color: #121212; }
-            .prose { max-width: none; }
-            .prose a { color: #2563eb; text-decoration: none; }
-            .prose a:hover { text-decoration: underline; }
-            .prose .infobox { border: 1px solid #e2e8f0; background-color: #f8fafc; float: right; width: 256px; font-size: 0.875rem; padding: 0.5rem; margin-left: 1rem; margin-bottom: 1rem; }
-            h1,h2,h3,h4,h5,h6 { font-weight: bold; }
+            body { font-family: sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
+            h1, h2, h3 { line-height: 1.2; }
+            a { color: #0066cc; }
+            .prose .infobox { border: 1px solid #ccc; background-color: #f9f9f9; float: right; width: 250px; font-size: 0.9em; padding: 5px; margin-left: 1em; margin-bottom: 1em; }
             cite { font-style: normal; }
-            ${typographyStyles}
-            ${columnStyles}
           </style>
         </head>
         <body>
-          <div class="p-12" style="page-break-after: always;">
-              <h1 class="text-5xl text-center mt-48" style="font-family: ${fonts[fontPair].heading};">${project.name}</h1>
-          </div>
-          ${tocHtml}
-          ${articlesHtml}
-          ${bibliographyHtml}
+          <header>
+              <h1>${project.name}</h1>
+          </header>
+          <main>
+            ${tocHtml}
+            <hr>
+            ${articlesHtml}
+            ${bibliographyHtml.replace('style="page-break-before: always;"', '')}
+          </main>
         </body>
       </html>
     `;
 }
-
-export const generatePdf = async (
-    project: Project,
-    options: PdfOptions,
-    settings: AppSettings,
-    getArticleContent: (title: string) => Promise<string>,
-    addToast: (message: string, type: ToastType) => void
-): Promise<void> => {
-    const contentContainer = document.createElement('div');
-    contentContainer.style.visibility = 'hidden';
-    contentContainer.style.position = 'absolute';
-    contentContainer.style.left = '-9999px';
-    document.body.appendChild(contentContainer);
-
-    try {
-        const finalHtml = await buildExportHtml(project, options, settings, getArticleContent);
-        contentContainer.innerHTML = finalHtml;
-    
-        const marginMap = {
-            normal: 0.75,
-            narrow: 0.5,
-            wide: 1.0,
-        };
-        const marginInInches = marginMap[options.margins];
-
-        // @ts-ignore
-        const promise = html2pdf().set({
-            margin: marginInInches,
-            filename: `${project.name.replace(/ /g, '_')}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, logging: false },
-            jsPDF: { unit: 'in', format: options.paperSize, orientation: 'portrait' }
-        }).from(contentContainer).toPdf().get('pdf').then((pdf) => {
-            const totalPages = pdf.internal.getNumberOfPages();
-            if (totalPages <= 1) return;
-
-            const pageHeight = pdf.internal.pageSize.getHeight();
-            const pageWidth = pdf.internal.pageSize.getWidth();
-            
-            // Logic to avoid adding headers/footers on title, TOC, and bibliography pages
-            const firstContentPage = 1 + (options.includeTOC ? 1 : 0) + 1; // Page after Title and TOC
-            const lastContentPage = totalPages - (options.includeBibliography ? 1 : 0); // Page before Bibliography
-
-            for (let i = firstContentPage; i <= lastContentPage; i++) {
-                if (i > totalPages) break;
-                pdf.setPage(i);
-                pdf.setFontSize(10);
-                pdf.setTextColor(100);
-
-                if (options.headerContent === 'title') {
-                    pdf.text(project.name, marginInInches, marginInInches / 1.5);
-                } else if (options.headerContent === 'custom' && options.customHeaderText) {
-                    pdf.text(options.customHeaderText, marginInInches, marginInInches / 1.5);
-                }
-
-                if (options.footerContent === 'pageNumber') {
-                    const pageNumText = `${i}`;
-                    const textWidth = pdf.getStringUnitWidth(pageNumText) * 10 / pdf.internal.scaleFactor;
-                    pdf.text(pageNumText, (pageWidth / 2) - (textWidth / 2), pageHeight - marginInInches / 2);
-                } else if (options.footerContent === 'custom' && options.customFooterText) {
-                    const text = options.customFooterText;
-                    const textWidth = pdf.getStringUnitWidth(text) * 10 / pdf.internal.scaleFactor;
-                    pdf.text(text, (pageWidth / 2) - (textWidth / 2), pageHeight - marginInInches / 2);
-                }
-            }
-        }).save();
-
-        await promise;
-
-    } catch(err) {
-        console.error("PDF generation failed inside service:", err);
-        addToast("PDF generation failed.", "error");
-    }
-    finally {
-        document.body.removeChild(contentContainer);
-    }
-};
 
 export const generateMarkdownContent = async (
     project: Project,
@@ -293,12 +177,11 @@ export const generateMarkdown = async (
 
 export const generateHtmlFile = async (
     project: Project,
-    options: PdfOptions,
     settings: AppSettings,
     getArticleContent: (title: string) => Promise<string>
 ): Promise<void> => {
-    const finalHtml = await buildExportHtml(project, options, settings, getArticleContent);
-    const blob = new Blob([finalHtml], { type: 'text/html;charset=utf-t' });
+    const finalHtml = await generateHtmlContent(project, settings, getArticleContent);
+    const blob = new Blob([finalHtml], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -371,6 +254,113 @@ export const generateJsonFile = async (
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 }
+
+// ODT Generation
+const odtTemplates = {
+    mimetype: 'application/vnd.oasis.opendocument.text',
+    manifest: `<?xml version="1.0" encoding="UTF-8"?>
+<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0">
+    <manifest:file-entry manifest:full-path="/" manifest:media-type="application/vnd.oasis.opendocument.text"/>
+    <manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/>
+    <manifest:file-entry manifest:full-path="styles.xml" manifest:media-type="text/xml"/>
+</manifest:manifest>`,
+    styles: `<?xml version="1.0" encoding="UTF-8"?>
+<office:document-styles xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0">
+    <office:styles>
+        <style:style style:name="Standard" style:family="paragraph" style:class="text"/>
+        <style:style style:name="Heading_20_1" style:family="paragraph" style:parent-style-name="Standard" style:class="text">
+            <style:text-properties fo:font-weight="bold" style:font-weight-asian="bold" style:font-weight-complex="bold"/>
+        </style:style>
+        <style:style style:name="T1" style:family="text"><style:text-properties fo:font-weight="bold"/></style:style>
+        <style:style style:name="T2" style:family="text"><style:text-properties fo:font-style="italic"/></style:style>
+    </office:styles>
+</office:document-styles>`,
+    contentStart: `<?xml version="1.0" encoding="UTF-8"?>
+<office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0">
+    <office:body><office:text>`,
+    contentEnd: `</office:text></office:body></office:document-content>`
+};
+
+const htmlToOdtXml = (html: string): string => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    const escapeXml = (text: string): string => {
+        return text.replace(/[<>&'"]/g, (c) => {
+            switch (c) {
+                case '<': return '&lt;';
+                case '>': return '&gt;';
+                case '&': return '&amp;';
+                case '\'': return '&apos;';
+                case '"': return '&quot;';
+                default: return c;
+            }
+        });
+    };
+    
+    const processNode = (node: Node): string => {
+        let result = '';
+        if (node.nodeType === Node.TEXT_NODE) {
+            return escapeXml(node.textContent || '');
+        }
+        if (node.nodeType === Node.ELEMENT_NODE) {
+            const el = node as HTMLElement;
+            const childrenXml = Array.from(el.childNodes).map(processNode).join('');
+            switch (el.nodeName) {
+                case 'H1': case 'H2': case 'H3': case 'H4': case 'H5': case 'H6':
+                    return `<text:h text:style-name="Heading_20_1" text:outline-level="1">${childrenXml}</text:h>`;
+                case 'P':
+                    return `<text:p text:style-name="Standard">${childrenXml || ' '}</text:p>`;
+                case 'B': case 'STRONG':
+                    return `<text:span text:style-name="T1">${childrenXml}</text:span>`;
+                case 'I': case 'EM':
+                    return `<text:span text:style-name="T2">${childrenXml}</text:span>`;
+                case 'UL': case 'OL':
+                    return `<text:list>${childrenXml}</text:list>`;
+                case 'LI':
+                    return `<text:list-item><text:p text:style-name="Standard">${childrenXml}</text:p></text:list-item>`;
+                default:
+                    return childrenXml;
+            }
+        }
+        return result;
+    };
+    
+    return Array.from(doc.body.childNodes).map(processNode).join('');
+};
+
+export const generateOdt = async (
+    project: Project,
+    getArticleContent: (title: string) => Promise<string>
+): Promise<void> => {
+    const allArticleContent = await fetchAllArticleContent(project, getArticleContent);
+    
+    let contentBody = `<text:h text:style-name="Heading_20_1" text:outline-level="1">${project.name}</text:h>`;
+    
+    allArticleContent.forEach(article => {
+        contentBody += `<text:h text:style-name="Heading_20_1" text:outline-level="1">${article.title}</text:h>`;
+        contentBody += htmlToOdtXml(article.html);
+    });
+
+    const fullContentXml = odtTemplates.contentStart + contentBody + odtTemplates.contentEnd;
+
+    const zip = new JSZip();
+    zip.file('mimetype', odtTemplates.mimetype);
+    zip.file('styles.xml', odtTemplates.styles);
+    zip.file('content.xml', fullContentXml);
+    zip.folder('META-INF')?.file('manifest.xml', odtTemplates.manifest);
+
+    const blob = await zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.oasis.opendocument.text' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${project.name.replace(/ /g, '_')}.odt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+};
+
 
 // DOCX Generation
 // FIX: The following function was rewritten to fix multiple read-only property assignment errors.

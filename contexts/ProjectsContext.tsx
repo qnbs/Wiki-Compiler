@@ -35,7 +35,6 @@ export const ProjectsProvider: React.FC<{ children: ReactNode }> = ({ children }
         name: t('New Compilation'), 
         articles: [], 
         notes: '',
-        pdfOptions: settings.compiler.defaultPdfOptions,
         lastActiveView: 'settings',
       };
       await saveProject(newProject);
@@ -108,7 +107,6 @@ export const ProjectsProvider: React.FC<{ children: ReactNode }> = ({ children }
         name: newName, 
         articles: [], 
         notes: '',
-        pdfOptions: settings.compiler.defaultPdfOptions,
         lastActiveView: 'settings',
     };
     await saveProject(newProject);
