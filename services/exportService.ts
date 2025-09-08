@@ -1,26 +1,34 @@
 import TurndownService from 'turndown';
-import { Project, PdfOptions, ProjectArticle } from '../types';
+import { Project, PdfOptions, AppSettings, CustomCitation } from '../types';
 import { formatBibliography } from './citationService';
+import { getProjectArticleContent } from './dbService';
 
 // Turndown service instantiated once for efficiency
 // @ts-ignore
 const turndownService = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced' });
 
-const fetchAllArticles = async (
-    articles: ProjectArticle[], 
+const fetchAllArticleContent = async (
+    project: Project,
     getArticleContent: (title: string) => Promise<string>
 ): Promise<{title: string, html: string}[]> => {
     return Promise.all(
-        articles.map(async article => ({
-            title: article.title,
-            html: await getArticleContent(article.title),
-        }))
+        project.articles.map(async article => {
+            let html;
+            const modifiedContent = await getProjectArticleContent(project.id, article.title);
+            if (modifiedContent) {
+                html = modifiedContent.html;
+            } else {
+                html = await getArticleContent(article.title);
+            }
+            return { title: article.title, html };
+        })
     );
 };
 
 export const generatePdf = async (
     project: Project,
     options: PdfOptions,
+    settings: AppSettings,
     getArticleContent: (title: string) => Promise<string>
 ): Promise<void> => {
     const contentContainer = document.createElement('div');
@@ -30,12 +38,12 @@ export const generatePdf = async (
     document.body.appendChild(contentContainer);
 
     try {
-        const allArticleHtml = await fetchAllArticles(project.articles, getArticleContent);
+        const allArticleContent = await fetchAllArticleContent(project, getArticleContent);
         
         let tocHtml = '';
         if (options.includeTOC) {
             tocHtml = `<div class="p-12" style="page-break-after: always;"><h1 class="text-4xl text-center mb-8">Table of Contents</h1><ul class="list-none space-y-2">`;
-            allArticleHtml.forEach((article, index) => {
+            allArticleContent.forEach((article, index) => {
                 const anchor = article.title.replace(/[^a-zA-Z0-9]/g, '') + index;
                 tocHtml += `<li class="text-lg"><a href="#${anchor}">${article.title}</a></li>`;
             });
@@ -44,13 +52,36 @@ export const generatePdf = async (
 
         let bibliographyHtml = '';
         if (options.includeBibliography) {
+            const citationKeyRegex = /<cite data-citation-key="([^"]+)">/g;
+            const usedCitationKeys = new Set<string>();
+            const wikiArticleTitles = new Set<string>(project.articles.map(a => a.title));
+
+            for (const article of allArticleContent) {
+                let match;
+                while ((match = citationKeyRegex.exec(article.html)) !== null) {
+                    usedCitationKeys.add(match[1]);
+                }
+            }
+
+            const customCitationsToInclude: CustomCitation[] = [];
+            usedCitationKeys.forEach(key => {
+                const found = settings.citations.customCitations.find(c => c.key === key);
+                if (found) {
+                    customCitationsToInclude.push(found);
+                } else {
+                    // It might be a cross-reference to another Wikipedia article
+                    wikiArticleTitles.add(key); 
+                }
+            });
+
             bibliographyHtml = await formatBibliography(
-                project.articles.map(a => a.title), 
+                Array.from(wikiArticleTitles), 
+                customCitationsToInclude,
                 options.citationStyle
             );
         }
         
-        const articlesHtml = allArticleHtml.map((article, index) => {
+        const articlesHtml = allArticleContent.map((article, index) => {
             const anchor = article.title.replace(/[^a-zA-Z0-9]/g, '') + index;
             return `<div class="p-12" style="page-break-after: always;">
                         <h2 class="text-3xl font-bold mb-6 border-b pb-2" id="${anchor}">${article.title}</h2>
@@ -96,6 +127,7 @@ export const generatePdf = async (
                 .prose a:hover { text-decoration: underline; }
                 .prose .infobox { border: 1px solid #e2e8f0; background-color: #f8fafc; float: right; width: 256px; font-size: 0.875rem; padding: 0.5rem; margin-left: 1rem; margin-bottom: 1rem; }
                 h1,h2,h3,h4,h5,h6 { font-weight: bold; }
+                cite { font-style: normal; }
                 ${typographyStyles}
                 ${columnStyles}
               </style>
@@ -172,11 +204,12 @@ export const generateMarkdownContent = async (
     project: Project,
     getArticleContent: (title: string) => Promise<string>
 ): Promise<string> => {
-    const allArticleHtml = await fetchAllArticles(project.articles, getArticleContent);
+    const allArticleContent = await fetchAllArticleContent(project, getArticleContent);
     
-    const markdownContent = allArticleHtml.map(article => {
+    const markdownContent = allArticleContent.map(article => {
         const markdown = turndownService.turndown(article.html);
-        return `# ${article.title}\n\n${markdown}`;
+        const sourceLink = `\n\n[Source: ${article.title} on Wikipedia](https://en.wikipedia.org/wiki/${encodeURIComponent(article.title.replace(/ /g, '_'))})`;
+        return `# ${article.title}\n\n${markdown}${sourceLink}`;
     }).join('\n\n---\n\n');
 
     return `# ${project.name}\n\n${markdownContent}`;

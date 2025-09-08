@@ -1,11 +1,12 @@
 import { openDB, IDBPDatabase } from 'idb';
-import { Project, ArticleContent, AppSettings } from '../types';
+import { Project, ArticleContent, AppSettings, ProjectArticleContent } from '../types';
 
 const DB_NAME = 'WikiCompilerDB';
-const DB_VERSION = 2; // Incremented version
+const DB_VERSION = 3; // Incremented version
 const PROJECTS_STORE = 'projects';
 const ARTICLES_STORE = 'articles';
 const SETTINGS_STORE = 'settings';
+const PROJECT_ARTICLES_STORE = 'project-articles';
 const SETTINGS_KEY = 'app-settings';
 
 let dbPromise: Promise<IDBPDatabase> | null = null;
@@ -24,6 +25,11 @@ const initDB = () => {
       if (oldVersion < 2) {
         if (!db.objectStoreNames.contains(SETTINGS_STORE)) {
             db.createObjectStore(SETTINGS_STORE);
+        }
+      }
+      if (oldVersion < 3) {
+        if (!db.objectStoreNames.contains(PROJECT_ARTICLES_STORE)) {
+          db.createObjectStore(PROJECT_ARTICLES_STORE, { keyPath: 'id' });
         }
       }
     },
@@ -96,6 +102,19 @@ export const saveSettings = async (settings: AppSettings): Promise<void> => {
     await db.put(SETTINGS_STORE, settings, SETTINGS_KEY);
 };
 
+// Project-specific Article Content Functions
+export const getProjectArticleContent = async (projectId: string, title: string): Promise<ProjectArticleContent | null> => {
+    const db = await initDB();
+    const id = `${projectId}-${title}`;
+    const content: ProjectArticleContent | undefined = await db.get(PROJECT_ARTICLES_STORE, id);
+    return content || null;
+};
+
+export const saveProjectArticleContent = async (content: ProjectArticleContent): Promise<void> => {
+    const db = await initDB();
+    await db.put(PROJECT_ARTICLES_STORE, content);
+};
+
 
 // Data Management Functions
 export const exportAllData = async (): Promise<string> => {
@@ -103,6 +122,7 @@ export const exportAllData = async (): Promise<string> => {
     const projects = await db.getAll(PROJECTS_STORE);
     const articles = await db.getAll(ARTICLES_STORE);
     const settings = await db.get(SETTINGS_STORE, SETTINGS_KEY);
+    const projectArticles = await db.getAll(PROJECT_ARTICLES_STORE);
 
     const data = {
         version: DB_VERSION,
@@ -111,6 +131,7 @@ export const exportAllData = async (): Promise<string> => {
             projects,
             articles,
             settings,
+            projectArticles,
         }
     };
 
@@ -120,23 +141,36 @@ export const exportAllData = async (): Promise<string> => {
 export const importAllData = async (jsonString: string): Promise<void> => {
     const importData = JSON.parse(jsonString);
     if (!importData.data) throw new Error("Invalid import file format");
-    const { projects, articles, settings } = importData.data;
+    const { projects, articles, settings, projectArticles } = importData.data;
 
     const db = await initDB();
 
+    const storesToClear: string[] = [PROJECTS_STORE, ARTICLES_STORE, PROJECT_ARTICLES_STORE];
+    for(const storeName of storesToClear) {
+        const tx = db.transaction(storeName, 'readwrite');
+        await tx.store.clear();
+        await tx.done;
+    }
+
     const projectTx = db.transaction(PROJECTS_STORE, 'readwrite');
-    await projectTx.store.clear();
     for (const project of projects) {
         await projectTx.store.add(project);
     }
     await projectTx.done;
     
     const articleTx = db.transaction(ARTICLES_STORE, 'readwrite');
-    await articleTx.store.clear();
     for (const article of articles) {
         await articleTx.store.add(article);
     }
     await articleTx.done;
+
+    if (projectArticles) {
+        const projectArticleTx = db.transaction(PROJECT_ARTICLES_STORE, 'readwrite');
+        for (const pa of projectArticles) {
+            await projectArticleTx.store.add(pa);
+        }
+        await projectArticleTx.done;
+    }
     
     if (settings) {
         await saveSettings(settings);

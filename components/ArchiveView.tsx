@@ -26,7 +26,7 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ addArticleToProject, getArtic
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [articleToDelete, setArticleToDelete] = useState<string | null>(null);
   const [justAdded, setJustAdded] = useState<Set<string>>(new Set());
-  const [sortOrder, setSortOrder] = useState<'az' | 'za'>('az');
+  const [sortOrder, setSortOrder] = useState<'az' | 'za' | 'date_newest' | 'date_oldest'>('az');
 
   const { insights, isAnalyzing, analysisError, analyze, clearAnalysis } = useArticleAnalysis(selectedArticle, settings);
   
@@ -54,11 +54,18 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ addArticleToProject, getArtic
     );
     
     filteredData.sort((a, b) => {
-        if (sortOrder === 'az') {
-            return a.title.localeCompare(b.title);
-        } else {
-            return b.title.localeCompare(a.title);
-        }
+      if (sortOrder.startsWith('date')) {
+        const dateA = a.metadata?.touched ? new Date(a.metadata.touched).getTime() : 0;
+        const dateB = b.metadata?.touched ? new Date(b.metadata.touched).getTime() : 0;
+        if (dateA === 0 && dateB === 0) return a.title.localeCompare(b.title);
+        if (dateA === 0) return 1;
+        if (dateB === 0) return -1;
+        return sortOrder === 'date_newest' ? dateB - dateA : dateA - dateB;
+      } else if (sortOrder === 'az') {
+          return a.title.localeCompare(b.title);
+      } else { // za
+          return b.title.localeCompare(a.title);
+      }
     });
 
     setFilteredArticles(filteredData);
@@ -142,11 +149,13 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ addArticleToProject, getArtic
               <select
                   id="sort-archive"
                   value={sortOrder}
-                  onChange={e => setSortOrder(e.target.value as 'az' | 'za')}
+                  onChange={e => setSortOrder(e.target.value as 'az' | 'za' | 'date_newest' | 'date_oldest')}
                   className="py-1 px-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-sm focus:ring-1 focus:ring-accent-500 outline-none"
               >
                   <option value="az">{t('Title (A-Z)')}</option>
                   <option value="za">{t('Title (Z-A)')}</option>
+                  <option value="date_newest">{t('Date (Newest)')}</option>
+                  <option value="date_oldest">{t('Date (Oldest)')}</option>
               </select>
           </div>
           {isLoading && <Spinner />}
@@ -203,9 +212,11 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ addArticleToProject, getArtic
         {/* Article View Column */}
         <div className="md:col-span-8 lg:col-span-9 overflow-y-auto">
           {selectedArticle && (
-            <div className="relative">
-              <div className="absolute top-2 right-2 flex items-center gap-2 z-10">
-                   {settings.library.aiAssistant.enabled && (
+            <div>
+              <div className="flex justify-between items-start gap-4 mb-4 border-b pb-2 dark:border-gray-600">
+                <h2 className="text-3xl font-bold flex-grow">{selectedArticle.title}</h2>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                    {settings.library.aiAssistant.enabled && (
                     <button
                         onClick={analyze}
                         disabled={isAnalyzing}
@@ -214,16 +225,16 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ addArticleToProject, getArtic
                         <Icon name="beaker" className="w-4 h-4"/>
                         {isAnalyzing ? t('Analyzing...') : t('Analyze with AI')}
                     </button>
-                   )}
-                  <button
-                      onClick={() => addArticleToProject(selectedArticle.title)}
-                      className="flex items-center gap-2 bg-accent-600 text-white px-4 py-2 rounded-lg hover:bg-accent-700 transition-colors text-sm font-semibold"
-                  >
-                      <Icon name="plus" className="w-4 h-4"/>
-                      {t('Add to Compilation')}
-                  </button>
+                    )}
+                    <button
+                        onClick={() => addArticleToProject(selectedArticle.title)}
+                        className="flex items-center gap-2 bg-accent-600 text-white px-4 py-2 rounded-lg hover:bg-accent-700 transition-colors text-sm font-semibold"
+                    >
+                        <Icon name="plus" className="w-4 h-4"/>
+                        {t('Add to Compilation')}
+                    </button>
+                </div>
               </div>
-              <h2 className="text-3xl font-bold mb-4 border-b pb-2 dark:border-gray-600 pr-80">{selectedArticle.title}</h2>
               <ArticleInsightsView 
                 insights={insights}
                 isAnalyzing={isAnalyzing}

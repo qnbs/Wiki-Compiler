@@ -22,7 +22,11 @@ export const useArticleAnalysis = (
         const textContent = tempDiv.textContent || tempDiv.innerText || "";
 
         try {
-            const resultInsights = await getArticleInsights(textContent, settings.library.aiAssistant.systemInstruction);
+            const resultInsights = await getArticleInsights(
+                textContent, 
+                settings.library.aiAssistant.systemInstruction,
+                settings.library.aiAssistant.focus
+            );
             setInsights(resultInsights);
         } catch (error) {
             console.error("Analysis failed:", error);

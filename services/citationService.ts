@@ -1,5 +1,5 @@
 import { getArticleMetadata } from './wikipediaService';
-import { ArticleMetadata } from '../types';
+import { ArticleMetadata, CustomCitation } from '../types';
 
 const formatAPA = (meta: ArticleMetadata): string => {
     const date = new Date(meta.touched);
@@ -21,19 +21,44 @@ const formatMLA = (meta: ArticleMetadata): string => {
     return `"${meta.title}." <i>Wikipedia, The Free Encyclopedia</i>. Wikimedia Foundation, Inc. ${day} ${month}. ${year}. Web. ${day} ${month}. ${year}. &lt;<a href="${url}">${url}</a>&gt;`;
 };
 
+const formatCustomAPA = (citation: CustomCitation): string => {
+    const authorPart = citation.author ? `${citation.author}.` : '';
+    const yearPart = citation.year ? `(${citation.year}).` : '';
+    const titlePart = `<i>${citation.title}</i>.`;
+    const urlPart = citation.url ? `Retrieved from <a href="${citation.url}">${citation.url}</a>` : '';
+    return [authorPart, yearPart, titlePart, urlPart].filter(Boolean).join(' ');
+};
 
-export const formatBibliography = async (titles: string[], style: 'apa' | 'mla'): Promise<string> => {
+const formatCustomMLA = (citation: CustomCitation): string => {
+    const authorPart = citation.author ? `${citation.author}.` : '';
+    const titlePart = `"${citation.title}."`;
+    const yearPart = citation.year ? `, ${citation.year}` : '';
+    const urlPart = citation.url ? `, <a href="${citation.url}">${citation.url}</a>.` : '.';
+    return `${authorPart} ${titlePart}${yearPart}${urlPart}`;
+};
+
+
+export const formatBibliography = async (
+    titles: string[], 
+    customCitations: CustomCitation[],
+    style: 'apa' | 'mla'
+): Promise<string> => {
     try {
         const metadata = await getArticleMetadata(titles);
 
-        const formatter = style === 'apa' ? formatAPA : formatMLA;
+        const wikiFormatter = style === 'apa' ? formatAPA : formatMLA;
+        const customFormatter = style === 'apa' ? formatCustomAPA : formatCustomMLA;
 
         let bibliographyHtml = `<div class="p-12" style="page-break-before: always;"><h1 class="text-4xl mb-8 border-b pb-2">Bibliography</h1><ul class="list-none space-y-4">`;
         
         metadata.forEach(meta => {
-            bibliographyHtml += `<li class="text-base">${formatter(meta)}</li>`;
+            bibliographyHtml += `<li class="text-base">${wikiFormatter(meta)}</li>`;
         });
         
+        customCitations.forEach(citation => {
+             bibliographyHtml += `<li class="text-base">${customFormatter(citation)}</li>`;
+        });
+
         bibliographyHtml += `</ul></div>`;
         return bibliographyHtml;
 

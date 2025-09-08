@@ -14,7 +14,7 @@ const HelpView: React.FC = () => {
     {
       title: 'The Compiler View',
       icon: 'compiler',
-      content: 'The Compiler is your workshop. Drag-and-drop articles to structure your narrative, fine-tune a wide range of PDF export settings, and preview your work in Markdown. When ready, export to a polished PDF or a clean Markdown file.',
+      content: 'The Compiler is your workshop. Drag-and-drop articles to structure your narrative, edit article content directly, insert custom citations, fine-tune a wide range of PDF export settings, and preview your work. When ready, export to a polished PDF or a clean Markdown file.',
     },
     {
       title: 'The Archive View',
@@ -29,7 +29,7 @@ const HelpView: React.FC = () => {
     {
       title: 'The Settings View',
       icon: 'settings',
-      content: 'Customize the application\'s appearance, set default behaviors, manage AI assistant preferences, and establish default export options. You can also manage your data by clearing the cache or backing up your entire workspace.',
+      content: 'Customize the application\'s appearance, set default behaviors, manage AI assistant preferences, manage custom citations, and establish default export options. You can also manage your data by clearing the cache or backing up your entire workspace.',
     },
     {
       title: 'Power Tips',

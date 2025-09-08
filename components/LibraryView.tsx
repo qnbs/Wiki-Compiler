@@ -172,27 +172,29 @@ const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArtic
       <div className="md:col-span-8 lg:col-span-9 overflow-y-auto">
         {isLoadingArticle && <div className="flex justify-center items-center h-full"><Spinner /></div>}
         {!isLoadingArticle && selectedArticle && (
-          <div className="relative">
-             <div className="absolute top-2 right-2 flex items-center gap-2 z-10">
-                {settings.library.aiAssistant.enabled && (
+          <div>
+            <div className="flex justify-between items-start gap-4 mb-4 border-b pb-2 dark:border-gray-600">
+                <h2 className="text-3xl font-bold flex-grow">{selectedArticle.title}</h2>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                    {settings.library.aiAssistant.enabled && (
+                        <button
+                            onClick={analyze}
+                            disabled={isAnalyzing}
+                            className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        >
+                            <Icon name="beaker" className="w-4 h-4"/>
+                            {isAnalyzing ? t('Analyzing...') : t('Analyze with AI')}
+                        </button>
+                    )}
                     <button
-                        onClick={analyze}
-                        disabled={isAnalyzing}
-                        className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        onClick={() => addArticleToProject(selectedArticle.title)}
+                        className="flex items-center gap-2 bg-accent-600 text-white px-4 py-2 rounded-lg hover:bg-accent-700 transition-colors text-sm font-semibold"
                     >
-                        <Icon name="beaker" className="w-4 h-4"/>
-                        {isAnalyzing ? t('Analyzing...') : t('Analyze with AI')}
+                        <Icon name="plus" className="w-4 h-4"/>
+                        {t('Add to Compilation')}
                     </button>
-                )}
-                <button
-                    onClick={() => addArticleToProject(selectedArticle.title)}
-                    className="flex items-center gap-2 bg-accent-600 text-white px-4 py-2 rounded-lg hover:bg-accent-700 transition-colors text-sm font-semibold"
-                >
-                    <Icon name="plus" className="w-4 h-4"/>
-                    {t('Add to Compilation')}
-                </button>
+                </div>
             </div>
-            <h2 className="text-3xl font-bold mb-4 border-b pb-2 dark:border-gray-600 pr-80">{selectedArticle.title}</h2>
             
             <ArticleInsightsView 
               insights={insights}

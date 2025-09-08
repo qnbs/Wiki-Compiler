@@ -26,6 +26,11 @@ const DEFAULT_SETTINGS: AppSettings = {
     aiAssistant: {
       enabled: true,
       systemInstruction: '',
+      focus: {
+        summary: true,
+        keyConcepts: true,
+        researchQuestions: true,
+      },
     },
   },
   compiler: {
@@ -46,6 +51,9 @@ const DEFAULT_SETTINGS: AppSettings = {
       customHeaderText: '',
       customFooterText: '',
     }
+  },
+  citations: {
+    customCitations: [],
   }
 };
 
@@ -70,7 +78,7 @@ const App: React.FC = () => {
   const [view, setView] = useState<View>(View.Library);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [settings, setSettings] = useState<AppSettings | null>(null);
-  useDarkMode(settings?.theme);
+  useDarkMode();
   const { 
     projects, 
     activeProjectId, 
@@ -90,6 +98,17 @@ const App: React.FC = () => {
     } else {
       // Force dark theme to override any previously saved user preference.
       dbSettings.theme = 'dark';
+      // Migration for users from older versions
+      if (!dbSettings.citations) {
+        dbSettings.citations = { customCitations: [] };
+      }
+       if (!dbSettings.library.aiAssistant.focus) {
+        dbSettings.library.aiAssistant.focus = {
+          summary: true,
+          keyConcepts: true,
+          researchQuestions: true,
+        };
+      }
     }
     await saveSettings(dbSettings); // Persist the change.
     setSettings(dbSettings);
@@ -119,13 +138,11 @@ const App: React.FC = () => {
   }, [settings?.accentColor]);
   
   const updateSettings = useCallback(async (newSettings: AppSettings) => {
-    // Ensure that any settings update always enforces dark mode.
-    const forcedDarkSettings: AppSettings = { ...newSettings, theme: 'dark' };
-    setSettings(forcedDarkSettings);
-    if (i18next.language !== forcedDarkSettings.language) {
-      await i18next.changeLanguage(forcedDarkSettings.language);
+    setSettings(newSettings);
+    if (i18next.language !== newSettings.language) {
+      await i18next.changeLanguage(newSettings.language);
     }
-    await saveSettings(forcedDarkSettings);
+    await saveSettings(newSettings);
   }, []);
 
   const addArticleToProject = useCallback((title: string) => {

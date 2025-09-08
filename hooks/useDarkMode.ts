@@ -1,44 +1,13 @@
-import { useState, useEffect } from 'react';
-import { Theme } from '../types';
+import { useEffect } from 'react';
 
-export const useDarkMode = (theme: Theme | undefined): [boolean] => {
-    const effectiveTheme = theme || 'system';
-
-    const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-        if (effectiveTheme === 'system') {
-            return window.matchMedia('(prefers-color-scheme: dark)').matches;
-        }
-        return effectiveTheme === 'dark';
-    });
-
-    useEffect(() => {
-        if (effectiveTheme === 'system') {
-            setIsDarkMode(window.matchMedia('(prefers-color-scheme: dark)').matches);
-        } else {
-            setIsDarkMode(effectiveTheme === 'dark');
-        }
-    }, [effectiveTheme]);
-
-    useEffect(() => {
-        if (effectiveTheme !== 'system') return;
-
-        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        const handleChange = (e: MediaQueryListEvent) => {
-            setIsDarkMode(e.matches);
-        };
-
-        mediaQuery.addEventListener('change', handleChange);
-        return () => mediaQuery.removeEventListener('change', handleChange);
-    }, [effectiveTheme]);
-
+// This hook ensures the dark theme is applied on app load,
+// aligning with the app's hardcoded dark mode.
+export const useDarkMode = (): void => {
     useEffect(() => {
         const root = window.document.documentElement;
-        if (isDarkMode) {
+        if (!root.classList.contains('dark')) {
             root.classList.add('dark');
-        } else {
-            root.classList.remove('dark');
         }
-    }, [isDarkMode]);
-
-    return [isDarkMode];
+        // No cleanup needed as it should always be dark.
+    }, []); // Run only once on mount
 };

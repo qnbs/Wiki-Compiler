@@ -62,15 +62,31 @@ export interface AiInsightKeyConcept {
 }
 
 export interface ArticleInsights {
-    summary: string;
-    keyConcepts: AiInsightKeyConcept[];
-    researchQuestions: string[];
+    summary?: string;
+    keyConcepts?: AiInsightKeyConcept[];
+    researchQuestions?: string[];
     readingTimeMinutes: number;
 }
 
-export type Theme = 'light' | 'dark' | 'system';
+export type Theme = 'dark';
 
 export type AccentColor = 'blue' | 'purple' | 'green' | 'orange';
+
+export interface CustomCitation {
+  id: string;
+  key: string; // e.g., "Smith2023"
+  author: string;
+  year: string;
+  title: string;
+  url: string;
+}
+
+export interface ProjectArticleContent {
+  id: string; // composite key: `${projectId}-${title}`
+  projectId: string;
+  title: string;
+  html: string;
+}
 
 export interface AppSettings {
   theme: Theme;
@@ -82,9 +98,17 @@ export interface AppSettings {
     aiAssistant: {
       enabled: boolean;
       systemInstruction: string;
+      focus: {
+        summary: boolean;
+        keyConcepts: boolean;
+        researchQuestions: boolean;
+      };
     };
   };
   compiler: {
     defaultPdfOptions: PdfOptions;
+  };
+  citations: {
+    customCitations: CustomCitation[];
   };
 }
