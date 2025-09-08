@@ -135,7 +135,6 @@ const resources = {
       "About Wiki Compiler": "About Wiki Compiler",
       "A premium knowledge management and research environment designed to curate, customize, and consume knowledge from Wikipedia. Transform passive reading into an active, creative act of knowledge assembly.": "A premium knowledge management and research environment designed to curate, customize, and consume knowledge from Wikipedia. Transform passive reading into an active, creative act of knowledge assembly.",
       "Version": "Version",
-      "Official Website": "Official Website",
       "Type a command or search...": "Type a command or search...",
       "Document Title": "Document Title",
       "Header Content": "Header Content",
@@ -180,7 +179,26 @@ const resources = {
       "Generating your PDF... This may take a moment.": "Generating your PDF... This may take a moment.",
       "Invalid or missing API Key for Gemini. Please check your configuration.": "Invalid or missing API Key for Gemini. Please check your configuration.",
       "Could not generate insights at this time. The service may be unavailable.": "Could not generate insights at this time. The service may be unavailable.",
-      "Press Ctrl + Arrow Up or Down to reorder.": "Press Ctrl + Arrow Up or Down to reorder."
+      "Press Ctrl + Arrow Up or Down to reorder.": "Press Ctrl + Arrow Up or Down to reorder.",
+
+      "about_p1": "Wiki Compiler is a premium knowledge management and research environment designed to curate, customize, and consume knowledge from Wikipedia. It transforms passive reading into an active, creative act of knowledge assembly.",
+      "about_p2": "Our goal is to empower students, researchers, and lifelong learners to build and share knowledge more effectively by providing a focused sanctuary for deep work, from initial research to a final, polished publication.",
+      "about_ai_title": "Powered by Google Gemini & AI Studio",
+      "about_ai_p1": "The AI Research Assistant feature in Wiki Compiler uses Google's powerful Gemini model. This allows for intelligent content analysis, providing you with instant summaries, key concept extraction, and insightful research questions to supercharge your learning process.",
+      "about_ai_p2": "This integration is powered by the same technology available in Google AI Studio, a web-based tool for developers to prototype and build with generative AI models. AI Studio provides a comprehensive environment for exploring the capabilities of Gemini and streamlining the development of next-generation AI applications.",
+      "Learn more about AI Studio": "Learn more about AI Studio"
+    }
+  },
+  de: {
+    translation: {
+      "About Wiki Compiler": "Über Wiki Compiler",
+      "Version": "Version",
+      "about_p1": "Wiki Compiler ist eine Premium-Umgebung für Wissensmanagement und Recherche, die entwickelt wurde, um Wissen aus Wikipedia zu kuratieren, anzupassen und zu nutzen. Es verwandelt passives Lesen in einen aktiven, kreativen Akt des Wissensaufbaus.",
+      "about_p2": "Unser Ziel ist es, Studierende, Forschende und lebenslang Lernende zu befähigen, Wissen effektiver aufzubauen und zu teilen, indem wir einen fokussierten Zufluchtsort für konzentriertes Arbeiten bieten – von der ersten Recherche bis zur fertigen, ausgefeilten Publikation.",
+      "about_ai_title": "Unterstützt durch Google Gemini & AI Studio",
+      "about_ai_p1": "Die Funktion 'KI-Forschungsassistent' in Wiki Compiler verwendet das leistungsstarke Gemini-Modell von Google. Dies ermöglicht eine intelligente Inhaltsanalyse und liefert Ihnen sofortige Zusammenfassungen, die Extraktion von Schlüsselkonzepten und aufschlussreiche Forschungsfragen, um Ihren Lernprozess zu beschleunigen.",
+      "about_ai_p2": "Diese Integration wird durch dieselbe Technologie ermöglicht, die auch in Google AI Studio verfügbar ist, einem webbasierten Werkzeug für Entwickler zum Prototyping und Erstellen mit generativen KI-Modellen. AI Studio bietet eine umfassende Umgebung zur Erkundung der Fähigkeiten von Gemini und zur Vereinfachung der Entwicklung von KI-Anwendungen der nächsten Generation.",
+      "Learn more about AI Studio": "Mehr über AI Studio erfahren"
     }
   }
 };
