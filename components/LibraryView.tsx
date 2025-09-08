@@ -19,13 +19,15 @@ interface SearchResultItemProps {
   wasJustAdded: boolean;
   onSelect: (title: string) => void;
   onQuickAdd: (title: string) => void;
+  style: React.CSSProperties;
 }
 
-const SearchResultItem: React.FC<SearchResultItemProps> = memo(({ result, isSelected, isAdded, wasJustAdded, onSelect, onQuickAdd }) => {
+const SearchResultItem: React.FC<SearchResultItemProps> = memo(({ result, isSelected, isAdded, wasJustAdded, onSelect, onQuickAdd, style }) => {
   const { t } = useTranslation();
   return (
     <li
-      className={`group p-3 rounded-lg transition-colors flex justify-between items-center ${isSelected ? 'bg-accent-100 dark:bg-accent-900/50' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+      style={style}
+      className={`group p-3 rounded-lg transition-colors flex justify-between items-center animate-fade-in ${isSelected ? 'bg-accent-100 dark:bg-accent-900/50' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
     >
       <div onClick={() => onSelect(result.title)} className="cursor-pointer flex-grow truncate pr-2">
         <h3 className="font-semibold text-gray-800 dark:text-gray-200 truncate">{result.title}</h3>
@@ -44,7 +46,7 @@ const SearchResultItem: React.FC<SearchResultItemProps> = memo(({ result, isSele
           isAdded ? 'text-green-500' : 'text-gray-400 hover:bg-accent-100 dark:hover:bg-accent-900/50 hover:text-accent-600'
         } disabled:text-green-500 disabled:cursor-default disabled:hover:bg-transparent dark:disabled:hover:bg-transparent`}
       >
-        <Icon name={isAdded || wasJustAdded ? 'check' : 'plus'} className="w-5 h-5" />
+        <Icon name={isAdded || wasJustAdded ? 'check' : 'plus'} className={`w-5 h-5 ${wasJustAdded ? 'animate-pop-in' : ''}`} />
       </button>
     </li>
   );
@@ -178,11 +180,11 @@ const LibraryView: React.FC<LibraryViewProps> = ({ getArticleContent }) => {
         {searchError && <p className="text-red-500 text-sm text-center my-4">{searchError}</p>}
         {!isSearching && debouncedSearchTerm && results.length === 0 && !searchError && (
           <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
-            <p>{t('No results found for "{{term}}"', { term: debouncedSearchTerm })}</p>
+            <p>{t('No results found for \"{{term}}\"', { term: debouncedSearchTerm })}</p>
           </div>
         )}
         <ul className="space-y-2">
-          {results.map((result) => (
+          {results.map((result, index) => (
               <SearchResultItem
                 key={result.pageid}
                 result={result}
@@ -191,6 +193,7 @@ const LibraryView: React.FC<LibraryViewProps> = ({ getArticleContent }) => {
                 wasJustAdded={justAdded.has(result.title)}
                 onSelect={handleSelectArticle}
                 onQuickAdd={handleQuickAdd}
+                style={{ animationDelay: `${index * 50}ms` }}
               />
             )
           )}

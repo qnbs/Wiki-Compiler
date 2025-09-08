@@ -406,7 +406,9 @@ const processNode = (node: Node): (Paragraph | TextRun)[] => {
 
     if (node.nodeType === Node.ELEMENT_NODE) {
         const element = node as HTMLElement;
-        let heading: HeadingLevel | undefined;
+        // FIX: Corrected a TypeScript error where 'HeadingLevel' was being used as a type but interpreted as a value.
+        // Using a lookup on the IParagraphOptions interface correctly resolves the intended type.
+        let heading: IParagraphOptions['heading'];
         
         switch (element.nodeName) {
             case 'H1': heading = HeadingLevel.HEADING_1; break;

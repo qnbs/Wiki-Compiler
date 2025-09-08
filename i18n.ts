@@ -243,7 +243,21 @@ const resources = {
       "DOCX (.docx)": "DOCX (.docx)",
       "Word Count: {{count}}": "Word Count: {{count}}",
       "Bold": "Bold",
-      "Italic": "Italic"
+      "Italic": "Italic",
+      "Welcome to Wiki Compiler": "Welcome to Wiki Compiler",
+      "welcome_p1": "Your new environment for research and knowledge creation is ready. Here's a quick guide to the three core areas:",
+      "welcome_library_title": "1. The Library",
+      "welcome_library_p": "Search Wikipedia, get instant AI insights on any article, and add sources to your projects.",
+      "welcome_compiler_title": "2. The Compiler",
+      "welcome_compiler_p": "Arrange and edit your articles, add notes, and export your work to beautifully formatted PDF or Markdown files.",
+      "welcome_archive_title": "3. The Archive",
+      "welcome_archive_p": "Every article you view is automatically saved for offline access, creating your personal, searchable knowledge base.",
+      "Get Started": "Get Started",
+      "AI is thinking...": "AI is thinking...",
+      "Summarize selection": "Summarize selection",
+      "Improve writing of selection": "Improve writing of selection",
+      "Fix spelling & grammar of selection": "Fix spelling & grammar of selection",
+      "Ask AI... (press Enter)": "Ask AI... (press Enter)"
     }
   },
   de: {
@@ -486,7 +500,21 @@ const resources = {
       "DOCX (.docx)": "DOCX (.docx)",
       "Word Count: {{count}}": "Wortanzahl: {{count}}",
       "Bold": "Fett",
-      "Italic": "Kursiv"
+      "Italic": "Kursiv",
+      "Welcome to Wiki Compiler": "Willkommen beim Wiki Compiler",
+      "welcome_p1": "Ihre neue Umgebung für Forschung und Wissenserstellung ist bereit. Hier ist eine Kurzanleitung zu den drei Kernbereichen:",
+      "welcome_library_title": "1. Die Bibliothek",
+      "welcome_library_p": "Durchsuchen Sie Wikipedia, erhalten Sie sofortige KI-Einblicke zu jedem Artikel und fügen Sie Quellen zu Ihren Projekten hinzu.",
+      "welcome_compiler_title": "2. Der Compiler",
+      "welcome_compiler_p": "Ordnen und bearbeiten Sie Ihre Artikel, fügen Sie Notizen hinzu und exportieren Sie Ihre Arbeit in schön formatierte PDF- oder Markdown-Dateien.",
+      "welcome_archive_title": "3. Das Archiv",
+      "welcome_archive_p": "Jeder Artikel, den Sie ansehen, wird automatisch für den Offline-Zugriff gespeichert und schafft so Ihre persönliche, durchsuchbare Wissensdatenbank.",
+      "Get Started": "Los geht's",
+      "AI is thinking...": "KI denkt nach...",
+      "Summarize selection": "Auswahl zusammenfassen",
+      "Improve writing of selection": "Schreibstil der Auswahl verbessern",
+      "Fix spelling & grammar of selection": "Rechtschreibung & Grammatik der Auswahl korrigieren",
+      "Ask AI... (press Enter)": "KI fragen... (Eingabetaste drücken)"
     }
   }
 };

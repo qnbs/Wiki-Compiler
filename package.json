@@ -23,9 +23,10 @@
     "@tiptap/extension-bubble-menu": "2.4.0",
     "@tiptap/extension-focus": "2.4.0",
     "@tiptap/extension-placeholder": "2.4.0",
+    "@tiptap/suggestion": "2.4.0",
     "@tiptap/react": "2.4.0",
     "@tiptap/starter-kit": "2.4.0",
-    "react-dom": "18.2.0"
+    "react-dom": "^19.1.1"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

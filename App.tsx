@@ -16,16 +16,25 @@ import Spinner from './components/Spinner';
 import { useSettings } from './hooks/useSettingsContext';
 import { useProjects } from './hooks/useProjectsContext';
 import ToastContainer from './components/ToastContainer';
+import WelcomeModal from './components/WelcomeModal';
 
 const App: React.FC = () => {
   const { t } = useTranslation();
   const [view, setView] = useState<View>(View.Library);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
   
   const { settings, accentColorMap, reloadSettings } = useSettings();
   const { activeProject, createNewProject, reloadProjects } = useProjects();
   
   useDarkMode();
+
+  useEffect(() => {
+    const hasBeenOnboarded = localStorage.getItem('wiki-compiler-onboarded');
+    if (!hasBeenOnboarded) {
+      setIsWelcomeModalOpen(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (settings) {
@@ -101,6 +110,7 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen text-gray-900 dark:text-gray-100 transition-colors duration-200">
       <ToastContainer />
+      <WelcomeModal isOpen={isWelcomeModalOpen} onClose={() => setIsWelcomeModalOpen(false)} />
       <Header 
         view={view} 
         setView={setView} 

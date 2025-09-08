@@ -1,8 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Editor } from '@tiptap/core';
-// FIX: The error indicates BubbleMenu is not in @tiptap/react. Assuming a configuration where it is exported from @tiptap/extension-bubble-menu.
-import { BubbleMenu } from '@tiptap/react';
+// FIX: The BubbleMenu component for older Tiptap versions is exported from the extension package, not @tiptap/react, which resolves the import error.
+import { BubbleMenu } from '@tiptap/extension-bubble-menu';
 import Icon from './Icon';
 
 interface EditorBubbleMenuProps {

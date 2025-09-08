@@ -36,6 +36,7 @@ export const ProjectsProvider: React.FC<{ children: ReactNode }> = ({ children }
         articles: [], 
         notes: '',
         pdfOptions: settings.compiler.defaultPdfOptions,
+        lastActiveView: 'settings',
       };
       await saveProject(newProject);
       dbProjects = [newProject];
@@ -108,6 +109,7 @@ export const ProjectsProvider: React.FC<{ children: ReactNode }> = ({ children }
         articles: [], 
         notes: '',
         pdfOptions: settings.compiler.defaultPdfOptions,
+        lastActiveView: 'settings',
     };
     await saveProject(newProject);
     

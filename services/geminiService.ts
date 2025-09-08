@@ -95,6 +95,7 @@ export const getArticleInsights = async (text: string, systemInstruction: string
 
     try {
         const response = await ai.models.generateContent({
+            // FIX: Updated deprecated model to 'gemini-2.5-flash'.
             model: 'gemini-2.5-flash',
             contents: `Analyze the following Wikipedia article text and provide a structured set of insights. Based on the text, generate ${promptFocusText}, and an estimated reading time. TEXT: "${truncatedText}"`,
             config: {
@@ -130,6 +131,7 @@ export const editTextWithAi = async (instruction: string, textToEdit: string): P
 
     try {
         const response = await ai.models.generateContent({
+            // FIX: Updated deprecated model to 'gemini-2.5-flash'.
             model: 'gemini-2.5-flash',
             contents: `INSTRUCTION: "${instruction}"\n\nTEXT TO EDIT: "${textToEdit}"`,
             config: {

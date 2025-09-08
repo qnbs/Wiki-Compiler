@@ -82,6 +82,23 @@
       .dark .ProseMirror p.is-editor-empty:first-child::before {
         color: #6b7280;
       }
+      
+      /* Animation styles */
+      @keyframes fade-in {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fade-in {
+        animation: fade-in 0.3s ease-out forwards;
+      }
+      @keyframes pop-in {
+        0% { transform: scale(0.5); opacity: 0; }
+        70% { transform: scale(1.1); opacity: 1; }
+        100% { transform: scale(1); }
+      }
+      .animate-pop-in {
+        animation: pop-in 0.3s ease-out forwards;
+      }
     </style>
   <script type="importmap">
 {
@@ -101,13 +118,15 @@
     "@tiptap/extension-bubble-menu": "https://esm.sh/@tiptap/extension-bubble-menu@2.4.0?deps=@tiptap/core,@tiptap/pm/state,@tiptap/pm/view,@tiptap/react",
     "@tiptap/extension-focus": "https://esm.sh/@tiptap/extension-focus@2.4.0?deps=@tiptap/core",
     "@tiptap/extension-placeholder": "https://esm.sh/@tiptap/extension-placeholder@2.4.0?deps=@tiptap/core",
+    "@tiptap/suggestion": "https://esm.sh/@tiptap/suggestion@2.4.0?deps=@tiptap/core",
     "@tiptap/pm/model": "https://esm.sh/prosemirror-model@1.21.0",
     "@tiptap/pm/state": "https://esm.sh/prosemirror-state@1.4.3",
     "@tiptap/pm/view": "https://esm.sh/prosemirror-view@1.33.5",
     "@tiptap/react": "https://esm.sh/@tiptap/react@2.4.0?deps=react@18.2.0,react-dom@18.2.0,@tiptap/core",
     "@tiptap/starter-kit": "https://esm.sh/@tiptap/starter-kit@2.4.0?deps=@tiptap/core",
     "react-dom/": "https://esm.sh/react-dom@18.2.0/",
-    "react/": "https://esm.sh/react@18.2.0/"
+    "react/": "https://esm.sh/react@18.2.0/",
+    "react-dom": "https://aistudiocdn.com/react-dom@^19.1.1"
   }
 }
 </script>

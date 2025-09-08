@@ -1,3 +1,5 @@
+import { RightPaneView } from './components/CompilerView';
+
 export interface SearchResult {
   title: string;
   snippet: string;
@@ -21,6 +23,7 @@ export interface Project {
   articles: ProjectArticle[];
   notes?: string;
   pdfOptions?: PdfOptions;
+  lastActiveView?: RightPaneView;
 }
 
 export enum View {

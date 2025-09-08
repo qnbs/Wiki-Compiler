@@ -6,6 +6,7 @@ import { generatePdf, generateMarkdown, generateJsonFile, generateDocx } from '.
 import Spinner from './Spinner';
 import CompilerLeftPanel from './CompilerLeftPanel';
 import CompilerRightPanel from './CompilerRightPanel';
+import { Project } from '../types';
 
 interface CompilerViewProps {
   getArticleContent: (title: string) => Promise<string>;
@@ -21,6 +22,19 @@ const CompilerView: React.FC<CompilerViewProps> = ({ getArticleContent }) => {
   const [activeArticleTitle, setActiveArticleTitle] = useState<string | null>(null);
   const [rightPaneView, setRightPaneView] = useState<RightPaneView>('settings');
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+  useEffect(() => {
+    if (activeProject) {
+        setRightPaneView(activeProject.lastActiveView || 'settings');
+    }
+  }, [activeProject?.id]);
+
+  useEffect(() => {
+    if (activeProject && rightPaneView !== activeProject.lastActiveView) {
+        const updatedProject: Project = { ...activeProject, lastActiveView: rightPaneView };
+        updateProject(updatedProject);
+    }
+  }, [rightPaneView, activeProject, updateProject]);
 
   useEffect(() => {
     // If the active article is no longer in the project, deselect it.
