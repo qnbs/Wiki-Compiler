@@ -54,6 +54,14 @@ In an age of information overload, Wiki Compiler provides a focused sanctuary fo
 
 ---
 
+## Built with Google AI Studio
+
+This application was developed using **[Google AI Studio](https://ai.studio/apps/drive/1yyz5W0rD85UmlKj6X2vkwrX-SGMrQQmZ)**. AI Studio is a web-based IDE that allows developers to rapidly prototype and build generative AI applications. It provides a streamlined workflow for iterating on prompts, tuning models, and integrating them with application code.
+
+The development of Wiki Compiler was significantly accelerated by AI Studio's capabilities, enabling the seamless integration of the Google Gemini model for its core AI features. You can explore a snapshot of the development process for this app directly in AI Studio via the link above.
+
+---
+
 ## Technical Stack
 
 *   **Framework**: React with TypeScript
