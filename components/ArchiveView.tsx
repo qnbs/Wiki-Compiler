@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArticleContent, Project, ArticleInsights, AppSettings } from '../types';
+import { ArticleContent } from '../types';
 import { getAllArticles, deleteArticleFromCache } from '../services/dbService';
 import { useArticleAnalysis } from '../hooks/useArticleAnalysis';
 import { useDebounce } from '../hooks/useDebounce';
@@ -8,16 +8,18 @@ import Icon from './Icon';
 import Spinner from './Spinner';
 import Modal from './Modal';
 import ArticleInsightsView from './ArticleInsightsView';
+import { useSettings } from '../hooks/useSettingsContext';
+import { useProjects } from '../hooks/useProjectsContext';
 
 interface ArchiveViewProps {
-  addArticleToProject: (title: string) => void;
   getArticleContent: (title: string) => Promise<string>;
-  activeProject: Project;
-  settings: AppSettings;
 }
 
-const ArchiveView: React.FC<ArchiveViewProps> = ({ addArticleToProject, getArticleContent, activeProject, settings }) => {
+const ArchiveView: React.FC<ArchiveViewProps> = ({ getArticleContent }) => {
   const { t } = useTranslation();
+  const { settings } = useSettings();
+  const { activeProject, addArticleToProject } = useProjects();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [allArticles, setAllArticles] = useState<ArticleContent[]>([]);
   const [filteredArticles, setFilteredArticles] = useState<ArticleContent[]>([]);
@@ -28,12 +30,12 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ addArticleToProject, getArtic
   const [justAdded, setJustAdded] = useState<Set<string>>(new Set());
   const [sortOrder, setSortOrder] = useState<'az' | 'za' | 'date_newest' | 'date_oldest'>('az');
 
-  const { insights, isAnalyzing, analysisError, analyze, clearAnalysis } = useArticleAnalysis(selectedArticle, settings);
+  const { insights, isAnalyzing, analysisError, analyze, clearAnalysis } = useArticleAnalysis(selectedArticle);
   
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   
   const articlesInProject = useMemo(() => 
-    new Set(activeProject.articles.map(a => a.title)),
+    new Set(activeProject?.articles.map(a => a.title)),
   [activeProject]);
 
   const loadArticles = useCallback(async () => {
@@ -106,6 +108,8 @@ const ArchiveView: React.FC<ArchiveViewProps> = ({ addArticleToProject, getArtic
     setIsDeleteModalOpen(false);
     setArticleToDelete(null);
   };
+
+  if (!settings) return <Spinner />;
 
   return (
     <>

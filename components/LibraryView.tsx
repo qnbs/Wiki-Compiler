@@ -1,22 +1,24 @@
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDebounce } from '../hooks/useDebounce';
-import { SearchResult, ArticleContent, ArticleInsights, AppSettings, Project } from '../types';
+import { SearchResult, ArticleContent } from '../types';
 import { searchArticles } from '../services/wikipediaService';
 import { useArticleAnalysis } from '../hooks/useArticleAnalysis';
 import Icon from './Icon';
 import Spinner from './Spinner';
 import ArticleInsightsView from './ArticleInsightsView';
+import { useSettings } from '../hooks/useSettingsContext';
+import { useProjects } from '../hooks/useProjectsContext';
 
 interface LibraryViewProps {
-  addArticleToProject: (title: string) => void;
   getArticleContent: (title: string) => Promise<string>;
-  settings: AppSettings;
-  activeProject: Project;
 }
 
-const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArticleContent, settings, activeProject }) => {
+const LibraryView: React.FC<LibraryViewProps> = ({ getArticleContent }) => {
   const { t } = useTranslation();
+  const { settings } = useSettings();
+  const { activeProject, addArticleToProject } = useProjects();
+
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedArticle, setSelectedArticle] = useState<ArticleContent | null>(null);
@@ -26,17 +28,17 @@ const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArtic
   const [justAdded, setJustAdded] = useState<Set<string>>(new Set());
   const [sortOption, setSortOption] = useState('relevance');
   
-  const { insights, isAnalyzing, analysisError, analyze, clearAnalysis } = useArticleAnalysis(selectedArticle, settings);
+  const { insights, isAnalyzing, analysisError, analyze, clearAnalysis } = useArticleAnalysis(selectedArticle);
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   const articlesInProject = useMemo(() => 
-    new Set(activeProject.articles.map(a => a.title)),
+    new Set(activeProject?.articles.map(a => a.title)),
   [activeProject]);
 
   useEffect(() => {
     const search = async () => {
-      if (debouncedSearchTerm) {
+      if (debouncedSearchTerm && settings) {
         setIsSearching(true);
         setSearchError(null);
         try {
@@ -69,7 +71,7 @@ const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArtic
       }
     };
     search();
-  }, [debouncedSearchTerm, settings.library.searchResultLimit, sortOption, t]);
+  }, [debouncedSearchTerm, settings, sortOption, t]);
 
   const handleSelectArticle = useCallback(async (title: string) => {
     setIsLoadingArticle(true);
@@ -95,6 +97,8 @@ const LibraryView: React.FC<LibraryViewProps> = ({ addArticleToProject, getArtic
       });
     }, 2000);
   };
+  
+  if (!settings) return <Spinner />;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-[calc(100vh-120px)]">

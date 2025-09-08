@@ -1,17 +1,18 @@
 import { useState, useCallback } from 'react';
-import { ArticleContent, ArticleInsights, AppSettings } from '../types';
+import { ArticleContent, ArticleInsights } from '../types';
 import { getArticleInsights } from '../services/geminiService';
+import { useSettings } from './useSettingsContext';
 
 export const useArticleAnalysis = (
-    article: ArticleContent | null,
-    settings: AppSettings
+    article: ArticleContent | null
 ) => {
+    const { settings } = useSettings();
     const [insights, setInsights] = useState<ArticleInsights | null>(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [analysisError, setAnalysisError] = useState<string | null>(null);
 
     const analyze = useCallback(async () => {
-        if (!article || !settings.library.aiAssistant.enabled) return;
+        if (!article || !settings || !settings.library.aiAssistant.enabled) return;
 
         setIsAnalyzing(true);
         setInsights(null);

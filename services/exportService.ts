@@ -1,5 +1,5 @@
 import TurndownService from 'turndown';
-import { Project, PdfOptions, AppSettings, CustomCitation } from '../types';
+import { Project, PdfOptions, AppSettings, CustomCitation, ToastType } from '../types';
 import { formatBibliography } from './citationService';
 import { getProjectArticleContent } from './dbService';
 
@@ -29,7 +29,8 @@ export const generatePdf = async (
     project: Project,
     options: PdfOptions,
     settings: AppSettings,
-    getArticleContent: (title: string) => Promise<string>
+    getArticleContent: (title: string) => Promise<string>,
+    addToast: (message: string, type: ToastType) => void
 ): Promise<void> => {
     const contentContainer = document.createElement('div');
     contentContainer.style.visibility = 'hidden';
@@ -195,7 +196,11 @@ export const generatePdf = async (
 
         await pdf.save();
 
-    } finally {
+    } catch(err) {
+        console.error("PDF generation failed inside service:", err);
+        addToast("PDF generation failed.", "error");
+    }
+    finally {
         document.body.removeChild(contentContainer);
     }
 };

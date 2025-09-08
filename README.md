@@ -19,7 +19,7 @@ In the age of information overload, Wiki Compiler offers a focused sanctuary for
 *   **Project Notes**: Each compilation includes a dedicated notes panel, perfect for jotting down ideas, creating an outline, or keeping a research diary.
 *   **Powerful Search**: Instantly search and browse Wikipedia articles with advanced sorting options.
 *   **Offline Article Archive**: Every article you view is automatically cached locally, creating a personal, searchable knowledge base that works anytime, anywhere.
-*   **Direct Content Editing**: Modify article text directly within the compiler to tailor content for your specific project. Changes are saved on a per-project basis.
+*   **Robust Rich-Text Editing**: Modify article text directly within the compiler using a powerful Tiptap-based editor. Changes are saved on a per-project basis.
 
 ### ✨ AI-Powered Research Assistant
 *   **Instant Insights**: Leverage Google's Gemini API to get an intelligent breakdown of any article.
@@ -43,6 +43,7 @@ In the age of information overload, Wiki Compiler offers a focused sanctuary for
 *   **Accent Colors**: Personalize the UI with your preferred highlight color.
 *   **Command Palette**: A keyboard-driven interface (**Ctrl/Cmd + K**) to instantly navigate views and execute commands.
 *   **Data Portability**: Backup and restore your entire workspace (projects, articles, settings) with a simple JSON import/export.
+*   **Non-Blocking Notifications**: A sleek toast notification system provides feedback without interrupting your workflow.
 
 ---
 
@@ -51,12 +52,14 @@ In the age of information overload, Wiki Compiler offers a focused sanctuary for
 This application is built with a modern, client-centric tech stack designed for performance, offline capability, and a rich user experience.
 
 *   **Framework**: **React with TypeScript** for a robust, type-safe, and component-based UI.
+*   **State Management**: **React Context API** provides global, scalable state management for settings and projects, eliminating prop drilling and improving maintainability.
+*   **Rich-Text Editor**: **Tiptap** provides a robust, extensible, and stable foundation for all content editing.
 *   **Styling**: **Tailwind CSS** (via CDN) for rapid, utility-first styling, enabling a consistent and modern design system.
-*   **Client-Side Storage**: **IndexedDB** (using the `idb` library) provides a large, asynchronous, and persistent local database. This is crucial for the offline article archive, project storage, and user settings, offering significantly more capacity and performance than `localStorage`.
-*   **AI Integration**: **Google Gemini API** (`@google/genai`) is the core of the AI Research Assistant, providing powerful generative capabilities for content summarization, concept extraction, and question generation.
+*   **Client-Side Storage**: **IndexedDB** (using the `idb` library) provides a large, asynchronous, and persistent local database. This is crucial for the offline article archive, project storage, and user settings.
+*   **AI Integration**: **Google Gemini API** (`@google/genai`) is the core of the AI Research Assistant, providing powerful generative capabilities for content analysis and editing.
 *   **PDF Generation**: **`html2pdf.js`** runs on the client to convert the compiled HTML content into a downloadable PDF, allowing for complex layouts and customization without server-side processing.
 *   **HTML to Markdown**: **`turndown`** is used to convert the rich HTML content from Wikipedia articles into clean, readable Markdown for export.
-*   **Internationalization**: **`i18next`** and **`react-i18next`** are used to provide full localization support, making the application accessible to a global audience.
+*   **Internationalization**: **`i18next`**, **`react-i18next`**, and **`i18next-browser-languagedetector`** are used to provide full localization support.
 
 ---
 
@@ -128,7 +131,7 @@ Im Zeitalter der Informationsüberflutung bietet Wiki Compiler einen fokussierte
 *   **Projektnotizen**: Jede Kompilation enthält ein eigenes Notizfeld, ideal zum Festhalten von Ideen, Erstellen einer Gliederung oder Führen eines Forschungstagebuchs.
 *   **Leistungsstarke Suche**: Suchen und durchsuchen Sie Wikipedia-Artikel sofort mit erweiterten Sortieroptionen.
 *   **Offline-Artikelarchiv**: Jeder Artikel, den Sie ansehen, wird automatisch lokal zwischengespeichert und schafft so eine persönliche, durchsuchbare Wissensdatenbank, die jederzeit und überall funktioniert.
-*   **Direkte Inhaltsbearbeitung**: Ändern Sie den Artikeltext direkt im Compiler, um den Inhalt für Ihr spezifisches Projekt anzupassen. Änderungen werden pro Projekt gespeichert.
+*   **Robustes Rich-Text-Editing**: Ändern Sie den Artikeltext direkt im Compiler mit einem leistungsstarken, auf Tiptap basierenden Editor. Änderungen werden pro Projekt gespeichert.
 
 ### ✨ KI-gestützter Forschungsassistent
 *   **Sofortige Einblicke**: Nutzen Sie die Gemini-API von Google, um eine intelligente Aufschlüsselung jedes Artikels zu erhalten.
@@ -152,6 +155,7 @@ Im Zeitalter der Informationsüberflutung bietet Wiki Compiler einen fokussierte
 *   **Akzentfarben**: Personalisieren Sie die Benutzeroberfläche mit Ihrer bevorzugten Hervorhebungsfarbe.
 *   **Befehlspalette**: Eine tastaturgesteuerte Oberfläche (**Ctrl/Cmd + K**), um sofort zwischen Ansichten zu navigieren und Befehle auszuführen.
 *   **Datentransportierbarkeit**: Sichern und Wiederherstellen Sie Ihren gesamten Arbeitsbereich (Projekte, Artikel, Einstellungen) mit einem einfachen JSON-Import/Export.
+*   **Nicht-blockierende Benachrichtigungen**: Ein elegantes Toast-Benachrichtigungssystem gibt Feedback, ohne Ihren Arbeitsablauf zu unterbrechen.
 
 ---
 
@@ -160,12 +164,14 @@ Im Zeitalter der Informationsüberflutung bietet Wiki Compiler einen fokussierte
 Diese Anwendung wurde mit einem modernen, client-zentrierten Technologie-Stack erstellt, der auf Leistung, Offline-Fähigkeit und eine reichhaltige Benutzererfahrung ausgelegt ist.
 
 *   **Framework**: **React mit TypeScript** für eine robuste, typsichere und komponentenbasierte Benutzeroberfläche.
+*   **State Management**: Die **React Context API** sorgt für ein globales, skalierbares Zustandsmanagement für Einstellungen und Projekte, vermeidet "Prop Drilling" und verbessert die Wartbarkeit.
+*   **Rich-Text-Editor**: **Tiptap** bietet eine robuste, erweiterbare und stabile Grundlage für die gesamte Inhaltsbearbeitung.
 *   **Styling**: **Tailwind CSS** (über CDN) für schnelles, Utility-First-Styling, das ein konsistentes und modernes Designsystem ermöglicht.
-*   **Client-seitiger Speicher**: **IndexedDB** (unter Verwendung der `idb`-Bibliothek) bietet eine große, asynchrone und persistente lokale Datenbank. Dies ist entscheidend für das Offline-Artikelarchiv, die Projektspeicherung und die Benutzereinstellungen und bietet deutlich mehr Kapazität und Leistung als `localStorage`.
-*   **KI-Integration**: **Google Gemini API** (`@google/genai`) ist der Kern des KI-Forschungsassistenten und bietet leistungsstarke generative Fähigkeiten zur Inhaltszusammenfassung, Konzeptextraktion und Fragengenerierung.
+*   **Client-seitiger Speicher**: **IndexedDB** (unter Verwendung der `idb`-Bibliothek) bietet eine große, asynchrone und persistente lokale Datenbank. Dies ist entscheidend für das Offline-Artikelarchiv, die Projektspeicherung und die Benutzereinstellungen.
+*   **KI-Integration**: **Google Gemini API** (`@google/genai`) ist der Kern des KI-Forschungsassistenten und bietet leistungsstarke generative Fähigkeiten zur Inhaltsanalyse und -bearbeitung.
 *   **PDF-Generierung**: **`html2pdf.js`** läuft auf dem Client, um den kompilierten HTML-Inhalt in ein herunterladbares PDF zu konvertieren, was komplexe Layouts und Anpassungen ohne serverseitige Verarbeitung ermöglicht.
 *   **HTML zu Markdown**: **`turndown`** wird verwendet, um den reichhaltigen HTML-Inhalt von Wikipedia-Artikeln für den Export in sauberes, lesbares Markdown zu konvertieren.
-*   **Internationalisierung**: **`i18next`** und **`react-i18next`** werden verwendet, um vollständige Lokalisierungsunterstützung zu bieten und die Anwendung einem globalen Publikum zugänglich zu machen.
+*   **Internationalisierung**: **`i18next`**, **`react-i18next`** und **`i18next-browser-languagedetector`** werden verwendet, um vollständige Lokalisierungsunterstützung zu bieten.
 
 ---
 

@@ -14,7 +14,7 @@ const HelpView: React.FC = () => {
     {
       title: 'The Compiler View',
       icon: 'compiler',
-      content: 'The Compiler is your workshop. Drag-and-drop articles to structure your narrative, edit article content directly, insert custom citations, fine-tune a wide range of PDF export settings, and preview your work. When ready, export to a polished PDF or a clean Markdown file.',
+      content: 'The Compiler is your workshop. Drag-and-drop articles to structure your narrative, edit article content with a robust rich-text editor, use the floating AI button to enhance your text, insert custom citations, fine-tune a wide range of PDF export settings, and preview your work. When ready, export to a polished PDF or a clean Markdown file.',
     },
     {
       title: 'The Archive View',
@@ -34,7 +34,7 @@ const HelpView: React.FC = () => {
     {
       title: 'Power Tips',
       icon: 'sparkles',
-      content: 'Save your favorite export settings as defaults in the Compiler via the Settings & Export pane.\nUse the keyboard to quickly reorder articles in the Compiler (Ctrl/Cmd + Arrow Up/Down).\nBackup your entire workspace from the Settings > Storage tab to keep your work safe.',
+      content: 'Use the floating sparkles button in the Compiler to get AI assistance for summarizing, improving, or correcting your text.\nSave your favorite export settings as defaults in the Compiler via the Settings & Export pane.\nUse the keyboard to quickly reorder articles in the Compiler (Ctrl/Cmd + Arrow Up/Down).\nBackup your entire workspace from the Settings > Storage tab to keep your work safe.',
     },
   ];
 

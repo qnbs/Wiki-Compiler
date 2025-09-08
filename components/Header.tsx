@@ -1,27 +1,27 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View, Project } from '../types';
+import { View } from '../types';
 import Icon from './Icon';
 import { useClickOutside } from '../hooks/useClickOutside';
+import { useProjects } from '../hooks/useProjectsContext';
 
 interface HeaderProps {
   view: View;
   setView: (view: View) => void;
-  projectName: string;
-  projects: Project[];
-  activeProjectId: string | null;
-  setActiveProjectId: (id: string) => void;
-  createNewProject: () => void;
-  deleteProject: (id: string) => void;
   openCommandPalette: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ 
-  view, setView, projectName,
-  projects, activeProjectId, setActiveProjectId, createNewProject, deleteProject,
-  openCommandPalette
-}) => {
+const Header: React.FC<HeaderProps> = ({ view, setView, openCommandPalette }) => {
   const { t } = useTranslation();
+  const {
+    projects,
+    activeProject,
+    activeProjectId,
+    setActiveProjectId,
+    createNewProject,
+    deleteProject,
+  } = useProjects();
+  
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [projectSearch, setProjectSearch] = useState('');
@@ -41,6 +41,11 @@ const Header: React.FC<HeaderProps> = ({
   const filteredProjects = projects.filter(p => 
     p.name.toLowerCase().includes(projectSearch.toLowerCase())
   );
+
+  const handleCreateNewProject = () => {
+    createNewProject(() => setView(View.Compiler));
+    closeAllMenus();
+  }
 
   const projectDropdownContent = (
     <>
@@ -74,7 +79,7 @@ const Header: React.FC<HeaderProps> = ({
         ))}
       </ul>
       <div className="border-t border-gray-200 dark:border-gray-700 p-2">
-        <button onClick={() => { createNewProject(); closeAllMenus(); }} className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/60 rounded-md">
+        <button onClick={handleCreateNewProject} className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/60 rounded-md">
           <Icon name="plus" className="w-4 h-4" />
           {t('Create New Project')}
         </button>
@@ -102,7 +107,7 @@ const Header: React.FC<HeaderProps> = ({
               onClick={() => { setIsProjectDropdownOpen(prev => !prev); setIsMoreMenuOpen(false); }}
               className="flex items-center gap-2 text-sm px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
             >
-              <span className="font-medium text-gray-700 dark:text-gray-300 truncate max-w-[120px] sm:max-w-none">{projectName}</span>
+              <span className="font-medium text-gray-700 dark:text-gray-300 truncate max-w-[120px] sm:max-w-none">{activeProject?.name}</span>
               <Icon name="chevron-down" className="w-4 h-4 text-gray-500 dark:text-gray-400"/>
             </button>
             {isProjectDropdownOpen && (
