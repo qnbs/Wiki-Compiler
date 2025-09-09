@@ -53,7 +53,8 @@ const CompilerLeftPanel: React.FC<CompilerLeftPanelProps> = ({
   };
 
   const removeArticle = (index: number) => {
-    if (window.confirm(t('Remove Article Confirmation', { articleTitle: articles[index].title }))) {
+    // FIX: Renamed translation key to avoid duplicates.
+    if (window.confirm(t('Remove Article from Compilation Confirmation', { articleTitle: articles[index].title }))) {
       const newArticles = articles.filter((_, i) => i !== index);
       setArticles(newArticles);
       updateProject({ ...project, articles: newArticles });

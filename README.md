@@ -12,37 +12,46 @@ In the age of information overload, Wiki Compiler offers a focused sanctuary for
 
 ---
 
+## The Workflow: From Idea to Publication
+
+Wiki Compiler is designed around a clear, four-step workflow that guides you from initial curiosity to a finished product.
+
+1.  **① Research in the Library**: Discover articles using the powerful Wikipedia search. Use the AI Research Assistant to get instant summaries and key concepts, helping you quickly identify relevant sources.
+2.  **② Curate in the Importers**: Send articles and images to dedicated "staging areas." Here, you can review, edit metadata, and deliberately select what to include in your permanent collection, ensuring your library remains organized and relevant.
+3.  **③ Assemble in the Compiler**: This is your workshop. Drag-and-drop articles to structure your narrative, edit content with a powerful rich-text editor, enhance your writing with AI, manage citations, and add project-specific notes.
+4.  **④ Publish Your Work**: Export your final compilation into professional formats like DOCX and ODT, or portable ones like Markdown and JSON, ready for submission, sharing, or personal archiving.
+
+---
+
 ## Key Features
 
-### 🧠 Knowledge Curation & Management
-*   **Project-Based Organization**: Group related articles into "Compilations" to structure your research projects.
-*   **Project Notes**: Each compilation includes a dedicated notes panel, perfect for jotting down ideas, creating an outline, or keeping a research diary.
-*   **Powerful Search**: Instantly search and browse Wikipedia articles with advanced sorting options.
+### 🧠 Research & Curation
+*   **Powerful Search**: Instantly search Wikipedia with advanced sorting options (relevance, date, title).
+*   **AI Research Assistant**: Leverage Google's Gemini API for an intelligent breakdown of any article, generating summaries, key concepts, and potential research questions.
 *   **Offline Article Archive**: Every article you view is automatically cached locally, creating a personal, searchable knowledge base that works anytime, anywhere.
-*   **Robust Rich-Text Editing**: Modify article text directly within the compiler using a powerful Tiptap-based editor. Changes are saved on a per-project basis.
+*   **Article Importer**: A dedicated staging area to collect articles before adding them to a project, keeping your compilations clean and focused.
 
-### ✨ AI-Powered Research Assistant
-*   **Instant Insights**: Leverage Google's Gemini API to get an intelligent breakdown of any article.
-*   **AI Content Editor**: Directly edit article text with AI. Select text (or the whole article) and prompt the AI to summarize, rephrase, check for clarity, or perform custom edits.
-*   **Focused Analysis**: Choose to generate a summary, key concepts, research questions, or any combination in the settings to fine-tune the AI output.
-*   **Key Concepts**: Automatically identify and explain important terms, people, and places.
-*   **Research Springboard**: Uncover potential research questions to guide your study and exploration.
+### 🖼️ Content Creation & Compilation
+*   **Project-Based Organization**: Group related articles into "Compilations" to structure your research projects.
+*   **Robust Rich-Text Editing**: Modify article text directly within the compiler using a powerful Lexical-based editor. Changes are saved on a per-project basis, preserving the original in the archive.
+*   **AI Content Editor**: Select any text (or the whole article) and prompt the AI to summarize, rephrase, fix grammar, or perform custom edits.
+*   **Image Importer & Library**: Extract images from articles or add them manually. Curate them in a staging area before importing them into a central, searchable image library.
+*   **Project Notes**: Each compilation includes a dedicated notes panel, perfect for jotting down ideas, creating an outline, or keeping a research diary.
 
 ### 📚 Professional Publishing & Export
-*   **Advanced Citation Management**: Add, manage, and insert custom external sources (books, websites, etc.) as in-text citations within your articles.
-*   **Automatic Bibliography**: Automatically generate a formatted bibliography in **APA** or **MLA** style for HTML exports, including both Wikipedia articles and your custom citations.
+*   **Advanced Citation Management**: Add and manage custom external sources (books, websites, etc.) for your bibliographies.
+*   **Automatic Bibliography**: Automatically generate a formatted bibliography in **APA** or **MLA** style, including both Wikipedia articles and your custom citations.
 *   **Multiple Export Formats**:
     *   **DOCX**: Export your compilation to a professional Microsoft Word document.
-    *   **Markdown**: Export your entire compilation as a clean, portable single Markdown file, complete with links back to the original source articles.
-    *   **HTML**: Get a standalone HTML file of your compilation.
-    *   **JSON / Plain Text**: Export your data for portability and easy reuse.
+    *   **ODT**: Export to the OpenDocument format for use with LibreOffice, OpenOffice, and other suites.
+    *   **Markdown**: Export your entire compilation as a clean, portable single Markdown file.
+    *   **JSON**: Export project data for portability, backup, or integration.
 
 ### 🎨 Personalized & Efficient Workflow
-*   **Focused Dark Mode**: A beautiful dark mode for focused, late-night research sessions.
-*   **Multilingual Support**: Switch between English and German for a localized experience.
-*   **Accent Colors**: Personalize the UI with your preferred highlight color.
 *   **Command Palette**: A keyboard-driven interface (**Ctrl/Cmd + K**) to instantly navigate views and execute commands.
-*   **Data Portability**: Backup and restore your entire workspace (projects, articles, settings) with a simple JSON import/export.
+*   **Focused Dark Mode**: A beautiful dark mode for focused, late-night research sessions.
+*   **Multilingual Support**: Fully localized in English and German.
+*   **Data Portability**: Backup and restore your entire workspace (projects, articles, images, settings) with a simple JSON import/export.
 *   **Non-Blocking Notifications**: A sleek toast notification system provides feedback without interrupting your workflow.
 
 ---
@@ -52,14 +61,13 @@ In the age of information overload, Wiki Compiler offers a focused sanctuary for
 This application is built with a modern, client-centric tech stack designed for performance, offline capability, and a rich user experience.
 
 *   **Framework**: **React with TypeScript** for a robust, type-safe, and component-based UI.
-*   **State Management**: **React Context API** provides global, scalable state management for settings and projects, eliminating prop drilling and improving maintainability.
-*   **Rich-Text Editor**: **Tiptap** provides a robust, extensible, and stable foundation for all content editing.
+*   **State Management**: **React Context API** provides global, scalable state management for settings, projects, and importers.
+*   **Rich-Text Editor**: **Lexical** (from Meta) provides a highly extensible and reliable framework for the article editor.
 *   **Styling**: **Tailwind CSS** (via CDN) for rapid, utility-first styling, enabling a consistent and modern design system.
 *   **Client-Side Storage**: **IndexedDB** (using the `idb` library) provides a large, asynchronous, and persistent local database. This is crucial for the offline article archive, project storage, and user settings.
 *   **AI Integration**: **Google Gemini API** (`@google/genai`) is the core of the AI Research Assistant, providing powerful generative capabilities for content analysis and editing.
-*   **DOCX Generation**: **`docx`** library is used to generate professional Word documents on the client-side.
-*   **HTML to Markdown**: **`turndown`** is used to convert the rich HTML content from Wikipedia articles into clean, readable Markdown for export.
-*   **Internationalization**: **`i18next`**, **`react-i18next`**, and **`i18next-browser-languagedetector`** are used to provide full localization support.
+*   **Document Generation**: The **`docx`** library is used to generate professional Word documents, and a custom implementation generates ODT files, all on the client-side.
+*   **Internationalization**: **`i18next`** and **`react-i18next`** are used to provide full localization support.
 
 ---
 
@@ -124,37 +132,46 @@ Im Zeitalter der Informationsüberflutung bietet Wiki Compiler einen fokussierte
 
 ---
 
+## Der Workflow: Von der Idee zur Publikation
+
+Wiki Compiler ist um einen klaren, vierstufigen Arbeitsablauf herum konzipiert, der Sie von der anfänglichen Neugier bis zum fertigen Produkt führt.
+
+1.  **① Recherchieren in der Bibliothek**: Entdecken Sie Artikel mit der leistungsstarken Wikipedia-Suche. Nutzen Sie den KI-Forschungsassistenten, um sofortige Zusammenfassungen und Schlüsselkonzepte zu erhalten, die Ihnen helfen, relevante Quellen schnell zu identifizieren.
+2.  **② Kuratieren in den Importern**: Senden Sie Artikel und Bilder an dedizierte "Staging-Bereiche". Hier können Sie Metadaten überprüfen, bearbeiten und gezielt auswählen, was Sie in Ihre permanente Sammlung aufnehmen möchten, um Ihre Bibliothek organisiert und relevant zu halten.
+3.  **③ Zusammenstellen im Compiler**: Dies ist Ihre Werkstatt. Ordnen Sie Artikel per Drag-and-Drop an, um Ihre Erzählung zu strukturieren, bearbeiten Sie Inhalte mit einem leistungsstarken Rich-Text-Editor, verbessern Sie Ihr Schreiben mit KI, verwalten Sie Zitate und fügen Sie projektspezifische Notizen hinzu.
+4.  **④ Veröffentlichen Sie Ihre Arbeit**: Exportieren Sie Ihre endgültige Kompilation in professionelle Formate wie DOCX und ODT oder portable Formate wie Markdown und JSON, bereit zur Einreichung, zum Teilen oder zur persönlichen Archivierung.
+
+---
+
 ## Hauptfunktionen
 
-### 🧠 Wissenskuratierung & -management
-*   **Projektbasierte Organisation**: Gruppieren Sie zusammengehörige Artikel in "Kompilationen", um Ihre Forschungsprojekte zu strukturieren.
-*   **Projektnotizen**: Jede Kompilation enthält ein eigenes Notizfeld, ideal zum Festhalten von Ideen, Erstellen einer Gliederung oder Führen eines Forschungstagebuchs.
-*   **Leistungsstarke Suche**: Suchen und durchsuchen Sie Wikipedia-Artikel sofort mit erweiterten Sortieroptionen.
+### 🧠 Recherche & Kuration
+*   **Leistungsstarke Suche**: Durchsuchen Sie Wikipedia sofort mit erweiterten Sortieroptionen (Relevanz, Datum, Titel).
+*   **KI-Forschungsassistent**: Nutzen Sie die Gemini-API von Google für eine intelligente Analyse jedes Artikels und generieren Sie Zusammenfassungen, Schlüsselkonzepte und potenzielle Forschungsfragen.
 *   **Offline-Artikelarchiv**: Jeder Artikel, den Sie ansehen, wird automatisch lokal zwischengespeichert und schafft so eine persönliche, durchsuchbare Wissensdatenbank, die jederzeit und überall funktioniert.
-*   **Robustes Rich-Text-Editing**: Ändern Sie den Artikeltext direkt im Compiler mit einem leistungsstarken, auf Tiptap basierenden Editor. Änderungen werden pro Projekt gespeichert.
+*   **Artikel-Importer**: Ein dedizierter Staging-Bereich, um Artikel zu sammeln, bevor Sie sie einem Projekt hinzufügen, um Ihre Kompilationen sauber und fokussiert zu halten.
 
-### ✨ KI-gestützter Forschungsassistent
-*   **Sofortige Einblicke**: Nutzen Sie die Gemini-API von Google, um eine intelligente Aufschlüsselung jedes Artikels zu erhalten.
-*   **KI-Inhaltseditor**: Bearbeiten Sie Artikeltexte direkt mit KI. Wählen Sie Text aus (oder den ganzen Artikel) und fordern Sie die KI auf, zusammenzufassen, umzuformulieren, auf Klarheit zu prüfen oder benutzerdefinierte Bearbeitungen durchzuführen.
-*   **Gezielte Analyse**: Wählen Sie in den Einstellungen aus, ob Sie eine Zusammenfassung, Schlüsselkonzepte, Forschungsfragen oder eine beliebige Kombination davon generieren möchten, um die KI-Ausgabe zu optimieren.
-*   **Schlüsselkonzepte**: Identifizieren und erklären Sie automatisch wichtige Begriffe, Personen und Orte.
-*   **Forschungssprungbrett**: Entdecken Sie potenzielle Forschungsfragen, um Ihr Studium und Ihre Erkundung zu leiten.
+### 🖼️ Inhaltserstellung & Kompilation
+*   **Projektbasierte Organisation**: Gruppieren Sie zusammengehörige Artikel in "Kompilationen", um Ihre Forschungsprojekte zu strukturieren.
+*   **Robustes Rich-Text-Editing**: Ändern Sie den Artikeltext direkt im Compiler mit einem leistungsstarken, auf Lexical basierenden Editor. Änderungen werden pro Projekt gespeichert, wobei das Original im Archiv erhalten bleibt.
+*   **KI-Inhaltseditor**: Wählen Sie einen beliebigen Text (oder den ganzen Artikel) aus und fordern Sie die KI auf, zusammenzufassen, umzuformulieren, die Grammatik zu korrigieren oder benutzerdefinierte Bearbeitungen durchzuführen.
+*   **Bild-Importer & Bibliothek**: Extrahieren Sie Bilder aus Artikeln oder fügen Sie sie manuell hinzu. Kuratieren Sie sie in einem Staging-Bereich, bevor Sie sie in eine zentrale, durchsuchbare Bildbibliothek importieren.
+*   **Projektnotizen**: Jede Kompilation enthält ein eigenes Notizfeld, ideal zum Festhalten von Ideen, Erstellen einer Gliederung oder Führen eines Forschungstagebuchs.
 
 ### 📚 Professionelles Publizieren & Export
-*   **Erweitertes Zitatmanagement**: Fügen Sie benutzerdefinierte externe Quellen (Bücher, Websites usw.) hinzu, verwalten Sie sie und fügen Sie sie als In-Text-Zitate in Ihre Artikel ein.
-*   **Automatische Bibliografie**: Generieren Sie automatisch eine formatierte Bibliografie im **APA**- oder **MLA**-Stil für HTML-Exporte, die sowohl Wikipedia-Artikel als auch Ihre benutzerdefinierten Zitate enthält.
+*   **Erweitertes Zitatmanagement**: Fügen Sie benutzerdefinierte externe Quellen (Bücher, Websites usw.) für Ihre Bibliografien hinzu und verwalten Sie diese.
+*   **Automatische Bibliografie**: Generieren Sie automatisch eine formatierte Bibliografie im **APA**- oder **MLA**-Stil, die sowohl Wikipedia-Artikel als auch Ihre benutzerdefinierten Zitate enthält.
 *   **Mehrere Exportformate**:
     *   **DOCX**: Exportieren Sie Ihre Kompilation in ein professionelles Microsoft Word-Dokument.
-    *   **Markdown**: Exportieren Sie Ihre gesamte Kompilation als saubere, portable einzelne Markdown-Datei, komplett mit Links zu den ursprünglichen Quellartikeln.
-    *   **HTML**: Erhalten Sie eine eigenständige HTML-Datei Ihrer Kompilation.
-    *   **JSON / Klartext**: Exportieren Sie Ihre Daten zur Portabilität und einfachen Wiederverwendung.
+    *   **ODT**: Exportieren Sie in das OpenDocument-Format zur Verwendung mit LibreOffice, OpenOffice und anderen Suiten.
+    *   **Markdown**: Exportieren Sie Ihre gesamte Kompilation als saubere, portable einzelne Markdown-Datei.
+    *   **JSON**: Exportieren Sie Projektdaten zur Portabilität, Sicherung oder Integration.
 
 ### 🎨 Personalisierter & effizienter Workflow
-*   **Fokussierter Dunkelmodus**: Ein schöner Dunkelmodus für konzentrierte, nächtliche Forschungssitzungen.
-*   **Mehrsprachige Unterstützung**: Wechseln Sie zwischen Englisch und Deutsch für eine lokalisierte Erfahrung.
-*   **Akzentfarben**: Personalisieren Sie die Benutzeroberfläche mit Ihrer bevorzugten Hervorhebungsfarbe.
 *   **Befehlspalette**: Eine tastaturgesteuerte Oberfläche (**Ctrl/Cmd + K**), um sofort zwischen Ansichten zu navigieren und Befehle auszuführen.
-*   **Datentransportierbarkeit**: Sichern und Wiederherstellen Sie Ihren gesamten Arbeitsbereich (Projekte, Artikel, Einstellungen) mit einem einfachen JSON-Import/Export.
+*   **Fokussierter Dunkelmodus**: Ein schöner Dunkelmodus für konzentrierte, nächtliche Forschungssitzungen.
+*   **Mehrsprachige Unterstützung**: Vollständig lokalisiert in Englisch und Deutsch.
+*   **Datentransportierbarkeit**: Sichern und Wiederherstellen Sie Ihren gesamten Arbeitsbereich (Projekte, Artikel, Bilder, Einstellungen) mit einem einfachen JSON-Import/Export.
 *   **Nicht-blockierende Benachrichtigungen**: Ein elegantes Toast-Benachrichtigungssystem gibt Feedback, ohne Ihren Arbeitsablauf zu unterbrechen.
 
 ---
@@ -164,14 +181,13 @@ Im Zeitalter der Informationsüberflutung bietet Wiki Compiler einen fokussierte
 Diese Anwendung wurde mit einem modernen, client-zentrierten Technologie-Stack erstellt, der auf Leistung, Offline-Fähigkeit und eine reichhaltige Benutzererfahrung ausgelegt ist.
 
 *   **Framework**: **React mit TypeScript** für eine robuste, typsichere und komponentenbasierte Benutzeroberfläche.
-*   **State Management**: Die **React Context API** sorgt für ein globales, skalierbares Zustandsmanagement für Einstellungen und Projekte, vermeidet "Prop Drilling" und verbessert die Wartbarkeit.
-*   **Rich-Text-Editor**: **Tiptap** bietet eine robuste, erweiterbare und stabile Grundlage für die gesamte Inhaltsbearbeitung.
+*   **State Management**: Die **React Context API** sorgt für ein globales, skalierbares Zustandsmanagement für Einstellungen, Projekte und Importer.
+*   **Rich-Text-Editor**: **Lexical** (von Meta) bietet ein hoch erweiterbares und zuverlässiges Framework für den Artikeleditor.
 *   **Styling**: **Tailwind CSS** (über CDN) für schnelles, Utility-First-Styling, das ein konsistentes und modernes Designsystem ermöglicht.
 *   **Client-seitiger Speicher**: **IndexedDB** (unter Verwendung der `idb`-Bibliothek) bietet eine große, asynchrone und persistente lokale Datenbank. Dies ist entscheidend für das Offline-Artikelarchiv, die Projektspeicherung und die Benutzereinstellungen.
 *   **KI-Integration**: **Google Gemini API** (`@google/genai`) ist der Kern des KI-Forschungsassistenten und bietet leistungsstarke generative Fähigkeiten zur Inhaltsanalyse und -bearbeitung.
-*   **DOCX-Generierung**: Die **`docx`**-Bibliothek wird verwendet, um professionelle Word-Dokumente auf der Client-Seite zu erstellen.
-*   **HTML zu Markdown**: **`turndown`** wird verwendet, um den reichhaltigen HTML-Inhalt von Wikipedia-Artikeln für den Export in sauberes, lesbares Markdown zu konvertieren.
-*   **Internationalisierung**: **`i18next`**, **`react-i18next`** und **`i18next-browser-languagedetector`** werden verwendet, um vollständige Lokalisierungsunterstützung zu bieten.
+*   **Dokumentenerstellung**: Die **`docx`**-Bibliothek wird verwendet, um professionelle Word-Dokumente zu erstellen, und eine benutzerdefinierte Implementierung generiert ODT-Dateien, alles auf der Client-Seite.
+*   **Internationalisierung**: **`i18next`** und **`react-i18next`** werden verwendet, um vollständige Lokalisierungsunterstützung zu bieten.
 
 ---
 

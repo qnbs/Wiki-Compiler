@@ -1,4 +1,5 @@
-import React, { useEffect }from 'react';
+import React, { ReactNode, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import Icon from './Icon';
 
@@ -6,60 +7,86 @@ interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
-  children: React.ReactNode;
-  actions: React.ReactNode;
+  children: ReactNode;
+  actions?: ReactNode;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, actions }) => {
+const Modal: React.FC<ModalProps> = ({
+  isOpen,
+  onClose,
+  title,
+  children,
+  actions,
+  size = 'md',
+}) => {
   const modalRef = useFocusTrap<HTMLDivElement>(isOpen);
 
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
         onClose();
       }
     };
+
     if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
       document.body.style.overflow = 'hidden';
-    } else {
-        document.body.style.overflow = 'unset';
+      document.addEventListener('keydown', handleKeyDown);
     }
+
     return () => {
-      document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = 'unset';
+      document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
-  return (
-    <div 
-      className="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex justify-center items-center p-4 transition-opacity duration-300"
+  const sizeClasses = {
+    sm: 'max-w-sm',
+    md: 'max-w-md',
+    lg: 'max-w-lg',
+    xl: 'max-w-xl',
+  };
+
+  return createPortal(
+    <div
+      className="fixed inset-0 bg-gray-900 bg-opacity-75 z-40 flex items-center justify-center p-4"
+      aria-labelledby="modal-title"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="modal-title"
       onClick={onClose}
     >
-      <div 
+      <div
         ref={modalRef}
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"
-        onClick={(e) => e.stopPropagation()} // Prevent closing modal when clicking inside
+        className={`bg-white dark:bg-gray-800 rounded-lg shadow-xl transform transition-all w-full ${sizeClasses[size]} animate-pop-in`}
+        onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-5 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-          <h2 id="modal-title" className="text-xl font-semibold">{title}</h2>
-          <button onClick={onClose} className="p-1 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-200" aria-label="Close modal">
-            <Icon name="x-mark" className="w-6 h-6" />
+        <header className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 id="modal-title" className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            {title}
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-1 rounded-full text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+            aria-label="Close modal"
+          >
+            <Icon name="x-mark" className="w-5 h-5" />
           </button>
-        </div>
-        <div className="p-5">
+        </header>
+        <main className="p-6">
           {children}
-        </div>
-        <div className="p-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3 rounded-b-lg">
-          {actions}
-        </div>
+        </main>
+        {actions && (
+          <footer className="flex justify-end items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 rounded-b-lg">
+            {actions}
+          </footer>
+        )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

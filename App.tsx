@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
-import { View, ArticleContent } from './types';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View } from './types';
+import { useSettings } from './hooks/useSettingsContext';
+import { getArticleHtml, getArticleMetadata } from './services/wikipediaService';
 import { getArticleCache, saveArticleCache } from './services/dbService';
-import { getArticleHtml as fetchArticleHtml, getArticleMetadata } from './services/wikipediaService';
+
 import Header from './components/Header';
 import LibraryView from './components/LibraryView';
 import ArchiveView from './components/ArchiveView';
@@ -11,118 +12,93 @@ import ImporterView from './components/ImporterView';
 import ImageImporterView from './components/ImageImporterView';
 import SettingsView from './components/SettingsView';
 import HelpView from './components/HelpView';
-import CommandPalette from './components/CommandPalette';
-import { useDarkMode } from './hooks/useDarkMode';
 import BottomNavBar from './components/BottomNavBar';
-import Spinner from './components/Spinner';
-import { useSettings } from './hooks/useSettingsContext';
-import { useProjects } from './hooks/useProjectsContext';
 import ToastContainer from './components/ToastContainer';
+import CommandPalette from './components/CommandPalette';
 import WelcomeModal from './components/WelcomeModal';
+import Spinner from './components/Spinner';
 
 const App: React.FC = () => {
-  const { t } = useTranslation();
-  const [view, setView] = useState<View>(View.Library);
+  const { settings } = useSettings();
+  const [view, setView] = useState<View | null>(null);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
-  
-  const { settings, reloadSettings } = useSettings();
-  const { activeProject, createNewProject, reloadProjects } = useProjects();
-  
-  useDarkMode();
-
-  useEffect(() => {
-    const hasBeenOnboarded = localStorage.getItem('wiki-compiler-onboarded');
-    if (!hasBeenOnboarded) {
-      setIsWelcomeModalOpen(true);
-    }
-  }, []);
 
   useEffect(() => {
     if (settings) {
       setView(settings.defaultView);
+      const hasOnboarded = localStorage.getItem('wiki-compiler-onboarded');
+      if (!hasOnboarded) {
+        setIsWelcomeModalOpen(true);
+      }
     }
-  }, [settings?.defaultView]);
+  }, [settings]);
 
   const reloadApp = useCallback(() => {
-    reloadSettings();
-    reloadProjects();
-  },[reloadSettings, reloadProjects]);
-
-  const getArticleContent = useCallback(async (title: string): Promise<string> => {
-    let article = await getArticleCache(title);
-    if (!article) {
-      const html = await fetchArticleHtml(title);
-      const metadataArray = await getArticleMetadata([title]);
-      const articleToCache: ArticleContent = { 
-        title, 
-        html, 
-        metadata: metadataArray.length > 0 ? metadataArray[0] : undefined 
-      };
-      await saveArticleCache(articleToCache);
-      return html;
-    }
-    return article.html;
+    // This is a bit of a heavy-handed way to reload, but it ensures all contexts and DB states are refreshed.
+    window.location.reload();
   }, []);
 
-  const commands = useMemo(() => [
-    { id: 'goto-library', label: t('Go to Library'), action: () => setView(View.Library), icon: 'book' },
-    { id: 'goto-archive', label: t('Go to Archive'), action: () => setView(View.Archive), icon: 'archive-box' },
-    { id: 'goto-compiler', label: t('Go to Compiler'), action: () => setView(View.Compiler), icon: 'compiler' },
-    { id: 'goto-importer', label: t('Go to Importer'), action: () => setView(View.Importer), icon: 'upload' },
-    { id: 'goto-image-importer', label: t('Image Importer'), action: () => setView(View.ImageImporter), icon: 'palette' },
-    { id: 'goto-settings', label: t('Settings'), action: () => setView(View.Settings), icon: 'settings' },
-    { id: 'goto-help', label: t('Help'), action: () => setView(View.Help), icon: 'help' },
-    { id: 'create-project', label: t('Create New Project'), action: () => createNewProject(() => setView(View.Compiler)), icon: 'plus' },
-  ], [t, createNewProject]);
-
-  if (!settings || !activeProject) {
-    return (
-      <div className="min-h-screen bg-white dark:bg-gray-900 flex justify-center items-center">
-        <Spinner />
-      </div>
-    );
-  }
-
-  const renderContent = () => {
-    switch (view) {
-        case View.Library:
-            return <LibraryView getArticleContent={getArticleContent} />;
-        case View.Archive:
-            return <ArchiveView getArticleContent={getArticleContent} />;
-        case View.Compiler:
-            return <CompilerView getArticleContent={getArticleContent} />;
-        case View.Importer:
-            return <ImporterView getArticleContent={getArticleContent} />;
-        case View.ImageImporter:
-            return <ImageImporterView />;
-        case View.Settings:
-            return <SettingsView reloadApp={reloadApp} />;
-        case View.Help:
-            return <HelpView />;
-        default:
-            return null;
+  const getArticleContent = useCallback(async (title: string): Promise<string> => {
+    const cachedArticle = await getArticleCache(title);
+    if (cachedArticle) {
+      return cachedArticle.html;
     }
+    const html = await getArticleHtml(title);
+    const metadataArray = await getArticleMetadata([title]);
+    await saveArticleCache({
+      title,
+      html,
+      metadata: metadataArray.length > 0 ? metadataArray[0] : undefined,
+    });
+    return html;
+  }, []);
+  
+  const commands = [
+    { id: 'goto-library', label: 'Go to Library', action: () => setView(View.Library), icon: 'book' },
+    { id: 'goto-archive', label: 'Go to Archive', action: () => setView(View.Archive), icon: 'archive-box' },
+    { id: 'goto-compiler', label: 'Go to Compiler', action: () => setView(View.Compiler), icon: 'compiler' },
+    { id: 'goto-importer', label: 'Go to Importer', action: () => setView(View.Importer), icon: 'upload' },
+    { id: 'goto-image-importer', label: 'Go to Image Importer', action: () => setView(View.ImageImporter), icon: 'palette' },
+    { id: 'goto-settings', label: 'Settings', action: () => setView(View.Settings), icon: 'settings' },
+    { id: 'goto-help', label: 'Help', action: () => setView(View.Help), icon: 'help' },
+  ];
+
+  const renderView = () => {
+    switch (view) {
+      case View.Library:
+        return <LibraryView getArticleContent={getArticleContent} />;
+      case View.Archive:
+        return <ArchiveView />;
+      case View.Compiler:
+        return <CompilerView getArticleContent={getArticleContent} />;
+      case View.Importer:
+        return <ImporterView getArticleContent={getArticleContent} />;
+      case View.ImageImporter:
+        return <ImageImporterView />;
+      case View.Settings:
+        return <SettingsView reloadApp={reloadApp} />;
+      case View.Help:
+        return <HelpView />;
+      default:
+        return <div className="flex justify-center items-center h-full"><Spinner /></div>;
+    }
+  };
+
+  if (!view || !settings) {
+    return <div className="w-screen h-screen flex justify-center items-center bg-gray-100 dark:bg-gray-900"><Spinner /></div>;
   }
 
   return (
-    <div className="min-h-screen text-gray-900 dark:text-gray-100 transition-colors duration-200">
-      <ToastContainer />
-      <WelcomeModal isOpen={isWelcomeModalOpen} onClose={() => setIsWelcomeModalOpen(false)} />
-      <Header 
-        view={view} 
-        setView={setView} 
-        openCommandPalette={() => setIsCommandPaletteOpen(true)}
-      />
-       <CommandPalette
-        isOpen={isCommandPaletteOpen}
-        setIsOpen={setIsCommandPaletteOpen}
-        commands={commands}
-      />
-      <main className="p-4 sm:p-6 lg:p-8 pb-20 sm:pb-6 lg:pb-8">
-        {renderContent()}
+    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900/95 text-gray-900 dark:text-gray-100">
+      <Header view={view} setView={setView} openCommandPalette={() => setIsCommandPaletteOpen(true)} />
+      <main className="flex-grow overflow-auto p-4 sm:p-6 mb-16 sm:mb-0">
+        {renderView()}
       </main>
       <BottomNavBar view={view} setView={setView} />
+      <ToastContainer />
+      <CommandPalette isOpen={isCommandPaletteOpen} setIsOpen={setIsCommandPaletteOpen} commands={commands} />
+      <WelcomeModal isOpen={isWelcomeModalOpen} onClose={() => setIsWelcomeModalOpen(false)} />
     </div>
   );
 };

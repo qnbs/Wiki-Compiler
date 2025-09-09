@@ -1,144 +1,193 @@
-<script type="importmap">
-{
-  "imports": {
-    "idb": "https://aistudiocdn.com/idb@^8.0.3",
-    "react-i18next": "https://aistudiocdn.com/react-i18next@^15.7.3",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.17.0",
-    "react-dom": "https://aistudiocdn.com/react-dom@^19.1.1",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
-    "i18next": "https://aistudiocdn.com/i18next@^25.5.2",
-    "react/": "https://aistudiocdn.com/react@^19.1.1/",
-    "react": "https://aistudiocdn.com/react@^19.1.1",
-    "marked": "https://aistudiocdn.com/marked@^16.2.1",
-    "i18next-browser-languagedetector": "https://aistudiocdn.com/i18next-browser-languagedetector@^8.2.0",
-    "turndown": "https://aistudiocdn.com/turndown@^7.2.1",
-    "docx": "https://aistudiocdn.com/docx@^9.5.1",
-    "file-saver": "https://aistudiocdn.com/file-saver@^2.0.5",
-    "lexical": "https://aistudiocdn.com/lexical@^0.35.0",
-    "@lexical/react": "https://aistudiocdn.com/@lexical/react@^0.35.0",
-    "@lexical/rich-text": "https://aistudiocdn.com/@lexical/rich-text@^0.35.0",
-    "@lexical/html": "https://aistudiocdn.com/@lexical/html@^0.35.0",
-    "@lexical/list": "https://aistudiocdn.com/@lexical/list@^0.35.0",
-    "@lexical/link": "https://aistudiocdn.com/@lexical/link@^0.35.0",
-    "@lexical/selection": "https://aistudiocdn.com/@lexical/selection@^0.35.0",
-    "@lexical/utils": "https://aistudiocdn.com/@lexical/utils@^0.35.0",
-    "@lexical/react/": "https://aistudiocdn.com/@lexical/react@^0.35.0/"
-  }
-}
-</script>
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wiki Compiler</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent-color: 39 110 241; /* Blue */
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Basic Reset & Font Smoothing */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+        body, h1, h2, h3, h4, p, figure, blockquote, dl, dd {
+            margin: 0;
+        }
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* TailwindCSS Prose styles for rendered Wikipedia articles */
+        .prose a { color: rgb(var(--accent-color)); }
+        .prose a:hover { text-decoration: underline; }
+        .prose img { border-radius: 0.5rem; }
+        .prose .infobox {
+            border: 1px solid #a2a9b1;
+            margin: 0.5em 0 0.5em 1em;
+            padding: 0.2em;
+            float: right;
+            clear: right;
+            font-size: 88%;
+            line-height: 1.5em;
+        }
+
+        /* Responsive Infobox */
+        .prose .infobox {
+            max-width: 22em; /* Keep max-width for large screens */
+            width: auto;     /* Allow it to shrink */
+            float: none;     /* Disable float on small screens */
+            margin: 1em 0; /* Center it with vertical margin */
+        }
+        @media (min-width: 640px) { /* sm breakpoint */
+            .prose .infobox {
+                float: right;
+                clear: right;
+                margin: 0.5em 0 0.5em 1em;
+            }
+        }
+        
+        .dark .prose .infobox {
+            border-color: #72777d;
+            background-color: #202122;
+        }
+        
+        .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+            font-weight: 700;
+        }
+        .dark .prose {
+          --tw-prose-body: #d1d5db;
+          --tw-prose-headings: #f9fafb;
+          --tw-prose-lead: #e5e7eb;
+          --tw-prose-links: #93c5fd;
+          --tw-prose-bold: #f9fafb;
+          --tw-prose-counters: #9ca3af;
+          --tw-prose-bullets: #6b7280;
+          --tw-prose-hr: #4b5563;
+          --tw-prose-quotes: #f3f4f6;
+          --tw-prose-quote-borders: #4b5563;
+          --tw-prose-captions: #9ca3af;
+          --tw-prose-code: #f9fafb;
+          --tw-prose-pre-code: #e5e7eb;
+          --tw-prose-pre-bg: #1f2937;
+          --tw-prose-th-borders: #4b5563;
+          --tw-prose-td-borders: #374151;
+        }
+
+        /* Lexical Editor Styles */
+        .editor-input {
+            caret-color: rgb(5, 5, 5);
+            position: relative;
+            tab-size: 1;
+            outline: 0;
+            padding: 10px;
+            user-select: text;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .dark .editor-input {
+            caret-color: #eee;
+        }
+        .editor-placeholder {
+            color: #999;
+            overflow: hidden;
+            position: absolute;
+            text-overflow: ellipsis;
+            top: 10px;
+            left: 10px;
+            font-size: 1rem;
+            user-select: none;
+            display: inline-block;
+            pointer-events: none;
+        }
+        
+        /* Custom Animations */
+        @keyframes pop-in {
+            0% { transform: scale(0.8); opacity: 0; }
+            70% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop-in {
+            animation: pop-in 0.3s ease-out forwards;
+        }
+
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            opacity: 0; /* Start hidden */
+            animation: fade-in 0.5s ease-out forwards;
+        }
+        
+        /* Slide Over Panel Animations */
+        .slide-over-panel, .slide-over-overlay {
+            transition-property: transform, opacity;
+            transition-duration: 300ms;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+    <script type="importmap">
+    {
+      "imports": {
+        "file-saver": "https://aistudiocdn.com/file-saver@^2.0.5",
+        "@lexical/react/": "https://aistudiocdn.com/@lexical/react@^0.35.0/",
+        "docx": "https://aistudiocdn.com/docx@^9.5.1",
+        "react/": "https://aistudiocdn.com/react@^19.1.1/",
+        "react": "https://aistudiocdn.com/react@^19.1.1",
+        "react-dom": "https://aistudiocdn.com/react-dom@^19.1.1",
+        "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+        "i18next": "https://aistudiocdn.com/i18next@^25.5.2",
+        "@google/genai": "https://aistudiocdn.com/@google/genai@^1.17.0",
+        "idb": "https://aistudiocdn.com/idb@^8.0.3",
+        "react-i18next": "https://aistudiocdn.com/react-i18next@^15.7.3",
+        "i18next-browser-languagedetector": "https://aistudiocdn.com/i18next-browser-languagedetector@^8.2.0",
+        "turndown": "https://aistudiocdn.com/turndown@^7.2.1",
+        "lexical": "https://aistudiocdn.com/lexical@^0.35.0",
+        "@lexical/rich-text": "https://aistudiocdn.com/@lexical/rich-text@^0.35.0",
+        "@lexical/list": "https://aistudiocdn.com/@lexical/list@^0.35.0",
+        "@lexical/link": "https://aistudiocdn.com/@lexical/link@^0.35.0",
+        "@lexical/utils": "https://aistudiocdn.com/@lexical/utils@^0.35.0",
+        "@lexical/selection": "https://aistudiocdn.com/@lexical/selection@^0.35.0",
+        "@lexical/html": "https://aistudiocdn.com/@lexical/html@^0.35.0"
+      }
+    }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
-      // Enable class-based dark mode in Tailwind
       tailwind.config = {
         darkMode: 'class',
         theme: {
           extend: {
             colors: {
               accent: {
-                50: 'rgb(var(--color-accent-50) / <alpha-value>)',
-                100: 'rgb(var(--color-accent-100) / <alpha-value>)',
-                200: 'rgb(var(--color-accent-200) / <alpha-value>)',
-                300: 'rgb(var(--color-accent-300) / <alpha-value>)',
-                400: 'rgb(var(--color-accent-400) / <alpha-value>)',
-                500: 'rgb(var(--color-accent-500) / <alpha-value>)',
-                600: 'rgb(var(--color-accent-600) / <alpha-value>)',
-                700: 'rgb(var(--color-accent-700) / <alpha-value>)',
-                800: 'rgb(var(--color-accent-800) / <alpha-value>)',
-                900: 'rgb(var(--color-accent-900) / <alpha-value>)',
-              }
+                  50:  '#eff6ff',
+                  100: '#dbeafe',
+                  200: '#bfdbfe',
+                  300: '#93c5fd',
+                  400: '#60a5fa',
+                  500: '#3b82f6',
+                  600: '#2563eb',
+                  700: '#1d4ed8',
+                  800: '#1e40af',
+                  900: '#1e3a8a',
+                  950: '#172554',
+              },
             }
           }
         }
       }
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-      :root {
-        --color-accent-50: 239 246 255; /* blue-50 */
-        --color-accent-100: 219 234 254; /* blue-100 */
-        --color-accent-200: 191 219 254; /* blue-200 */
-        --color-accent-300: 147 197 253; /* blue-300 */
-        --color-accent-400: 96 165 250; /* blue-400 */
-        --color-accent-500: 59 130 246; /* blue-500 */
-        --color-accent-600: 37 99 235; /* blue-600 */
-        --color-accent-700: 29 78 216; /* blue-700 */
-        --color-accent-800: 30 64 175; /* blue-800 */
-        --color-accent-900: 30 58 138; /* blue-900 */
-      }
-      body { font-family: 'Inter', sans-serif; }
-      .font-serif { font-family: 'Lora', serif; }
-      /* Custom styles for rendered Wikipedia content */
-      .prose .infobox {
-        border: 1px solid #e2e8f0;
-        background-color: #f8fafc;
-        float: right;
-        width: 256px;
-        font-size: 0.875rem; /* text-sm */
-        padding: 0.5rem; /* p-2 */
-        margin-left: 1rem; /* ml-4 */
-        margin-bottom: 1rem; /* mb-4 */
-      }
-      .dark .prose .infobox {
-        border-color: #374151; /* dark:border-gray-700 */
-        background-color: rgba(31, 41, 55, 0.5); /* dark:bg-gray-800/50 */
-      }
-       /* Lexical editor styles */
-      .editor-container {
-        position: relative;
-      }
-      .editor-input {
-        min-height: 400px;
-        resize: none;
-        outline: 0;
-      }
-      .editor-placeholder {
-        color: #adb5bd;
-        overflow: hidden;
-        position: absolute;
-        text-overflow: ellipsis;
-        top: 0;
-        left: 0;
-        user-select: none;
-        pointer-events: none;
-      }
-      .dark .editor-placeholder {
-        color: #6b7280;
-      }
-      
-      /* Animation styles */
-      @keyframes fade-in {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      .animate-fade-in {
-        animation: fade-in 0.3s ease-out forwards;
-      }
-      @keyframes pop-in {
-        0% { transform: scale(0.5); opacity: 0; }
-        70% { transform: scale(1.1); opacity: 1; }
-        100% { transform: scale(1); }
-      }
-      .animate-pop-in {
-        animation: pop-in 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
-      }
-      @keyframes scale-subtle {
-        from { transform: scale(0.95); opacity: 0; }
-        to { transform: scale(1); opacity: 1; }
-      }
-    </style>
-  </head>
-  <body class="bg-gray-50 dark:bg-gray-900">
+</head>
+<body>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
-  </body>
+</body>
 </html>

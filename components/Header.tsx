@@ -25,7 +25,7 @@ const Header: React.FC<HeaderProps> = ({ view, setView, openCommandPalette }) =>
     renameProject,
   } = useProjects();
   const { stagedArticles } = useImporter();
-  const { images: importedImages } = useImageImporter();
+  const { stagedImages } = useImageImporter();
   
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
@@ -115,7 +115,7 @@ const Header: React.FC<HeaderProps> = ({ view, setView, openCommandPalette }) =>
     { id: View.Archive, icon: 'archive-box', label: 'Archive', badge: undefined },
     { id: View.Compiler, icon: 'compiler', label: 'Compiler', badge: undefined },
     { id: View.Importer, icon: 'upload', label: 'Importer', badge: stagedArticles.length > 0 ? stagedArticles.length : undefined },
-    { id: View.ImageImporter, icon: 'palette', label: 'Image Importer', badge: importedImages.length > 0 ? importedImages.length : undefined },
+    { id: View.ImageImporter, icon: 'palette', label: 'Image Importer', badge: stagedImages.length > 0 ? stagedImages.length : undefined },
   ];
 
   const projectDropdownContent = (
@@ -223,7 +223,7 @@ const Header: React.FC<HeaderProps> = ({ view, setView, openCommandPalette }) =>
               label={t('Image Importer')} 
               isActive={view === View.ImageImporter} 
               onClick={() => setView(View.ImageImporter)} 
-              badge={importedImages.length > 0 ? importedImages.length : undefined}
+              badge={stagedImages.length > 0 ? stagedImages.length : undefined}
             />
           </div>
 

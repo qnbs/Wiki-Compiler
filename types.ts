@@ -19,7 +19,8 @@ export interface ProjectArticle {
 }
 
 // FIX: Centralized RightPaneView type definition.
-export type RightPaneView = 'settings' | 'article' | 'markdown';
+// Corrected: Removed 'markdown' as it's not implemented.
+export type RightPaneView = 'settings' | 'article';
 
 export interface Project {
   id: string;

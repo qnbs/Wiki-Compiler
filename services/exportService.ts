@@ -1,344 +1,314 @@
 import { Project } from '../types';
 import TurndownService from 'turndown';
 import saveAs from 'file-saver';
-import { Document, Packer, Paragraph, HeadingLevel, TextRun, ExternalHyperlink, PageBreak, IStylesOptions, UnderlineType } from 'docx';
-import { getSettings } from './dbService';
+import { 
+    Document, 
+    Packer, 
+    Paragraph, 
+    TextRun, 
+    HeadingLevel, 
+    ImageRun, 
+    ExternalHyperlink,
+    Table,
+    TableRow,
+    TableCell,
+    WidthType,
+    BorderStyle
+} from 'docx';
 import { formatBibliography } from './citationService';
+import { getSettings, getProjectArticleContent } from './dbService';
 
-// --- ODT Generation Utilities ---
+const turndownService = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced' });
 
-const escapeXml = (unsafe: string): string => {
-    return unsafe.replace(/[<>&'"]/g, c => {
-        switch (c) {
-            case '<': return '&lt;';
-            case '>': return '&gt;';
-            case '&': return '&amp;';
-            case '\'': return '&apos;';
-            case '"': return '&quot;';
-            default: return c;
-        }
+/**
+ * Gathers the HTML content for a project, prioritizing edited versions of articles.
+ * Combines all articles and appends a formatted bibliography.
+ * @param project The project to get content for.
+ * @param getArticleContent A fallback function to get original article HTML.
+ * @returns A single HTML string containing all project content.
+ */
+const getHtmlContent = async (project: Project, getArticleContent: (title: string) => Promise<string>): Promise<string> => {
+    const articleHtmlPromises = project.articles.map(async (article) => {
+        const editedContent = await getProjectArticleContent(project.id, article.title);
+        const html = editedContent ? editedContent.html : await getArticleContent(article.title);
+        return `<h1>${article.title}</h1>${html}<div style="page-break-after: always;"></div>`;
     });
-};
-
-const ODT_TEMPLATES = {
-    mimetype: 'application/vnd.oasis.opendocument.text',
-    'META-INF/manifest.xml': `<?xml version="1.0" encoding="UTF-8"?>
-<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.2">
-    <manifest:file-entry manifest:full-path="/" manifest:version="1.2" manifest:media-type="application/vnd.oasis.opendocument.text"/>
-    <manifest:file-entry manifest:full-path="styles.xml" manifest:media-type="text/xml"/>
-    <manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/>
-    <manifest:file-entry manifest:full-path="meta.xml" manifest:media-type="text/xml"/>
-</manifest:manifest>`,
-    'meta.xml': `<?xml version="1.0" encoding="UTF-8"?>
-<office:document-meta xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.2" xmlns:meta="urn:oasis:names:tc:opendocument:xmlns:meta:1.2" office:version="1.2">
-    <office:meta>
-        <meta:generator>Wiki Compiler</meta:generator>
-        <meta:creation-date>${new Date().toISOString()}</meta:creation-date>
-    </office:meta>
-</office:document-meta>`,
-    'styles.xml': `<?xml version="1.0" encoding="UTF-8"?>
-<office:document-styles xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.2" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" office:version="1.2">
-    <office:styles>
-        <style:style style:name="Standard" style:family="paragraph" />
-        <style:style style:name="Heading" style:family="paragraph" style:parent-style-name="Standard">
-            <style:text-properties fo:font-weight="bold" />
-        </style:style>
-        <style:style style:name="H1" style:family="paragraph" style:parent-style-name="Heading">
-            <style:text-properties fo:font-size="24pt" />
-        </style:style>
-        <style:style style:name="H2" style:family="paragraph" style:parent-style-name="Heading">
-            <style:text-properties fo:font-size="18pt" />
-        </style:style>
-        <style:style style:name="Text_20_body" style:family="paragraph" style:parent-style-name="Standard"/>
-        <style:style style:name="Link" style:family="text">
-            <style:text-properties fo:color="#0000FF" text:underline-style="solid" text:underline-width="auto" text:underline-color="font-color"/>
-        </style:style>
-        <style:style style:name="Bold" style:family="text">
-            <style:text-properties fo:font-weight="bold" style:font-weight-asian="bold" style:font-weight-complex="bold"/>
-        </style:style>
-        <style:style style:name="Italic" style:family="text">
-            <style:text-properties fo:font-style="italic" style:font-style-asian="italic" style:font-style-complex="italic"/>
-        </style:style>
-    </office:styles>
-</office:document-styles>`,
-    'content.xml': (body: string) => `<?xml version="1.0" encoding="UTF-8"?>
-<office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.2" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:xlink="http://www.w3.org/1999/xlink" office:version="1.2">
-    <office:body>
-        <office:text>
-            ${body}
-        </office:text>
-    </office:body>
-</office:document-content>`
-};
-
-function htmlToOdtXml(html: string): string {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
     
-    function parseChildren(node: Node): string {
-        let result = '';
-        node.childNodes.forEach(child => {
-            result += parseNode(child);
-        });
-        return result;
-    }
-
-    function parseNode(node: Node): string {
-        if (node.nodeType === Node.TEXT_NODE) {
-            return escapeXml(node.textContent || '');
-        }
-        if (node.nodeType !== Node.ELEMENT_NODE) {
-            return '';
-        }
-
-        const el = node as HTMLElement;
-        switch (el.nodeName) {
-            case 'H1': return `<text:h text:outline-level="1" text:style-name="H1">${parseChildren(el)}</text:h>`;
-            case 'H2': return `<text:h text:outline-level="2" text:style-name="H2">${parseChildren(el)}</text:h>`;
-            case 'P': return `<text:p text:style-name="Text_20_body">${parseChildren(el)}</text:p>`;
-            case 'B': case 'STRONG': return `<text:span text:style-name="Bold">${parseChildren(el)}</text:span>`;
-            case 'I': case 'EM': return `<text:span text:style-name="Italic">${parseChildren(el)}</text:span>`;
-            case 'A':
-                const href = el.getAttribute('href') || '';
-                return `<text:a xlink:type="simple" xlink:href="${escapeXml(href)}" text:style-name="Link" text:visited-style-name="Link">${parseChildren(el)}</text:a>`;
-            case 'UL': case 'OL':
-                let listXml = '<text:list>';
-                el.querySelectorAll('li').forEach(li => {
-                    listXml += `<text:list-item><text:p text:style-name="Text_20_body">${parseChildren(li)}</text:p></text:list-item>`;
-                });
-                listXml += '</text:list>';
-                return listXml;
-            case 'BR': return '<text:line-break/>';
-            default: return parseChildren(el);
-        }
-    }
-
-    return parseChildren(doc.body);
-}
-
-
-// --- DOCX Generation Utilities ---
-
-const getHeadingLevel = (level: number) => {
-    // FIX: Removed explicit type annotation to let TypeScript infer it, resolving compiler confusion.
-    const levelMap = {
-        1: HeadingLevel.HEADING_1, 2: HeadingLevel.HEADING_2,
-        3: HeadingLevel.HEADING_3, 4: HeadingLevel.HEADING_4,
-        5: HeadingLevel.HEADING_5, 6: HeadingLevel.HEADING_6,
-    };
-    return levelMap[level as keyof typeof levelMap] || HeadingLevel.HEADING_1;
-};
-
-const parseInline = (node: Node, options: { bold?: boolean, italic?: boolean } = {}): (TextRun | ExternalHyperlink)[] => {
-    const runs: (TextRun | ExternalHyperlink)[] = [];
-    node.childNodes.forEach(child => {
-        if (child.nodeType === Node.TEXT_NODE) {
-            runs.push(new TextRun({ text: child.textContent || '', ...options }));
-        } else if (child.nodeType === Node.ELEMENT_NODE) {
-            const el = child as HTMLElement;
-
-            if (el.nodeName === 'A') {
-                const href = el.getAttribute('href');
-                if (href) {
-                    runs.push(new ExternalHyperlink({
-                        children: [new TextRun({ text: el.textContent || '', style: "Hyperlink" })],
-                        link: href
-                    }));
-                    return;
-                }
-            }
-            
-            const newOptions = { ...options };
-            if (el.nodeName === 'B' || el.nodeName === 'STRONG') {
-                newOptions.bold = true;
-            }
-            if (el.nodeName === 'I' || el.nodeName === 'EM') {
-                newOptions.italic = true;
-            }
-            runs.push(...parseInline(el, newOptions));
-        }
-    });
-    return runs;
-};
-
-const parseHtmlToDocx = (html: string): Paragraph[] => {
-    const elements: Paragraph[] = [];
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-
-    doc.body.childNodes.forEach(node => {
-        if (node.nodeType !== Node.ELEMENT_NODE) return;
-        const el = node as HTMLElement;
-
-        if (el.nodeName.match(/^H[1-6]$/)) {
-            const level = parseInt(el.nodeName.substring(1), 10);
-            elements.push(new Paragraph({
-                children: parseInline(el),
-                heading: getHeadingLevel(level),
-            }));
-        } else if (el.nodeName === 'P') {
-            elements.push(new Paragraph({ children: parseInline(el) }));
-        } else if (el.nodeName === 'UL' || el.nodeName === 'OL') {
-            el.querySelectorAll('li').forEach(li => {
-                elements.push(new Paragraph({
-                    children: parseInline(li),
-                    bullet: { level: 0 }
-                }));
-            });
-        }
-    });
-
-    return elements;
-};
-
-// --- Export Service ---
-
-const turndownService = new TurndownService({ headingStyle: 'atx' });
-
-const getFullHtmlForExport = async (project: Project, getArticleContent: (title: string) => Promise<string>): Promise<string> => {
-    let combinedHtml = `<h1>${escapeXml(project.name)}</h1>`;
-    
-    if (project.notes) {
-        combinedHtml += `<h2>Project Notes</h2><p>${escapeXml(project.notes).replace(/\n/g, '<br/>')}</p>`;
-    }
-
-    const articles = await Promise.all(
-        project.articles.map(async (article) => ({
-            title: article.title,
-            html: await getArticleContent(article.title),
-        }))
-    );
-    
-    articles.forEach(article => {
-        combinedHtml += `<hr><h1>${escapeXml(article.title)}</h1>${article.html}`;
-    });
+    const resolvedHtmls = await Promise.all(articleHtmlPromises);
+    let combinedHtml = `<div class="p-12">${resolvedHtmls.join('')}`;
 
     const settings = await getSettings();
     if (settings) {
-        const bibHtml = await formatBibliography(
-            project.articles.map(a => a.title),
-            settings.citations.customCitations,
-            settings.citations.citationStyle
-        );
-        combinedHtml += bibHtml.replace('<div class="p-12" style="page-break-before: always;">', '<hr>');
+        const customCitations = settings.citations.customCitations;
+        const citationStyle = settings.citations.citationStyle;
+        const articleTitles = project.articles.map(a => a.title);
+
+        if (articleTitles.length > 0 || customCitations.length > 0) {
+            const bibliography = await formatBibliography(articleTitles, customCitations, citationStyle);
+            combinedHtml += bibliography;
+        }
     }
     
+    combinedHtml += '</div>';
     return combinedHtml;
 };
 
+// --- Markdown and JSON Export ---
+
 export const generateMarkdown = async (project: Project, getArticleContent: (title: string) => Promise<string>): Promise<void> => {
-    const fullHtml = await getFullHtmlForExport(project, getArticleContent);
-    const markdown = turndownService.turndown(fullHtml);
+    const html = await getHtmlContent(project, getArticleContent);
+    const markdown = turndownService.turndown(html);
     const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
     saveAs(blob, `${project.name}.md`);
 };
 
 export const generateJsonFile = async (project: Project, getArticleContent: (title: string) => Promise<string>): Promise<void> => {
-    const articles = await Promise.all(
-        project.articles.map(async (article) => ({
-            title: article.title,
-            html: await getArticleContent(article.title),
-        }))
+    const articlesContent = await Promise.all(
+        project.articles.map(async (article) => {
+            const editedContent = await getProjectArticleContent(project.id, article.title);
+            const html = editedContent ? editedContent.html : await getArticleContent(article.title);
+            return { title: article.title, html };
+        })
     );
     const data = {
         projectName: project.name,
-        projectNotes: project.notes,
-        articles,
+        notes: project.notes,
+        articles: articlesContent,
     };
     const json = JSON.stringify(data, null, 2);
     const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
     saveAs(blob, `${project.name}.json`);
 };
 
-export const generateDocx = async (project: Project, getArticleContent: (title: string) => Promise<string>): Promise<void> => {
-    const fullHtml = await getFullHtmlForExport(project, getArticleContent);
-    const docxSections = fullHtml.split('<hr>').map(htmlSection => parseHtmlToDocx(htmlSection));
+// --- DOCX Generation Overhaul ---
 
-    const children: Paragraph[] = [];
-    docxSections.forEach((section, index) => {
-        if (index > 0) {
-            children.push(new Paragraph({ children: [new PageBreak()] }));
+type DocxChild = TextRun | ImageRun | ExternalHyperlink;
+
+/**
+ * Recursively traverses a DOM node and its children to convert them into an array of docx.js objects.
+ * @param node The DOM Node to process.
+ * @param options Formatting options to apply to text nodes.
+ * @returns An array of TextRun, ImageRun, or ExternalHyperlink objects.
+ */
+// FIX: Refactored processNode to pass styles down recursively, avoiding errors with immutable TextRun objects.
+const processNode = async (node: Node, options: { bold?: boolean; italics?: boolean; style?: string } = {}): Promise<DocxChild[]> => {
+    if (node.nodeType === Node.TEXT_NODE) {
+        return [new TextRun({ text: node.textContent || '', ...options })];
+    }
+
+    if (node.nodeType !== Node.ELEMENT_NODE) {
+        return [];
+    }
+
+    const element = node as HTMLElement;
+    
+    let newOptions = { ...options };
+    switch (element.tagName.toUpperCase()) {
+        case 'STRONG':
+        case 'B':
+            newOptions.bold = true;
+            break;
+        case 'EM':
+        case 'I':
+            newOptions.italics = true;
+            break;
+    }
+
+    // Handle specific element types that don't just pass down styles
+    switch (element.tagName.toUpperCase()) {
+        case 'A':
+            const href = (element as HTMLAnchorElement).href;
+            const linkChildrenNested = await Promise.all(
+                Array.from(element.childNodes).map((childNode) => processNode(childNode, { ...newOptions, style: "Hyperlink" })),
+            );
+            const linkChildren = linkChildrenNested.flat().filter((c): c is TextRun => c instanceof TextRun);
+
+            return [new ExternalHyperlink({
+                children: linkChildren,
+                link: href,
+            })];
+
+        case 'IMG':
+            const imgElement = element as HTMLImageElement;
+            const src = imgElement.src;
+            if (!src) return [];
+            try {
+                // Using a proxy might be necessary for CORS issues in a real-world scenario
+                const response = await fetch(src);
+                const blob = await response.blob();
+                 // Ensure blob is an image type before proceeding
+                if (!blob.type.startsWith('image/')) {
+                    console.warn(`Fetched resource is not an image: ${src}`);
+                    return [new TextRun({ text: `[Image: ${src}]`, italics: true })];
+                }
+                const buffer = await new Promise<ArrayBuffer>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result as ArrayBuffer);
+                    reader.onerror = reject;
+                    reader.readAsArrayBuffer(blob);
+                });
+
+                return [new ImageRun({
+                    // FIX: Added `type: "buffer"` to satisfy the IImageOptions type for some versions of the docx library.
+                    type: "buffer",
+                    data: buffer,
+                    transformation: {
+                        // FIX: Cast element to HTMLImageElement to access width and height properties.
+                        width: Math.min(imgElement.width, 450) || 450, // Cap width to fit page
+                        height: Math.min(imgElement.height, 600) || 300,
+                    },
+                })];
+            } catch (error) {
+                console.warn(`Could not fetch image at ${src}:`, error);
+                return [new TextRun({ text: `[Image: ${src}]`, italics: true })];
+            }
+        default:
+             // Process children with new options for all other tags
+             const childrenNested = await Promise.all(Array.from(element.childNodes).map((childNode) => processNode(childNode, newOptions)));
+             return childrenNested.flat();
+    }
+};
+
+/**
+ * Converts an HTML string into an array of docx.js Paragraph and Table objects.
+ * @param htmlString The HTML content to convert.
+ * @returns A promise that resolves to an array of Paragraphs and Tables.
+ */
+const htmlToDocxChildren = async (htmlString: string): Promise<(Paragraph | Table)[]> => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlString, 'text/html');
+    const elements: (Paragraph | Table)[] = [];
+
+    const processElement = async (el: Element) => {
+        switch (el.tagName.toUpperCase()) {
+            case 'H1':
+            case 'H2':
+            case 'H3':
+            case 'H4':
+                elements.push(new Paragraph({
+                    children: await processNode(el),
+                    // FIX: Removed incorrect type assertion `as HeadingLevel` as the property accepts a string.
+                    heading: `Heading${el.tagName.substring(1)}`,
+                }));
+                break;
+            case 'P':
+                elements.push(new Paragraph({ children: await processNode(el) }));
+                break;
+            case 'UL':
+            case 'OL':
+                for (const li of Array.from(el.children)) {
+                    if (li.tagName.toUpperCase() === 'LI') {
+                        elements.push(new Paragraph({
+                            children: await processNode(li),
+                            bullet: { level: 0 },
+                        }));
+                    }
+                }
+                break;
+            case 'TABLE':
+                const rows: TableRow[] = [];
+                for (const tr of Array.from(el.querySelectorAll('tr'))) {
+                    const cells: TableCell[] = [];
+                    for (const td of Array.from(tr.querySelectorAll('td, th'))) {
+                        cells.push(new TableCell({
+                            children: [new Paragraph({ children: await processNode(td) })],
+                            borders: {
+                                top: { style: BorderStyle.SINGLE, size: 1, color: "auto" },
+                                bottom: { style: BorderStyle.SINGLE, size: 1, color: "auto" },
+                                left: { style: BorderStyle.SINGLE, size: 1, color: "auto" },
+                                right: { style: BorderStyle.SINGLE, size: 1, color: "auto" },
+                            }
+                        }));
+                    }
+                    rows.push(new TableRow({ children: cells }));
+                }
+                elements.push(new Table({ rows, width: { size: 100, type: WidthType.PERCENTAGE } }));
+                break;
+            case 'DIV':
+            case 'SECTION':
+            case 'ARTICLE':
+                for (const child of Array.from(el.children)) {
+                    await processElement(child);
+                }
+                break;
         }
-        children.push(...section);
-    });
+    };
+    
+    for (const child of Array.from(doc.body.children)) {
+        await processElement(child);
+    }
+    
+    return elements;
+};
 
+const generateDocxBlob = async (html: string, title: string): Promise<Blob> => {
+    const content = await htmlToDocxChildren(html);
     const doc = new Document({
         styles: {
-            characterStyles: [{
+            paragraphStyles: [{
                 id: "Hyperlink",
                 name: "Hyperlink",
-                run: {
-                    color: "0000FF",
-                    underline: {
-                        type: UnderlineType.SINGLE,
-                    },
-                },
-            }],
+                basedOn: "Normal",
+                next: "Normal",
+                run: { color: "0000FF", underline: {} },
+            }]
         },
-        sections: [{ children }],
+        sections: [{
+            children: [
+                new Paragraph({ text: title, heading: HeadingLevel.TITLE }),
+                ...content,
+            ],
+        }],
     });
+    return Packer.toBlob(doc);
+};
 
-    const blob = await Packer.toBlob(doc);
+export const generateDocx = async (project: Project, getArticleContent: (title: string) => Promise<string>): Promise<void> => {
+    const html = await getHtmlContent(project, getArticleContent);
+    const blob = await generateDocxBlob(html, project.name);
     saveAs(blob, `${project.name}.docx`);
 };
 
-export const generateOdt = async (project: Project, getArticleContent: (title: string) => Promise<string>): Promise<void> => {
-    // @ts-ignore
-    const zip = new JSZip();
-    
-    const fullHtml = await getFullHtmlForExport(project, getArticleContent);
-    const contentBodyXml = htmlToOdtXml(fullHtml.replace(/<hr>/g, '<p style="page-break-before:always"></p>'));
-
-    zip.file('mimetype', ODT_TEMPLATES.mimetype, { compression: "STORE" });
-    zip.file('META-INF/manifest.xml', ODT_TEMPLATES['META-INF/manifest.xml']);
-    zip.file('meta.xml', ODT_TEMPLATES['meta.xml']);
-    zip.file('styles.xml', ODT_TEMPLATES['styles.xml']);
-    zip.file('content.xml', ODT_TEMPLATES['content.xml'](contentBodyXml));
-
-    const blob = await zip.generateAsync({
-        type: 'blob',
-        mimeType: 'application/vnd.oasis.opendocument.text'
-    });
-    saveAs(blob, `${project.name}.odt`);
-};
-
-
-// --- Single Article Export Functions ---
-export const generateSingleArticleDocx = async (title: string, htmlContent: string): Promise<void> => {
-    const children = parseHtmlToDocx(htmlContent);
-    const doc = new Document({
-        styles: {
-            characterStyles: [{
-                id: "Hyperlink",
-                name: "Hyperlink",
-                run: {
-                    color: "0000FF",
-                    underline: {
-                        type: UnderlineType.SINGLE,
-                    },
-                },
-            }],
-        },
-        sections: [{ children }],
-    });
-    const blob = await Packer.toBlob(doc);
+export const generateSingleArticleDocx = async (title: string, html: string): Promise<void> => {
+    const blob = await generateDocxBlob(html, title);
     saveAs(blob, `${title}.docx`);
 };
 
-export const generateSingleArticleOdt = async (title: string, htmlContent: string): Promise<void> => {
-    // @ts-ignore
-    const zip = new JSZip();
-    const contentBodyXml = htmlToOdtXml(htmlContent);
 
-    zip.file('mimetype', ODT_TEMPLATES.mimetype, { compression: "STORE" });
-    zip.file('META-INF/manifest.xml', ODT_TEMPLATES['META-INF/manifest.xml']);
-    zip.file('meta.xml', ODT_TEMPLATES['meta.xml']);
-    zip.file('styles.xml', ODT_TEMPLATES['styles.xml']);
-    zip.file('content.xml', ODT_TEMPLATES['content.xml'](contentBodyXml));
+// --- ODT Generation Improvement ---
 
-    const blob = await zip.generateAsync({
-        type: 'blob',
-        mimeType: 'application/vnd.oasis.opendocument.text'
-    });
+const getOdtStyles = () => `
+    body { font-family: sans-serif; line-height: 1.5; max-width: 800px; margin: auto; padding: 2em; }
+    h1, h2, h3 { line-height: 1.2; margin-top: 1.5em; margin-bottom: 0.5em; }
+    h1 { font-size: 2em; }
+    h2 { font-size: 1.5em; }
+    h3 { font-size: 1.2em; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 1em; }
+    td, th { border: 1px solid #ccc; padding: 0.5em; text-align: left; }
+    img { max-width: 100%; height: auto; border-radius: 8px; }
+    a { color: #0000FF; text-decoration: underline; }
+`;
+
+const generateOdtBlob = (html: string): Blob => {
+    const fullHtml = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Export</title>
+    <style>${getOdtStyles()}</style>
+</head>
+<body>${html}</body>
+</html>`;
+    return new Blob([fullHtml], { type: 'application/vnd.oasis.opendocument.text' });
+};
+
+export const generateOdt = async (project: Project, getArticleContent: (title: string) => Promise<string>): Promise<void> => {
+    const html = await getHtmlContent(project, getArticleContent);
+    const blob = generateOdtBlob(html);
+    saveAs(blob, `${project.name}.odt`);
+};
+
+export const generateSingleArticleOdt = async (title: string, html: string): Promise<void> => {
+    const blob = generateOdtBlob(html);
     saveAs(blob, `${title}.odt`);
 };

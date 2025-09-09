@@ -7,34 +7,39 @@ const HelpView: React.FC = () => {
 
   const helpSections = [
     {
-      title: 'The Library View',
+      title: 'help_library_title',
       icon: 'book',
-      content: 'The Library is your portal to Wikipedia. Search for articles, get instant AI-powered insights, and add sources to your compilation. Use the sorting options to organize results by relevance, date, or title.',
+      content: 'help_library_content',
     },
     {
-      title: 'The Compiler View',
+      title: 'help_compiler_title',
       icon: 'compiler',
-      content: 'The Compiler is your workshop. Drag-and-drop articles to structure your narrative, edit article content with a robust rich-text editor, use the floating AI button to enhance your text, insert custom citations, and preview your work. When ready, export to a professional DOCX document or other formats like Markdown.',
+      content: 'help_compiler_content',
     },
     {
-      title: 'The Archive View',
+      title: 'help_archive_title',
       icon: 'archive-box',
-      content: 'Every article you open is automatically saved in your private, offline Archive. This becomes your personal knowledge base, fully searchable and always available. You can add articles from the Archive back into any project.',
+      content: 'help_archive_content',
     },
     {
-      title: 'Command Palette',
+      title: 'help_importers_title',
+      icon: 'upload',
+      content: 'help_importers_content',
+    },
+    {
+      title: 'help_command_palette_title',
       icon: 'command',
-      content: 'Press Ctrl+K (or Cmd+K on Mac) to open the Command Palette. It\'s the fastest way to navigate between views, create projects, and access other key functions without leaving the keyboard.',
+      content: 'help_command_palette_content',
     },
     {
-      title: 'The Settings View',
+      title: 'help_settings_title',
       icon: 'settings',
-      content: 'Customize the application\'s appearance, set default behaviors, manage AI assistant preferences, and manage custom citations. You can also manage your data by clearing the cache or backing up your entire workspace.',
+      content: 'help_settings_content',
     },
     {
-      title: 'Power Tips',
+      title: 'help_power_tips_title',
       icon: 'sparkles',
-      content: 'Use the floating sparkles button in the Compiler to get AI assistance for summarizing, improving, or correcting your text.\nUse the keyboard to quickly reorder articles in the Compiler (Ctrl/Cmd + Arrow Up/Down).\nBackup your entire workspace from the Settings > Storage tab to keep your work safe.',
+      content: 'help_power_tips_content',
     },
   ];
 
