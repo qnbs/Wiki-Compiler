@@ -1,12 +1,13 @@
 import { openDB, IDBPDatabase } from 'idb';
-import { Project, ArticleContent, AppSettings, ProjectArticleContent } from '../types';
+import { Project, ArticleContent, AppSettings, ProjectArticleContent, ImportedImage } from '../types';
 
 const DB_NAME = 'WikiCompilerDB';
-const DB_VERSION = 3; // Incremented version
+const DB_VERSION = 4; // Incremented version
 const PROJECTS_STORE = 'projects';
 const ARTICLES_STORE = 'articles';
 const SETTINGS_STORE = 'settings';
 const PROJECT_ARTICLES_STORE = 'project-articles';
+const IMPORTED_IMAGES_STORE = 'importedImages';
 const SETTINGS_KEY = 'app-settings';
 
 let dbPromise: Promise<IDBPDatabase> | null = null;
@@ -30,6 +31,11 @@ const initDB = () => {
       if (oldVersion < 3) {
         if (!db.objectStoreNames.contains(PROJECT_ARTICLES_STORE)) {
           db.createObjectStore(PROJECT_ARTICLES_STORE, { keyPath: 'id' });
+        }
+      }
+      if (oldVersion < 4) {
+        if (!db.objectStoreNames.contains(IMPORTED_IMAGES_STORE)) {
+          db.createObjectStore(IMPORTED_IMAGES_STORE, { keyPath: 'id' });
         }
       }
     },
@@ -115,6 +121,21 @@ export const saveProjectArticleContent = async (content: ProjectArticleContent):
     await db.put(PROJECT_ARTICLES_STORE, content);
 };
 
+// Image Importer Functions
+export const getImportedImages = async (): Promise<ImportedImage[]> => {
+    const db = await initDB();
+    return db.getAll(IMPORTED_IMAGES_STORE);
+};
+
+export const saveImportedImage = async (image: ImportedImage): Promise<void> => {
+    const db = await initDB();
+    await db.put(IMPORTED_IMAGES_STORE, image);
+};
+
+export const deleteImportedImage = async (id: string): Promise<void> => {
+    const db = await initDB();
+    await db.delete(IMPORTED_IMAGES_STORE, id);
+};
 
 // Data Management Functions
 export const exportAllData = async (): Promise<string> => {
@@ -123,6 +144,7 @@ export const exportAllData = async (): Promise<string> => {
     const articles = await db.getAll(ARTICLES_STORE);
     const settings = await db.get(SETTINGS_STORE, SETTINGS_KEY);
     const projectArticles = await db.getAll(PROJECT_ARTICLES_STORE);
+    const importedImages = await db.getAll(IMPORTED_IMAGES_STORE);
 
     const data = {
         version: DB_VERSION,
@@ -132,6 +154,7 @@ export const exportAllData = async (): Promise<string> => {
             articles,
             settings,
             projectArticles,
+            importedImages,
         }
     };
 
@@ -141,11 +164,11 @@ export const exportAllData = async (): Promise<string> => {
 export const importAllData = async (jsonString: string): Promise<void> => {
     const importData = JSON.parse(jsonString);
     if (!importData.data) throw new Error("Invalid import file format");
-    const { projects, articles, settings, projectArticles } = importData.data;
+    const { projects, articles, settings, projectArticles, importedImages } = importData.data;
 
     const db = await initDB();
 
-    const storesToClear: string[] = [PROJECTS_STORE, ARTICLES_STORE, PROJECT_ARTICLES_STORE];
+    const storesToClear: string[] = [PROJECTS_STORE, ARTICLES_STORE, PROJECT_ARTICLES_STORE, IMPORTED_IMAGES_STORE];
     for(const storeName of storesToClear) {
         const tx = db.transaction(storeName, 'readwrite');
         await tx.store.clear();
@@ -170,6 +193,14 @@ export const importAllData = async (jsonString: string): Promise<void> => {
             await projectArticleTx.store.add(pa);
         }
         await projectArticleTx.done;
+    }
+
+    if (importedImages) {
+        const imageTx = db.transaction(IMPORTED_IMAGES_STORE, 'readwrite');
+        for (const image of importedImages) {
+            await imageTx.store.add(image);
+        }
+        await imageTx.done;
     }
     
     if (settings) {

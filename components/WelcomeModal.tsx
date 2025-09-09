@@ -2,18 +2,40 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import Modal from './Modal';
 import Icon from './Icon';
+import { useSettings } from '../hooks/useSettingsContext';
 
 interface WelcomeModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+const LanguageButton: React.FC<{lang: string, currentLang: string, onClick: (lang: string) => void, children: React.ReactNode}> = ({ lang, currentLang, onClick, children }) => (
+    <button 
+        onClick={() => onClick(lang)}
+        className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm transition-all duration-200 ${
+            currentLang === lang 
+            ? 'bg-accent-100 dark:bg-accent-900/50 text-accent-700 dark:text-accent-300 ring-2 ring-accent-500' 
+            : 'bg-gray-100 dark:bg-gray-700/50 hover:bg-gray-200 dark:hover:bg-gray-600'
+        }`}
+    >
+        {children}
+    </button>
+);
+
 const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { settings, updateSettings } = useSettings();
 
   const handleGetStarted = () => {
     localStorage.setItem('wiki-compiler-onboarded', 'true');
     onClose();
+  };
+  
+  const handleLanguageChange = (lang: string) => {
+    if (settings) {
+        i18n.changeLanguage(lang);
+        updateSettings({ ...settings, language: lang });
+    }
   };
 
   const sections = [
@@ -49,6 +71,18 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) => {
         <p className="text-gray-600 dark:text-gray-300">
           {t('welcome_p1')}
         </p>
+
+        <div className="flex justify-center items-center gap-4 py-2">
+            <LanguageButton lang="en" currentLang={i18n.language} onClick={handleLanguageChange}>
+                <span className="text-lg">🇬🇧</span>
+                <span>English</span>
+            </LanguageButton>
+            <LanguageButton lang="de" currentLang={i18n.language} onClick={handleLanguageChange}>
+                <span className="text-lg">🇩🇪</span>
+                <span>Deutsch</span>
+            </LanguageButton>
+        </div>
+
         <div className="space-y-4">
           {sections.map(section => (
             <div key={section.title} className="flex items-start gap-4">

@@ -1,11 +1,10 @@
 import React, { createContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import i18next from '../i18n';
-import { View, AppSettings, AccentColor } from '../types';
+import { View, AppSettings } from '../types';
 import { getSettings, saveSettings } from '../services/dbService';
 
 const DEFAULT_SETTINGS: Omit<AppSettings, 'theme'> = {
   language: 'en',
-  accentColor: 'blue',
   defaultView: View.Library,
   library: {
     searchResultLimit: 10,
@@ -25,19 +24,10 @@ const DEFAULT_SETTINGS: Omit<AppSettings, 'theme'> = {
   }
 };
 
-const accentColorMap: Record<AccentColor, Record<string, string>> = {
-  blue: { '50': '239 246 255', '100': '219 234 254', '200': '191 219 254', '300': '147 197 253', '400': '96 165 250', '500': '59 130 246', '600': '37 99 235', '700': '29 78 216', '800': '30 64 175', '900': '30 58 138' },
-  purple: { '50': '245 243 255', '100': '237 233 254', '200': '221 214 254', '300': '196 181 253', '400': '167 139 250', '500': '139 92 246', '600': '124 58 237', '700': '109 40 217', '800': '91 33 182', '900': '76 29 149' },
-  green: { '50': '240 253 244', '100': '220 252 231', '200': '187 247 208', '300': '134 239 172', '400': '74 222 128', '500': '34 197 94', '600': '22 163 74', '700': '21 128 61', '800': '22 101 52', '900': '20 83 45' },
-  orange: { '50': '255 247 237', '100': '255 237 213', '200': '254 215 170', '300': '253 186 116', '400': '251 146 60', '500': '249 115 22', '600': '234 88 12', '700': '194 65 12', '800': '154 52 18', '900': '124 45 18' }
-};
-
-
 interface SettingsContextType {
   settings: AppSettings | null;
   updateSettings: (newSettings: AppSettings) => Promise<void>;
   reloadSettings: () => void;
-  accentColorMap: Record<AccentColor, Record<string, string>>;
 }
 
 export const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -112,7 +102,6 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
     settings,
     updateSettings,
     reloadSettings: loadInitialSettings,
-    accentColorMap,
   };
 
   return (

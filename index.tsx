@@ -6,6 +6,8 @@ import i18next from './i18n';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { ProjectsProvider } from './contexts/ProjectsContext';
 import { ToastProvider } from './contexts/ToastContext';
+import { ImporterProvider } from './contexts/ImporterContext';
+import { ImageImporterProvider } from './contexts/ImageImporterContext';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -19,7 +21,11 @@ root.render(
       <ToastProvider>
         <SettingsProvider>
           <ProjectsProvider>
-            <App />
+            <ImporterProvider>
+              <ImageImporterProvider>
+                <App />
+              </ImageImporterProvider>
+            </ImporterProvider>
           </ProjectsProvider>
         </SettingsProvider>
       </ToastProvider>

@@ -2,7 +2,6 @@
 {
   "imports": {
     "idb": "https://aistudiocdn.com/idb@^8.0.3",
-    "@tiptap/extension-bubble-menu": "https://aistudiocdn.com/@tiptap/extension-bubble-menu@^3.4.1",
     "react-i18next": "https://aistudiocdn.com/react-i18next@^15.7.3",
     "@google/genai": "https://aistudiocdn.com/@google/genai@^1.17.0",
     "react-dom": "https://aistudiocdn.com/react-dom@^19.1.1",
@@ -13,13 +12,17 @@
     "marked": "https://aistudiocdn.com/marked@^16.2.1",
     "i18next-browser-languagedetector": "https://aistudiocdn.com/i18next-browser-languagedetector@^8.2.0",
     "turndown": "https://aistudiocdn.com/turndown@^7.2.1",
-    "@tiptap/react": "https://aistudiocdn.com/@tiptap/react@^3.4.1",
     "docx": "https://aistudiocdn.com/docx@^9.5.1",
-    "@tiptap/core": "https://aistudiocdn.com/@tiptap/core@^3.4.1",
-    "@tiptap/extension-placeholder": "https://aistudiocdn.com/@tiptap/extension-placeholder@^3.4.1",
-    "@tiptap/starter-kit": "https://aistudiocdn.com/@tiptap/starter-kit@^3.4.1",
-    "@tiptap/suggestion": "https://aistudiocdn.com/@tiptap/suggestion@^3.4.1",
-    "@tiptap/extension-focus": "https://aistudiocdn.com/@tiptap/extension-focus@^3.4.1"
+    "file-saver": "https://aistudiocdn.com/file-saver@^2.0.5",
+    "lexical": "https://aistudiocdn.com/lexical@^0.35.0",
+    "@lexical/react": "https://aistudiocdn.com/@lexical/react@^0.35.0",
+    "@lexical/rich-text": "https://aistudiocdn.com/@lexical/rich-text@^0.35.0",
+    "@lexical/html": "https://aistudiocdn.com/@lexical/html@^0.35.0",
+    "@lexical/list": "https://aistudiocdn.com/@lexical/list@^0.35.0",
+    "@lexical/link": "https://aistudiocdn.com/@lexical/link@^0.35.0",
+    "@lexical/selection": "https://aistudiocdn.com/@lexical/selection@^0.35.0",
+    "@lexical/utils": "https://aistudiocdn.com/@lexical/utils@^0.35.0",
+    "@lexical/react/": "https://aistudiocdn.com/@lexical/react@^0.35.0/"
   }
 }
 </script>
@@ -89,22 +92,26 @@
         border-color: #374151; /* dark:border-gray-700 */
         background-color: rgba(31, 41, 55, 0.5); /* dark:bg-gray-800/50 */
       }
-       /* Tiptap styles */
-      .ProseMirror {
+       /* Lexical editor styles */
+      .editor-container {
+        position: relative;
+      }
+      .editor-input {
         min-height: 400px;
+        resize: none;
+        outline: 0;
       }
-      .ProseMirror:focus {
-        outline: none;
-      }
-      /* Placeholder extension */
-      .ProseMirror p.is-editor-empty:first-child::before {
-        content: attr(data-placeholder);
-        float: left;
+      .editor-placeholder {
         color: #adb5bd;
+        overflow: hidden;
+        position: absolute;
+        text-overflow: ellipsis;
+        top: 0;
+        left: 0;
+        user-select: none;
         pointer-events: none;
-        height: 0;
       }
-      .dark .ProseMirror p.is-editor-empty:first-child::before {
+      .dark .editor-placeholder {
         color: #6b7280;
       }
       

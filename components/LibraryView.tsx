@@ -11,19 +11,30 @@ import SkeletonLoader from './SkeletonLoader';
 import ArticleInsightsView from './ArticleInsightsView';
 import { useSettings } from '../hooks/useSettingsContext';
 import { useProjects } from '../hooks/useProjectsContext';
+import { useImporter } from '../hooks/useImporterContext';
+import { useToasts } from '../hooks/useToasts';
 
 interface SearchResultItemProps {
   result: SearchResult;
   isSelected: boolean;
-  isAdded: boolean;
-  wasJustAdded: boolean;
+  isAddedToProject: boolean;
+  isAddedToImporter: boolean;
   onSelect: (title: string) => void;
-  onQuickAdd: (title: string) => void;
+  onAddToImporter: (title: string, html: string) => void;
+  onAddToProject: (title: string) => void;
+  getArticle: (title: string) => Promise<string>;
   style: React.CSSProperties;
 }
 
-const SearchResultItem: React.FC<SearchResultItemProps> = memo(({ result, isSelected, isAdded, wasJustAdded, onSelect, onQuickAdd, style }) => {
+const SearchResultItem: React.FC<SearchResultItemProps> = memo(({ result, isSelected, isAddedToProject, isAddedToImporter, onSelect, onAddToImporter, onAddToProject, getArticle, style }) => {
   const { t } = useTranslation();
+
+  const handleAddToImporter = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const html = await getArticle(result.title);
+    onAddToImporter(result.title, html);
+  };
+
   return (
     <li
       style={style}
@@ -39,14 +50,24 @@ const SearchResultItem: React.FC<SearchResultItemProps> = memo(({ result, isSele
         )}
       </div>
       <button
-        onClick={() => onQuickAdd(result.title)}
-        disabled={isAdded}
-        aria-label={t('Quick Add to Compilation')}
+        onClick={handleAddToImporter}
+        disabled={isAddedToImporter}
+        aria-label={t('Add to Importer')}
         className={`flex-shrink-0 p-2 rounded-full transition-colors ${
-          isAdded ? 'text-green-500' : 'text-gray-400 hover:bg-accent-100 dark:hover:bg-accent-900/50 hover:text-accent-600'
+          isAddedToImporter ? 'text-green-500' : 'text-gray-400 hover:bg-accent-100 dark:hover:bg-accent-900/50 hover:text-accent-600'
         } disabled:text-green-500 disabled:cursor-default disabled:hover:bg-transparent dark:disabled:hover:bg-transparent`}
       >
-        <Icon name={isAdded || wasJustAdded ? 'check' : 'plus'} className={`w-5 h-5 ${wasJustAdded ? 'animate-pop-in' : ''}`} />
+        <Icon name={isAddedToImporter ? 'check' : 'upload'} className={`w-5 h-5 ${isAddedToImporter ? 'animate-pop-in' : ''}`} />
+      </button>
+      <button
+        onClick={() => onAddToProject(result.title)}
+        disabled={isAddedToProject}
+        aria-label={t('Quick Add to Compilation')}
+        className={`flex-shrink-0 p-2 rounded-full transition-colors ${
+          isAddedToProject ? 'text-green-500' : 'text-gray-400 hover:bg-accent-100 dark:hover:bg-accent-900/50 hover:text-accent-600'
+        } disabled:text-green-500 disabled:cursor-default disabled:hover:bg-transparent dark:disabled:hover:bg-transparent`}
+      >
+        <Icon name={isAddedToProject ? 'check' : 'plus'} className={`w-5 h-5 ${isAddedToProject ? 'animate-pop-in' : ''}`} />
       </button>
     </li>
   );
@@ -60,6 +81,8 @@ const LibraryView: React.FC<LibraryViewProps> = ({ getArticleContent }) => {
   const { t } = useTranslation();
   const { settings } = useSettings();
   const { activeProject, addArticleToProject } = useProjects();
+  const { addArticle: addArticleToImporter, isArticleStaged } = useImporter();
+  const { addToast } = useToasts();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -67,7 +90,6 @@ const LibraryView: React.FC<LibraryViewProps> = ({ getArticleContent }) => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [isLoadingArticle, setIsLoadingArticle] = useState(false);
-  const [justAdded, setJustAdded] = useState<Set<string>>(new Set());
   const [sortOption, setSortOption] = useState('relevance');
   
   const { insights, isAnalyzing, analysisError, analyze, clearAnalysis } = useArticleAnalysis(selectedArticle);
@@ -128,16 +150,9 @@ const LibraryView: React.FC<LibraryViewProps> = ({ getArticleContent }) => {
     setIsLoadingArticle(false);
   }, [getArticleContent, clearAnalysis]);
 
-  const handleQuickAdd = (title: string) => {
-    addArticleToProject(title);
-    setJustAdded(prev => new Set(prev).add(title));
-    setTimeout(() => {
-      setJustAdded(prev => {
-        const next = new Set(prev);
-        next.delete(title);
-        return next;
-      });
-    }, 2000);
+  const handleAddToImporter = (title: string, html: string) => {
+    addArticleToImporter({ title, html });
+    addToast(t('Article added to Importer.'), 'success');
   };
   
   if (!settings) return <Spinner />;
@@ -189,10 +204,12 @@ const LibraryView: React.FC<LibraryViewProps> = ({ getArticleContent }) => {
                 key={result.pageid}
                 result={result}
                 isSelected={selectedArticle?.title === result.title}
-                isAdded={articlesInProject.has(result.title)}
-                wasJustAdded={justAdded.has(result.title)}
+                isAddedToProject={articlesInProject.has(result.title)}
+                isAddedToImporter={isArticleStaged(result.title)}
                 onSelect={handleSelectArticle}
-                onQuickAdd={handleQuickAdd}
+                onAddToImporter={handleAddToImporter}
+                onAddToProject={addArticleToProject}
+                getArticle={getArticleContent}
                 style={{ animationDelay: `${index * 50}ms` }}
               />
             )

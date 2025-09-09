@@ -7,6 +7,8 @@ import Header from './components/Header';
 import LibraryView from './components/LibraryView';
 import ArchiveView from './components/ArchiveView';
 import CompilerView from './components/CompilerView';
+import ImporterView from './components/ImporterView';
+import ImageImporterView from './components/ImageImporterView';
 import SettingsView from './components/SettingsView';
 import HelpView from './components/HelpView';
 import CommandPalette from './components/CommandPalette';
@@ -24,7 +26,7 @@ const App: React.FC = () => {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
   
-  const { settings, accentColorMap, reloadSettings } = useSettings();
+  const { settings, reloadSettings } = useSettings();
   const { activeProject, createNewProject, reloadProjects } = useProjects();
   
   useDarkMode();
@@ -41,16 +43,6 @@ const App: React.FC = () => {
       setView(settings.defaultView);
     }
   }, [settings?.defaultView]);
-
-  useEffect(() => {
-    if (settings) {
-      const root = document.documentElement;
-      const colors = accentColorMap[settings.accentColor];
-      for (const [shade, value] of Object.entries(colors)) {
-        root.style.setProperty(`--color-accent-${shade}`, String(value));
-      }
-    }
-  }, [settings?.accentColor, accentColorMap]);
 
   const reloadApp = useCallback(() => {
     reloadSettings();
@@ -77,6 +69,8 @@ const App: React.FC = () => {
     { id: 'goto-library', label: t('Go to Library'), action: () => setView(View.Library), icon: 'book' },
     { id: 'goto-archive', label: t('Go to Archive'), action: () => setView(View.Archive), icon: 'archive-box' },
     { id: 'goto-compiler', label: t('Go to Compiler'), action: () => setView(View.Compiler), icon: 'compiler' },
+    { id: 'goto-importer', label: t('Go to Importer'), action: () => setView(View.Importer), icon: 'upload' },
+    { id: 'goto-image-importer', label: t('Image Importer'), action: () => setView(View.ImageImporter), icon: 'palette' },
     { id: 'goto-settings', label: t('Settings'), action: () => setView(View.Settings), icon: 'settings' },
     { id: 'goto-help', label: t('Help'), action: () => setView(View.Help), icon: 'help' },
     { id: 'create-project', label: t('Create New Project'), action: () => createNewProject(() => setView(View.Compiler)), icon: 'plus' },
@@ -98,6 +92,10 @@ const App: React.FC = () => {
             return <ArchiveView getArticleContent={getArticleContent} />;
         case View.Compiler:
             return <CompilerView getArticleContent={getArticleContent} />;
+        case View.Importer:
+            return <ImporterView getArticleContent={getArticleContent} />;
+        case View.ImageImporter:
+            return <ImageImporterView />;
         case View.Settings:
             return <SettingsView reloadApp={reloadApp} />;
         case View.Help:

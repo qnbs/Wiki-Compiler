@@ -1,4 +1,5 @@
-import { RightPaneView } from './components/CompilerView';
+// FIX: Removed import to break a circular dependency. The RightPaneView type is now defined in this file.
+// import { RightPaneView } from './components/CompilerView';
 
 export interface SearchResult {
   title: string;
@@ -17,6 +18,9 @@ export interface ProjectArticle {
   title:string;
 }
 
+// FIX: Centralized RightPaneView type definition.
+export type RightPaneView = 'settings' | 'article' | 'markdown';
+
 export interface Project {
   id: string;
   name: string;
@@ -29,6 +33,8 @@ export enum View {
   Library = 'library',
   Archive = 'archive',
   Compiler = 'compiler',
+  Importer = 'importer',
+  ImageImporter = 'imageImporter',
   Settings = 'settings',
   Help = 'help'
 }
@@ -72,7 +78,6 @@ export interface ProjectArticleContent {
 
 export interface AppSettings {
   language: string;
-  accentColor: AccentColor;
   defaultView: View;
   library: {
     searchResultLimit: number;
@@ -98,6 +103,17 @@ export interface ToastMessage {
   id: number;
   message: string;
   type: ToastType;
+}
+
+export interface ImportedImage {
+  id: string; // uuid
+  srcUrl: string;
+  altText: string;
+  caption: string;
+  originalArticleTitle: string;
+  tags: string[];
+  category: string;
+  notes: string;
 }
 
 // Types for Wikipedia API responses for better type safety
