@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wiki Compiler</title>
+    <meta name="theme-color" content="#1f2937">
+    <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiV2lraSBDb21waWxlciIsInNob3J0X25hbWUiOiJXaWtpQ29tcGlsZXIiLCJkZXNjcmlwdGlvbiI6IkEgcHJlbWl1bSBrbm93bGVkZ2UgbWFuYWdlbWVudCBhbmQgcmVzZWFyY2ggZW52aXJvbm1lbnQgZGVzaWduZWQgdG8gY3VyYXRlLCBjdXN0b21pemUsIGFuZCBjb25zdW1lIGtub3dsZWRnZSBmcm9tIFdpa2lwZWRpYS4gVHJhbnNmb3JtIHBhc3NpdmUgcmVhZGluZyBpbnRvIGFuIGFjdGl2ZSwgY3JlYXRpdmUgYWN0IG9mIGtub3dsZWRnZSBhc3NlbWJseS4iLCJzdGFydF91cmwiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzExMTgyNyIsInRoZW1lX2NvbG9yIjoiIzFmMjkzNyIsImljb25zIjpbeyJzcmMiOiJodHRwczovL3BsYWNlaG9sZC5jby8xOTJ4MTkyLzNiODJmNi9mZmZmZmY/dGV4dD1XIiwidHlwZSI6ImltYWdlL3BuZyIsInNpemVzIjoiMTkyeDE5MiJ9LHsic3JjIjoiaHR0cHM6Ly9wbGFjZWhvbGQuY28vNTEyeDUxMi8zYjgyZjYvZmZmZmZmP3RleHQ9VyIsInR5cGUiOiJpbWFnZS9wbmciLCJzaXplcyI6IjUxMng1MTIifV19">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -91,6 +93,7 @@
             user-select: text;
             white-space: pre-wrap;
             word-break: break-word;
+            min-height: 200px;
         }
         .dark .editor-input {
             caret-color: #eee;
@@ -133,6 +136,25 @@
             transition-duration: 300ms;
             transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
         }
+
+        /* Drag and Drop Visual Feedback */
+        .dragging-item {
+            opacity: 0.5;
+            background: rgb(var(--accent-color) / 0.1);
+        }
+        .drop-indicator {
+            position: relative;
+        }
+        .drop-indicator::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background-color: rgb(var(--accent-color));
+            border-radius: 2px;
+        }
     </style>
     <script type="importmap">
     {
@@ -168,17 +190,17 @@
           extend: {
             colors: {
               accent: {
-                  50:  '#eff6ff',
-                  100: '#dbeafe',
-                  200: '#bfdbfe',
-                  300: '#93c5fd',
-                  400: '#60a5fa',
-                  500: '#3b82f6',
-                  600: '#2563eb',
-                  700: '#1d4ed8',
-                  800: '#1e40af',
-                  900: '#1e3a8a',
-                  950: '#172554',
+                  50:  'rgba(var(--accent-color), 0.05)',
+                  100: 'rgba(var(--accent-color), 0.1)',
+                  200: 'rgba(var(--accent-color), 0.2)',
+                  300: 'rgba(var(--accent-color), 0.4)',
+                  400: 'rgba(var(--accent-color), 0.6)',
+                  500: 'rgba(var(--accent-color), 1)',
+                  600: 'rgba(var(--accent-color), 0.9)',
+                  700: 'rgba(var(--accent-color), 0.8)',
+                  800: 'rgba(var(--accent-color), 0.7)',
+                  900: 'rgba(var(--accent-color), 0.6)',
+                  950: 'rgba(var(--accent-color), 0.5)',
               },
             }
           }

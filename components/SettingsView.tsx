@@ -2,24 +2,22 @@ import React, { useState, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from './Icon';
 import GeneralSettings from './settings/GeneralSettings';
+import AppearanceSettings from './settings/AppearanceSettings';
 import LibrarySettings from './settings/LibrarySettings';
 import CitationSettings from './settings/CitationSettings';
 import StorageSettings from './settings/StorageSettings';
 import AboutSettings from './settings/AboutSettings';
 
-interface SettingsViewProps {
-  reloadApp: () => void;
-}
-
-const SettingsView: React.FC<SettingsViewProps> = ({ reloadApp }) => {
+const SettingsView: React.FC = () => {
   const { t } = useTranslation();
   const [activeSection, setActiveSection] = useState('general');
 
   const sections = {
     general: { label: 'General', icon: 'settings', component: <GeneralSettings /> },
+    appearance: { label: 'Appearance', icon: 'palette', component: <AppearanceSettings /> },
     library: { label: 'Library', icon: 'book', component: <LibrarySettings /> },
     citations: { label: 'Citations', icon: 'key', component: <CitationSettings /> },
-    storage: { label: 'Storage', icon: 'archive-box', component: <StorageSettings reloadApp={reloadApp} /> },
+    storage: { label: 'Storage', icon: 'archive-box', component: <StorageSettings /> },
     about: { label: 'About', icon: 'info', component: <AboutSettings /> },
   };
 

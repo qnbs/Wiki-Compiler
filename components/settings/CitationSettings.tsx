@@ -69,11 +69,12 @@ const CitationSettings: React.FC = () => {
                 <select 
                     id="citation-style-select" 
                     value={settings.citations.citationStyle} 
-                    onChange={e => updateSettings({ ...settings, citations: { ...settings.citations, citationStyle: e.target.value as 'apa' | 'mla' }})} 
+                    onChange={e => updateSettings({ ...settings, citations: { ...settings.citations, citationStyle: e.target.value as 'apa' | 'mla' | 'chicago' }})} 
                     className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-accent-500"
                 >
-                    <option value="apa">{t('APA')}</option>
-                    <option value="mla">{t('MLA')}</option>
+                    <option value="apa">APA</option>
+                    <option value="mla">MLA</option>
+                    <option value="chicago">{t('Chicago')}</option>
                 </select>
             </div>
             

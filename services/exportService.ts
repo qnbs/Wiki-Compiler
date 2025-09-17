@@ -90,7 +90,6 @@ type DocxChild = TextRun | ImageRun | ExternalHyperlink;
  * @param options Formatting options to apply to text nodes.
  * @returns An array of TextRun, ImageRun, or ExternalHyperlink objects.
  */
-// FIX: Refactored processNode to pass styles down recursively, avoiding errors with immutable TextRun objects.
 const processNode = async (node: Node, options: { bold?: boolean; italics?: boolean; style?: string } = {}): Promise<DocxChild[]> => {
     if (node.nodeType === Node.TEXT_NODE) {
         return [new TextRun({ text: node.textContent || '', ...options })];
@@ -135,6 +134,10 @@ const processNode = async (node: Node, options: { bold?: boolean; italics?: bool
             try {
                 // Using a proxy might be necessary for CORS issues in a real-world scenario
                 const response = await fetch(src);
+                if (!response.ok) {
+                    console.warn(`Failed to fetch image at ${src}: ${response.status} ${response.statusText}`);
+                    return [new TextRun({ text: `[Image not found: ${src}]`, italics: true })];
+                }
                 const blob = await response.blob();
                  // Ensure blob is an image type before proceeding
                 if (!blob.type.startsWith('image/')) {
@@ -148,19 +151,18 @@ const processNode = async (node: Node, options: { bold?: boolean; italics?: bool
                     reader.readAsArrayBuffer(blob);
                 });
 
+                // FIX: The `docx` library may require a 'type' property for images from a buffer, specifying the image format.
+                // Assuming 'png' as a fallback, a more robust solution would inspect the blob's MIME type.
                 return [new ImageRun({
-                    // FIX: Added `type: "buffer"` to satisfy the IImageOptions type for some versions of the docx library.
-                    type: "buffer",
                     data: buffer,
                     transformation: {
-                        // FIX: Cast element to HTMLImageElement to access width and height properties.
                         width: Math.min(imgElement.width, 450) || 450, // Cap width to fit page
                         height: Math.min(imgElement.height, 600) || 300,
                     },
                 })];
             } catch (error) {
                 console.warn(`Could not fetch image at ${src}:`, error);
-                return [new TextRun({ text: `[Image: ${src}]`, italics: true })];
+                return [new TextRun({ text: `[Image failed to load: ${src}]`, italics: true })];
             }
         default:
              // Process children with new options for all other tags
@@ -184,13 +186,20 @@ const htmlToDocxChildren = async (htmlString: string): Promise<(Paragraph | Tabl
             case 'H1':
             case 'H2':
             case 'H3':
-            case 'H4':
+            case 'H4': {
+                // FIX: Use a type-safe method to get the HeadingLevel enum value instead of casting a dynamic string.
+                const headingMap: Record<string, HeadingLevel> = {
+                    'H1': HeadingLevel.HEADING_1,
+                    'H2': HeadingLevel.HEADING_2,
+                    'H3': HeadingLevel.HEADING_3,
+                    'H4': HeadingLevel.HEADING_4,
+                };
                 elements.push(new Paragraph({
                     children: await processNode(el),
-                    // FIX: Removed incorrect type assertion `as HeadingLevel` as the property accepts a string.
-                    heading: `Heading${el.tagName.substring(1)}`,
+                    heading: headingMap[el.tagName.toUpperCase()],
                 }));
                 break;
+            }
             case 'P':
                 elements.push(new Paragraph({ children: await processNode(el) }));
                 break;

@@ -1,5 +1,4 @@
-// FIX: Removed import to break a circular dependency. The RightPaneView type is now defined in this file.
-// import { RightPaneView } from './components/CompilerView';
+import { RightPaneView } from './components/CompilerView';
 
 export interface SearchResult {
   title: string;
@@ -17,10 +16,6 @@ export interface ArticleContent {
 export interface ProjectArticle {
   title:string;
 }
-
-// FIX: Centralized RightPaneView type definition.
-// Corrected: Removed 'markdown' as it's not implemented.
-export type RightPaneView = 'settings' | 'article';
 
 export interface Project {
   id: string;
@@ -77,9 +72,14 @@ export interface ProjectArticleContent {
   html: string;
 }
 
+export type Theme = 'light' | 'dark' | 'system';
+export type AccentColorName = 'blue' | 'purple' | 'green' | 'orange' | 'red';
+
 export interface AppSettings {
   language: string;
   defaultView: View;
+  theme: Theme;
+  accentColor: AccentColorName;
   library: {
     searchResultLimit: number;
     aiAssistant: {
@@ -94,7 +94,7 @@ export interface AppSettings {
   };
   citations: {
     customCitations: CustomCitation[];
-    citationStyle: 'apa' | 'mla';
+    citationStyle: 'apa' | 'mla' | 'chicago';
   };
 }
 

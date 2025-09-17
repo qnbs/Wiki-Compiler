@@ -1,6 +1,38 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { ArticleInsights } from '../types';
 
+const handleGeminiError = (error: unknown, context: 'analysis' | 'editing'): Error => {
+    console.error(`Error during AI ${context}:`, error);
+
+    if (error instanceof SyntaxError) {
+        return new Error("Failed to parse AI response. The format might be invalid.");
+    }
+
+    if (error instanceof Error) {
+        const message = error.message.toLowerCase();
+        
+        if (message.includes('api key') || message.includes('credential')) {
+            return new Error("Invalid or missing API Key for Gemini. Please check your configuration.");
+        }
+        if (message.includes('quota') || message.includes('rate limit')) {
+            return new Error("API request limit reached. Please try again later.");
+        }
+        if (message.includes('safety') || message.includes('filtered')) {
+            return new Error("The response was blocked due to safety concerns. Please adjust your prompt.");
+        }
+        if (message.includes('400') || message.includes('invalid argument')) {
+            return new Error("Invalid request. The provided text might be too long or malformed.");
+        }
+        if (message.includes('503') || message.includes('unavailable')) {
+            return new Error("The AI service is temporarily unavailable. Please try again later.");
+        }
+        return new Error(`AI service error: ${error.message}`);
+    }
+
+    const defaultMessage = `Could not ${context === 'analysis' ? 'generate insights' : 'perform AI edit'} at this time. An unknown error occurred.`;
+    return new Error(defaultMessage);
+};
+
 const API_KEY = process.env.API_KEY;
 
 let ai: GoogleGenAI | null = null;
@@ -95,7 +127,6 @@ export const getArticleInsights = async (text: string, systemInstruction: string
 
     try {
         const response = await ai.models.generateContent({
-            // FIX: Updated deprecated model to 'gemini-2.5-flash'.
             model: 'gemini-2.5-flash',
             contents: `Analyze the following Wikipedia article text and provide a structured set of insights. Based on the text, generate ${promptFocusText}, and an estimated reading time. TEXT: "${truncatedText}"`,
             config: {
@@ -109,14 +140,7 @@ export const getArticleInsights = async (text: string, systemInstruction: string
         return JSON.parse(jsonText) as ArticleInsights;
 
     } catch (error) {
-        console.error("Error getting insights from Gemini API:", error);
-        if (error instanceof SyntaxError) {
-             throw new Error("Failed to parse AI response. The format might be invalid.");
-        }
-        if (error instanceof Error && (error.message.toLowerCase().includes('api key') || error.message.toLowerCase().includes('credential'))) {
-            throw new Error("Invalid or missing API Key for Gemini. Please check your configuration.");
-        }
-        throw new Error("Could not generate insights at this time. The service may be unavailable.");
+        throw handleGeminiError(error, 'analysis');
     }
 };
 
@@ -131,12 +155,10 @@ export const editTextWithAi = async (instruction: string, textToEdit: string): P
 
     try {
         const response = await ai.models.generateContent({
-            // FIX: Updated deprecated model to 'gemini-2.5-flash'.
             model: 'gemini-2.5-flash',
             contents: `INSTRUCTION: "${instruction}"\n\nTEXT TO EDIT: "${textToEdit}"`,
             config: {
                 systemInstruction: "You are an expert academic editor. You will be given a piece of text and an instruction. You MUST return ONLY the modified text, without any preamble, explanation, or markdown formatting like ```.",
-                // Lower temperature for more predictable, deterministic edits
                 temperature: 0.2, 
             },
         });
@@ -144,10 +166,6 @@ export const editTextWithAi = async (instruction: string, textToEdit: string): P
         return response.text.trim();
 
     } catch (error) {
-        console.error("Error editing text with Gemini API:", error);
-        if (error instanceof Error && (error.message.toLowerCase().includes('api key') || error.message.toLowerCase().includes('credential'))) {
-            throw new Error("Invalid or missing API Key for Gemini. Please check your configuration.");
-        }
-        throw new Error("Could not perform AI edit at this time. The service may be unavailable.");
+        throw handleGeminiError(error, 'editing');
     }
 };

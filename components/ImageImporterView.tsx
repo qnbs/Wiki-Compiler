@@ -87,6 +87,15 @@ const ImageImporterView: React.FC = () => {
         discardStagedImages(Array.from(selectedStaged));
         setSelectedStaged(new Set());
     };
+
+     const handleDiscardSingle = (id: string) => {
+        discardStagedImages([id]);
+        setSelectedStaged(prev => {
+            const next = new Set(prev);
+            next.delete(id);
+            return next;
+        });
+    };
     
     const handleSaveEdit = (image: ImportedImage) => {
         if (activeTab === 'staging') {
@@ -103,22 +112,40 @@ const ImageImporterView: React.FC = () => {
         <div>
             {stagedImages.length > 0 ? (
                 <>
-                <div className="flex items-center gap-4 mb-4 p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                    <button onClick={handleSelectAllStaged} className="text-sm font-medium">{isAllStagedSelected ? "Deselect All" : t('Select All')}</button>
+                <div className="flex items-center gap-4 mb-4 p-2 bg-gray-100 dark:bg-gray-800 rounded-lg border dark:border-gray-700">
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            className="h-4 w-4 rounded border-gray-300 text-accent-600 focus:ring-accent-500"
+                            checked={isAllStagedSelected}
+                            onChange={handleSelectAllStaged}
+                        />
+                        <label className="text-sm font-medium">{t('Select All')}</label>
+                    </div>
+                    <div className="flex-grow" />
                     <button onClick={handleImportSelected} disabled={selectedStaged.size === 0} className="flex items-center gap-2 bg-accent-600 text-white px-3 py-1.5 rounded-lg text-sm disabled:bg-gray-400"><Icon name="check" className="w-4 h-4"/>{t('Import Selected')}</button>
                     <button onClick={handleDiscardSelected} disabled={selectedStaged.size === 0} className="flex items-center gap-2 bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm disabled:bg-gray-400"><Icon name="trash" className="w-4 h-4"/>{t('Discard Selected')}</button>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <ul className="space-y-3">
                     {stagedImages.map(img => (
-                        <div key={img.id} className={`relative group border-2 rounded-lg overflow-hidden ${selectedStaged.has(img.id) ? 'border-accent-500' : 'border-transparent'}`} onClick={() => handleToggleSelectStaged(img.id)}>
-                            <img src={img.srcUrl} alt={img.altText} className="w-full h-32 object-cover" />
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2 text-white">
-                                <p className="text-xs line-clamp-2">{img.caption || img.altText}</p>
-                                <p className="text-xs text-gray-300 truncate">From: {img.originalArticleTitle}</p>
+                        <li key={img.id} className={`flex items-center gap-4 p-3 rounded-lg border ${selectedStaged.has(img.id) ? 'bg-accent-50 dark:bg-accent-900/30 border-accent-200 dark:border-accent-700' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
+                            <input
+                                type="checkbox"
+                                className="h-4 w-4 rounded border-gray-300 text-accent-600 focus:ring-accent-500 flex-shrink-0"
+                                checked={selectedStaged.has(img.id)}
+                                onChange={() => handleToggleSelectStaged(img.id)}
+                            />
+                            <img src={img.srcUrl} alt={img.altText} className="w-24 h-16 object-cover rounded-md bg-gray-100 dark:bg-gray-700 flex-shrink-0" />
+                            <div className="flex-grow text-sm">
+                                <p className="font-medium text-gray-800 dark:text-gray-200 line-clamp-2">{img.caption || img.altText || t('No caption available')}</p>
+                                <p className="text-gray-500 dark:text-gray-400 truncate">{t('From')}: {img.originalArticleTitle}</p>
                             </div>
-                        </div>
+                            <button onClick={() => handleDiscardSingle(img.id)} className="flex-shrink-0 p-2 rounded-full text-gray-400 hover:bg-red-100 dark:hover:bg-red-900/50 hover:text-red-600" title={t('Discard') as string}>
+                                <Icon name="trash" className="w-5 h-5" />
+                            </button>
+                        </li>
                     ))}
-                </div>
+                </ul>
                 </>
             ) : (
                 <div className="text-center text-gray-500 dark:text-gray-400 py-16">

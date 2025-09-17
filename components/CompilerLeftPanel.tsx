@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Project, ProjectArticle } from '../types';
+import { Project } from '../types';
 import { useDebounce } from '../hooks/useDebounce';
 import Icon from './Icon';
 
@@ -21,6 +21,8 @@ const CompilerLeftPanel: React.FC<CompilerLeftPanelProps> = ({
   const [articles, setArticles] = useState(project.articles);
   const [projectNotes, setProjectNotes] = useState(project.notes || '');
   const debouncedProjectNotes = useDebounce(projectNotes, 500);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
 
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
@@ -43,37 +45,48 @@ const CompilerLeftPanel: React.FC<CompilerLeftPanelProps> = ({
   
   const handleSort = () => {
     if (dragItem.current === null || dragOverItem.current === null) return;
-    const newArticles = [...articles];
-    const draggedItemContent = newArticles.splice(dragItem.current, 1)[0];
-    newArticles.splice(dragOverItem.current, 0, draggedItemContent);
+    
+    setArticles(currentArticles => {
+        const newArticles = [...currentArticles];
+        const draggedItemContent = newArticles.splice(dragItem.current!, 1)[0];
+        newArticles.splice(dragOverItem.current!, 0, draggedItemContent);
+        updateProject({ ...project, articles: newArticles });
+        return newArticles;
+    });
+
     dragItem.current = null;
     dragOverItem.current = null;
-    setArticles(newArticles);
-    updateProject({ ...project, articles: newArticles });
+    setDraggingIndex(null);
+    setDragOverIndex(null);
   };
 
   const removeArticle = (index: number) => {
-    // FIX: Renamed translation key to avoid duplicates.
     if (window.confirm(t('Remove Article from Compilation Confirmation', { articleTitle: articles[index].title }))) {
-      const newArticles = articles.filter((_, i) => i !== index);
-      setArticles(newArticles);
-      updateProject({ ...project, articles: newArticles });
+        setArticles(currentArticles => {
+            const newArticles = currentArticles.filter((_, i) => i !== index);
+            updateProject({ ...project, articles: newArticles });
+            return newArticles;
+        });
     }
   };
 
   const moveArticle = (index: number, direction: 'up' | 'down') => {
-    const newArticles = [...articles];
-    const newIndex = direction === 'up' ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= newArticles.length) return;
+    setArticles(currentArticles => {
+        const newArticles = [...currentArticles];
+        const newIndex = direction === 'up' ? index - 1 : index + 1;
+        if (newIndex < 0 || newIndex >= newArticles.length) return currentArticles;
 
-    [newArticles[index], newArticles[newIndex]] = [newArticles[newIndex], newArticles[index]];
+        [newArticles[index], newArticles[newIndex]] = [newArticles[newIndex], newArticles[index]];
 
-    setArticles(newArticles);
-    updateProject({ ...project, articles: newArticles });
-    setTimeout(() => {
-        const itemToFocus = listRef.current?.children[newIndex] as HTMLLIElement | undefined;
-        itemToFocus?.focus();
-    }, 0);
+        updateProject({ ...project, articles: newArticles });
+        
+        setTimeout(() => {
+            const itemToFocus = listRef.current?.children[newIndex] as HTMLLIElement | undefined;
+            itemToFocus?.focus();
+        }, 0);
+
+        return newArticles;
+    });
   };
 
   return (
@@ -94,27 +107,24 @@ const CompilerLeftPanel: React.FC<CompilerLeftPanelProps> = ({
           {articles.map((article, index) => (
             <li
               key={article.title}
+              draggable
               tabIndex={0}
-              onDragEnter={() => (dragOverItem.current = index)}
+              onDragStart={() => {
+                dragItem.current = index;
+                setDraggingIndex(index);
+              }}
+              onDragEnter={() => {
+                dragOverItem.current = index;
+                setDragOverIndex(index);
+              }}
               onDragEnd={handleSort}
               onDragOver={(e) => e.preventDefault()}
               onClick={() => onSelectArticle(article.title)}
-              onKeyDown={(e) => {
-                if (e.ctrlKey || e.metaKey) {
-                  if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    moveArticle(index, 'up');
-                  } else if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    moveArticle(index, 'down');
-                  }
-                }
-              }}
-              className={`group flex items-center justify-between p-3 rounded-lg shadow-sm transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-500 ${activeArticleTitle === article.title ? 'bg-accent-100 dark:bg-accent-900/50 ring-2 ring-accent-500' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'} cursor-pointer`}
+              className={`group flex items-center justify-between p-3 rounded-lg shadow-sm transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-500 ${activeArticleTitle === article.title ? 'bg-accent-100 dark:bg-accent-900/50 ring-2 ring-accent-500' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'} cursor-pointer ${draggingIndex === index ? 'dragging-item' : ''} ${dragOverIndex === index ? 'drop-indicator' : ''}`}
             >
               <div className="flex items-center gap-3 truncate">
-                <div draggable onDragStart={() => (dragItem.current = index)} className="cursor-grab active:cursor-grabbing">
-                    <Icon name="grip" className="w-5 h-5 text-gray-400 flex-shrink-0 group-hover:text-gray-600 dark:group-hover:text-gray-300" title={t('Press Ctrl + Arrow Up or Down to reorder.')} />
+                <div className="cursor-grab active:cursor-grabbing" title={t('Drag to reorder.')}>
+                    <Icon name="grip" className="w-5 h-5 text-gray-400 flex-shrink-0 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
                 </div>
                 <span className="font-medium truncate">{article.title}</span>
               </div>
@@ -146,9 +156,6 @@ const CompilerLeftPanel: React.FC<CompilerLeftPanelProps> = ({
             </li>
           ))}
         </ul>
-        <p className="text-xs text-center text-gray-500 dark:text-gray-400 mt-4 italic">
-          {t('Press Ctrl + Arrow Up or Down to reorder.')}
-        </p>
         </>
       ) : (
         <div className="flex flex-col items-center justify-center text-center text-gray-500 dark:text-gray-400 p-8 rounded-lg border-2 border-dashed dark:border-gray-700">

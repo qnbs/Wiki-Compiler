@@ -21,6 +21,16 @@ const formatMLA = (meta: ArticleMetadata): string => {
     return `"${meta.title}." <i>Wikipedia, The Free Encyclopedia</i>. Wikimedia Foundation, Inc. ${day} ${month}. ${year}. Web. ${day} ${month}. ${year}. &lt;<a href="${url}">${url}</a>&gt;`;
 };
 
+const formatChicago = (meta: ArticleMetadata): string => {
+    const date = new Date(meta.touched);
+    const month = date.toLocaleString('default', { month: 'long' });
+    const day = date.getUTCDate();
+    const year = date.getUTCFullYear();
+    const url = `https://en.wikipedia.org/w/index.php?title=${encodeURIComponent(meta.title.replace(/ /g, '_'))}&oldid=${meta.revid}`;
+
+    return `"${meta.title}." <i>Wikipedia</i>. Last modified ${month} ${day}, ${year}. <a href="${url}">${url}</a>.`;
+};
+
 const formatCustomAPA = (citation: CustomCitation): string => {
     const authorPart = citation.author ? `${citation.author}.` : '';
     const yearPart = citation.year ? `(${citation.year}).` : '';
@@ -37,17 +47,41 @@ const formatCustomMLA = (citation: CustomCitation): string => {
     return `${authorPart} ${titlePart}${yearPart}${urlPart}`;
 };
 
+const formatCustomChicago = (citation: CustomCitation): string => {
+    const authorPart = citation.author ? `${citation.author}.` : '';
+    const titlePart = `"${citation.title}."`;
+    const yearPart = citation.year ? `${citation.year}.` : '';
+    const urlPart = citation.url ? `<a href="${citation.url}">${citation.url}</a>.` : '';
+    return [authorPart, titlePart, yearPart, urlPart].filter(Boolean).join(' ');
+};
+
 
 export const formatBibliography = async (
     titles: string[], 
     customCitations: CustomCitation[],
-    style: 'apa' | 'mla'
+    style: 'apa' | 'mla' | 'chicago'
 ): Promise<string> => {
     try {
         const metadata = await getArticleMetadata(titles);
 
-        const wikiFormatter = style === 'apa' ? formatAPA : formatMLA;
-        const customFormatter = style === 'apa' ? formatCustomAPA : formatCustomMLA;
+        let wikiFormatter: (meta: ArticleMetadata) => string;
+        let customFormatter: (citation: CustomCitation) => string;
+
+        switch (style) {
+            case 'mla':
+                wikiFormatter = formatMLA;
+                customFormatter = formatCustomMLA;
+                break;
+            case 'chicago':
+                wikiFormatter = formatChicago;
+                customFormatter = formatCustomChicago;
+                break;
+            case 'apa':
+            default:
+                wikiFormatter = formatAPA;
+                customFormatter = formatCustomAPA;
+                break;
+        }
 
         let bibliographyHtml = `<div class="p-12" style="page-break-before: always;"><h1 class="text-4xl mb-8 border-b pb-2">Bibliography</h1><ul class="list-none space-y-4">`;
         

@@ -21,45 +21,42 @@ const ImporterView: React.FC<{ getArticleContent: (title: string) => Promise<str
         const articleToAdd = stagedArticles.find(a => a.title === title);
         if (!articleToAdd) return;
 
-        // --- New Image Extraction Logic ---
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = articleToAdd.html;
         
-        const figures = Array.from(tempDiv.querySelectorAll('figure, .infobox'));
-        const imagesInFigures = new Set<HTMLImageElement>();
+        const allImages = Array.from(tempDiv.querySelectorAll('img'));
         const extractedImages: Omit<ImportedImage, 'id' | 'tags' | 'category' | 'notes'>[] = [];
+        const seenUrls = new Set<string>();
 
         const isMeaningfulImage = (img: HTMLImageElement, src: string | null): boolean => {
             if (!src) return false;
-            // A simple heuristic to filter out small icons and decorative images
             const isTooSmall = (img.width > 0 && img.width < 50) || (img.height > 0 && img.height < 50);
             const isIcon = src.includes('icon') || src.includes('wiki-letter') || src.includes('Wiktionary-logo') || src.endsWith('.svg');
             return !isTooSmall && !isIcon;
         };
         
-        figures.forEach(figure => {
-            const img = figure.querySelector('img');
-            const figcaption = figure.querySelector('figcaption');
-            if (img) {
-                let src = img.getAttribute('src');
-                if (src && isMeaningfulImage(img, src)) {
-                    if (src.startsWith('//')) src = 'https:' + src;
-                    
-                    extractedImages.push({
-                        srcUrl: src,
-                        altText: img.getAttribute('alt') || '',
-                        caption: figcaption ? figcaption.innerText.trim() : (img.getAttribute('alt') || ''),
-                        originalArticleTitle: articleToAdd.title,
-                    });
-                    imagesInFigures.add(img);
-                }
+        allImages.forEach(img => {
+            let src = img.getAttribute('src');
+            if (src && isMeaningfulImage(img, src)) {
+                if (src.startsWith('//')) src = 'https:' + src;
+                if (seenUrls.has(src)) return; // Avoid duplicates
+
+                const figureParent = img.closest('figure');
+                const figcaption = figureParent?.querySelector('figcaption');
+                
+                extractedImages.push({
+                    srcUrl: src,
+                    altText: img.getAttribute('alt') || '',
+                    caption: figcaption ? figcaption.innerText.trim() : (img.getAttribute('alt') || ''),
+                    originalArticleTitle: articleToAdd.title,
+                });
+                seenUrls.add(src);
             }
         });
         
         if (extractedImages.length > 0) {
             addImagesToStaging(extractedImages);
         }
-        // --- End of New Logic ---
 
         addArticleToProject(title);
         removeArticle(title);
@@ -70,7 +67,6 @@ const ImporterView: React.FC<{ getArticleContent: (title: string) => Promise<str
         stagedArticles.forEach(article => {
             handleAddToProject(article.title);
         });
-        // Clear importer is implicitly called inside handleAddToProject, so this is safe.
         addToast(t('All articles added to compilation.'), 'success');
     };
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-// FIX: Imported RightPaneView from types.ts.
-import { Project, AppSettings, RightPaneView } from '../types';
+import { Project, AppSettings } from '../types';
+import type { RightPaneView } from './CompilerView';
 import Spinner from './Spinner';
 import Icon from './Icon';
 import ArticleEditor from './ArticleEditor';
@@ -10,9 +10,6 @@ import AIEditorModal from './AIEditorModal';
 import { editTextWithAi } from '../services/geminiService';
 import { LexicalEditor, $getSelection, $isRangeSelection, TextNode, $getRoot } from 'lexical';
 import { saveProjectArticleContent, getProjectArticleContent } from '../services/dbService';
-
-// FIX: Removed local RightPaneView type definition, which is now centralized in types.ts.
-// export type RightPaneView = 'settings' | 'article';
 
 interface CompilerRightPanelProps {
   project: Project;

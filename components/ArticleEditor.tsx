@@ -14,6 +14,7 @@ import { $getRoot, $insertNodes, EditorState, LexicalEditor } from 'lexical';
 import { editorTheme } from './lexical/EditorTheme';
 import { editorNodes } from './lexical/nodes';
 import EditorBubbleMenu from './EditorBubbleMenu';
+import EditorToolbar from './EditorToolbar';
 import { isAiConfigured } from '../services/geminiService';
 import { useTranslation } from 'react-i18next';
 
@@ -86,12 +87,15 @@ const ArticleEditor: React.FC<ArticleEditorProps> = ({ content, onUpdate, editab
 
     return (
         <LexicalComposer initialConfig={initialConfig}>
-            <div className="prose dark:prose-invert max-w-none focus-within:ring-2 focus-within:ring-accent-500 rounded-md -m-2 relative p-2">
-                <RichTextPlugin
-                    contentEditable={<ContentEditable className="editor-input" />}
-                    placeholder={<div className="editor-placeholder">{placeholder || 'Article content appears here...'}</div>}
-                    ErrorBoundary={LexicalErrorBoundary}
-                />
+            <div className="prose dark:prose-invert max-w-none rounded-md -m-2 relative border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50">
+                <EditorToolbar />
+                <div className="relative p-2">
+                    <RichTextPlugin
+                        contentEditable={<ContentEditable className="editor-input" />}
+                        placeholder={<div className="editor-placeholder">{placeholder || 'Article content appears here...'}</div>}
+                        ErrorBoundary={LexicalErrorBoundary}
+                    />
+                </div>
                 <HistoryPlugin />
                 <ListPlugin />
                 <LinkPlugin />

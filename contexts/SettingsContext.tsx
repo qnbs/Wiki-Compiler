@@ -3,9 +3,11 @@ import i18next from '../i18n';
 import { View, AppSettings } from '../types';
 import { getSettings, saveSettings } from '../services/dbService';
 
-const DEFAULT_SETTINGS: Omit<AppSettings, 'theme'> = {
+const DEFAULT_SETTINGS: AppSettings = {
   language: 'en',
   defaultView: View.Library,
+  theme: 'system',
+  accentColor: 'blue',
   library: {
     searchResultLimit: 10,
     aiAssistant: {
@@ -27,7 +29,7 @@ const DEFAULT_SETTINGS: Omit<AppSettings, 'theme'> = {
 interface SettingsContextType {
   settings: AppSettings | null;
   updateSettings: (newSettings: AppSettings) => Promise<void>;
-  reloadSettings: () => void;
+  reloadSettings: () => Promise<void>;
 }
 
 export const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -60,6 +62,12 @@ const deepMerge = (target: any, source: any): any => {
     } else if (source[key] !== undefined) {
       Object.assign(output, { [key]: source[key] });
     }
+  }
+  // Ensure all default keys are present in the final object
+  for (const key in target) {
+      if(!(key in output)) {
+          output[key] = target[key];
+      }
   }
 
   return output;

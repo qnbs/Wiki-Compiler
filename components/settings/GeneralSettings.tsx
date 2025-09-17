@@ -1,11 +1,41 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from '../../types';
 import { useSettings } from '../../hooks/useSettingsContext';
+import Icon from '../Icon';
 
 const GeneralSettings: React.FC = () => {
     const { t } = useTranslation();
     const { settings, updateSettings } = useSettings();
+    const [installPrompt, setInstallPrompt] = useState<any>(null);
+
+    useEffect(() => {
+        const handleBeforeInstallPrompt = (e: Event) => {
+            e.preventDefault();
+            setInstallPrompt(e);
+        };
+
+        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+        return () => {
+            window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        };
+    }, []);
+
+    const handleInstallClick = () => {
+        if (!installPrompt) {
+            return;
+        }
+        installPrompt.prompt();
+        installPrompt.userChoice.then((choiceResult: { outcome: string }) => {
+            if (choiceResult.outcome === 'accepted') {
+                console.log('User accepted the A2HS prompt');
+            } else {
+                console.log('User dismissed the A2HS prompt');
+            }
+            setInstallPrompt(null);
+        });
+    };
 
     if (!settings) return null;
     
@@ -30,6 +60,16 @@ const GeneralSettings: React.FC = () => {
                     <option value={View.Compiler}>{t('Compiler')}</option>
                 </select>
             </div>
+            {installPrompt && (
+                <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('Install App')}</label>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('Install Wiki Compiler on your device for quick access and offline capabilities.')}</p>
+                    <button onClick={handleInstallClick} className="flex items-center gap-2 bg-accent-600 text-white px-4 py-2 rounded-lg hover:bg-accent-700 transition-colors text-sm font-semibold">
+                        <Icon name="download" className="w-4 h-4" />
+                        {t('Install App')}
+                    </button>
+                </div>
+            )}
         </div>
     );
 };

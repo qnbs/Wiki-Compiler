@@ -18,6 +18,48 @@ import CommandPalette from './components/CommandPalette';
 import WelcomeModal from './components/WelcomeModal';
 import Spinner from './components/Spinner';
 
+const accentColorMap: { [key: string]: string } = {
+  blue: '39 110 241',
+  purple: '124 58 237',
+  green: '22 163 74',
+  orange: '234 88 12',
+  red: '220 38 38',
+};
+
+const ThemeManager = () => {
+    const { settings } = useSettings();
+
+    useEffect(() => {
+        if (!settings) return;
+        const root = document.documentElement;
+
+        // Accent Color
+        root.style.setProperty('--accent-color', accentColorMap[settings.accentColor]);
+
+        // Theme
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+        
+        const applyTheme = () => {
+            if (settings.theme === 'dark' || (settings.theme === 'system' && systemPrefersDark.matches)) {
+                root.classList.add('dark');
+                root.classList.remove('light');
+            } else {
+                root.classList.add('light');
+                root.classList.remove('dark');
+            }
+        };
+
+        applyTheme();
+
+        systemPrefersDark.addEventListener('change', applyTheme);
+        return () => systemPrefersDark.removeEventListener('change', applyTheme);
+
+    }, [settings]);
+
+    return null;
+};
+
+
 const App: React.FC = () => {
   const { settings } = useSettings();
   const [view, setView] = useState<View | null>(null);
@@ -34,10 +76,73 @@ const App: React.FC = () => {
     }
   }, [settings]);
 
-  const reloadApp = useCallback(() => {
-    // This is a bit of a heavy-handed way to reload, but it ensures all contexts and DB states are refreshed.
-    window.location.reload();
-  }, []);
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+        const swContent = `
+            const CACHE_NAME = 'wiki-compiler-cache-v1';
+            const APP_SHELL_URLS = ['/', '/index.html'];
+
+            self.addEventListener('install', (event) => {
+              event.waitUntil(
+                caches.open(CACHE_NAME)
+                  .then((cache) => cache.addAll(APP_SHELL_URLS))
+                  .then(() => self.skipWaiting())
+              );
+            });
+
+            self.addEventListener('activate', (event) => {
+              const cacheWhitelist = [CACHE_NAME];
+              event.waitUntil(
+                caches.keys().then((cacheNames) =>
+                  Promise.all(
+                    cacheNames.map((cacheName) => {
+                      if (!cacheWhitelist.includes(cacheName)) {
+                        return caches.delete(cacheName);
+                      }
+                    })
+                  )
+                ).then(() => self.clients.claim())
+              );
+            });
+
+            self.addEventListener('fetch', (event) => {
+              if (event.request.method !== 'GET') {
+                return;
+              }
+              
+              event.respondWith(
+                fetch(event.request)
+                  .then((response) => {
+                    if (response && response.status === 200) {
+                      const responseToCache = response.clone();
+                      caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, responseToCache);
+                      });
+                    }
+                    return response;
+                  })
+                  .catch(() => {
+                    return caches.match(event.request).then((cachedResponse) => {
+                      if (cachedResponse) {
+                        return cachedResponse;
+                      }
+                      return new Response('<h1>You are offline</h1><p>This content is not available offline.</p>', { headers: { 'Content-Type': 'text/html' } });
+                    });
+                  })
+              );
+            });
+        `;
+        const blob = new Blob([swContent], { type: 'application/javascript' });
+        const swUrl = URL.createObjectURL(blob);
+        navigator.serviceWorker.register(swUrl)
+            .then(registration => {
+                console.log('Service Worker registered with scope:', registration.scope);
+            })
+            .catch(error => {
+                console.error('Service Worker registration failed:', error);
+            });
+    }
+}, []);
 
   const getArticleContent = useCallback(async (title: string): Promise<string> => {
     const cachedArticle = await getArticleCache(title);
@@ -77,7 +182,7 @@ const App: React.FC = () => {
       case View.ImageImporter:
         return <ImageImporterView />;
       case View.Settings:
-        return <SettingsView reloadApp={reloadApp} />;
+        return <SettingsView />;
       case View.Help:
         return <HelpView />;
       default:
@@ -91,6 +196,7 @@ const App: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900/95 text-gray-900 dark:text-gray-100">
+      <ThemeManager />
       <Header view={view} setView={setView} openCommandPalette={() => setIsCommandPaletteOpen(true)} />
       <main className="flex-grow overflow-auto p-4 sm:p-6 mb-16 sm:mb-0">
         {renderView()}

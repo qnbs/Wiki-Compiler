@@ -15,7 +15,7 @@ interface ProjectsContextType {
   addArticleToProject: (title: string) => void;
   createNewProject: (callback?: () => void) => Promise<void>;
   deleteProject: (projectId: string) => Promise<void>;
-  reloadProjects: () => void;
+  reloadProjects: () => Promise<void>;
 }
 
 export const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);

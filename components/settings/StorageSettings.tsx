@@ -3,14 +3,18 @@ import { useTranslation } from 'react-i18next';
 import { getCacheSize, clearArticleCache, exportAllData, importAllData } from '../../services/dbService';
 import { useToasts } from '../../hooks/useToasts';
 import Icon from '../Icon';
+import { useSettings } from '../../hooks/useSettingsContext';
+import { useProjects } from '../../hooks/useProjectsContext';
+import { useImageImporter } from '../../hooks/useImageImporterContext';
+import { useImporter } from '../../hooks/useImporterContext';
 
-interface StorageSettingsProps {
-    reloadApp: () => void;
-}
-
-const StorageSettings: React.FC<StorageSettingsProps> = ({ reloadApp }) => {
+const StorageSettings: React.FC = () => {
     const { t } = useTranslation();
     const { addToast } = useToasts();
+    const { reloadSettings } = useSettings();
+    const { reloadProjects } = useProjects();
+    const { loadImportedImages } = useImageImporter();
+    const { clearImporter } = useImporter();
     const [cacheInfo, setCacheInfo] = useState({ count: 0, size: 0 });
     const importFileRef = useRef<HTMLInputElement>(null);
 
@@ -59,8 +63,13 @@ const StorageSettings: React.FC<StorageSettingsProps> = ({ reloadApp }) => {
                 reader.onload = async (event) => {
                     try {
                         await importAllData(event.target?.result as string);
-                        addToast(t('Import successful! The app will now reload.'), 'success');
-                        setTimeout(() => reloadApp(), 1000);
+                        addToast(t('Import successful!'), 'success');
+                        await Promise.all([
+                            reloadSettings(),
+                            reloadProjects(),
+                            loadImportedImages(),
+                        ]);
+                        clearImporter();
                     } catch (error) {
                         console.error("Import failed:", error);
                         addToast(t('Import failed. Please check the file format.'), 'error');

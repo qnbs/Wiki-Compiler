@@ -6,15 +6,13 @@ import { generateMarkdown, generateJsonFile, generateDocx, generateOdt } from '.
 import Spinner from './Spinner';
 import CompilerLeftPanel from './CompilerLeftPanel';
 import CompilerRightPanel from './CompilerRightPanel';
-// FIX: Imported RightPaneView from types.ts.
-import { Project, RightPaneView } from '../types';
+import { Project } from '../types';
 
 interface CompilerViewProps {
   getArticleContent: (title: string) => Promise<string>;
 }
 
-// FIX: Removed local RightPaneView type definition, which is now centralized in types.ts.
-// export type RightPaneView = 'settings' | 'article' | 'markdown';
+export type RightPaneView = 'settings' | 'article';
 
 const CompilerView: React.FC<CompilerViewProps> = ({ getArticleContent }) => {
   const { activeProject, updateProject } = useProjects();
@@ -26,7 +24,7 @@ const CompilerView: React.FC<CompilerViewProps> = ({ getArticleContent }) => {
 
   useEffect(() => {
     if (activeProject) {
-        setRightPaneView(activeProject.lastActiveView || 'settings');
+        setRightPaneView((activeProject.lastActiveView as RightPaneView) || 'settings');
     }
   }, [activeProject?.id]);
 
