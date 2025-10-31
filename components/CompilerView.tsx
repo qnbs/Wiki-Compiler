@@ -6,13 +6,11 @@ import { generateMarkdown, generateJsonFile, generateDocx, generateOdt } from '.
 import Spinner from './Spinner';
 import CompilerLeftPanel from './CompilerLeftPanel';
 import CompilerRightPanel from './CompilerRightPanel';
-import { Project } from '../types';
+import { Project, RightPaneView } from '../types';
 
 interface CompilerViewProps {
   getArticleContent: (title: string) => Promise<string>;
 }
-
-export type RightPaneView = 'settings' | 'article';
 
 const CompilerView: React.FC<CompilerViewProps> = ({ getArticleContent }) => {
   const { activeProject, updateProject } = useProjects();
@@ -24,7 +22,7 @@ const CompilerView: React.FC<CompilerViewProps> = ({ getArticleContent }) => {
 
   useEffect(() => {
     if (activeProject) {
-        setRightPaneView((activeProject.lastActiveView as RightPaneView) || 'settings');
+        setRightPaneView(activeProject.lastActiveView || 'settings');
     }
   }, [activeProject?.id]);
 

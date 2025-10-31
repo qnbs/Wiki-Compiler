@@ -28,7 +28,7 @@ const formatChicago = (meta: ArticleMetadata): string => {
     const year = date.getUTCFullYear();
     const url = `https://en.wikipedia.org/w/index.php?title=${encodeURIComponent(meta.title.replace(/ /g, '_'))}&oldid=${meta.revid}`;
 
-    return `"${meta.title}." <i>Wikipedia</i>. Last modified ${month} ${day}, ${year}. <a href="${url}">${url}</a>.`;
+    return `Wikipedia, s.v. "${meta.title}," last modified ${month} ${day}, ${year}, <a href="${url}">${url}</a>.`;
 };
 
 const formatCustomAPA = (citation: CustomCitation): string => {

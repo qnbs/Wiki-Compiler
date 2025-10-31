@@ -1,10 +1,51 @@
-import { RightPaneView } from './components/CompilerView';
+
+export enum View {
+  Library = 'library',
+  Archive = 'archive',
+  Compiler = 'compiler',
+  Importer = 'importer',
+  ImageImporter = 'imageImporter',
+  Settings = 'settings',
+  Help = 'help',
+}
+
+export type RightPaneView = 'settings' | 'article';
+
+export type Theme = 'light' | 'dark' | 'system';
+export type AccentColorName = 'blue' | 'purple' | 'green' | 'orange' | 'red';
 
 export interface SearchResult {
+  pageid: number;
   title: string;
   snippet: string;
+  timestamp: string;
+}
+
+export interface WikipediaSearchItem {
   pageid: number;
-  timestamp?: string;
+  title: string;
+  snippet: string;
+  timestamp: string;
+}
+
+export interface WikipediaQueryResponse {
+  query: {
+    search: WikipediaSearchItem[];
+  };
+}
+
+export interface ArticleMetadata {
+  pageid: number;
+  ns: number;
+  title: string;
+  contentmodel: string;
+  pagelanguage: string;
+  pagelanguagehtmlcode: string;
+  pagelanguagedir: string;
+  touched: string;
+  lastrevid: number;
+  length: number;
+  revid: number;
 }
 
 export interface ArticleContent {
@@ -14,66 +55,32 @@ export interface ArticleContent {
 }
 
 export interface ProjectArticle {
-  title:string;
+  title: string;
 }
 
 export interface Project {
   id: string;
   name: string;
   articles: ProjectArticle[];
-  notes?: string;
-  lastActiveView?: RightPaneView;
-}
-
-export enum View {
-  Library = 'library',
-  Archive = 'archive',
-  Compiler = 'compiler',
-  Importer = 'importer',
-  ImageImporter = 'imageImporter',
-  Settings = 'settings',
-  Help = 'help'
-}
-
-export interface ArticleMetadata {
-    pageid: number;
-    revid: number;
-    touched: string;
-    title: string;
-}
-
-export interface AiInsightKeyConcept {
-    concept: string;
-    explanation: string;
-}
-
-export interface ArticleInsights {
-    summary?: string;
-    keyConcepts?: AiInsightKeyConcept[];
-    researchQuestions?: string[];
-    readingTimeMinutes: number;
-}
-
-export type AccentColor = 'blue' | 'purple' | 'green' | 'orange';
-
-export interface CustomCitation {
-  id: string;
-  key: string; // e.g., "Smith2023"
-  author: string;
-  year: string;
-  title: string;
-  url: string;
+  notes: string;
+  lastActiveView: RightPaneView;
 }
 
 export interface ProjectArticleContent {
-  id: string; // composite key: `${projectId}-${title}`
-  projectId: string;
-  title: string;
-  html: string;
+    id: string; // "projectId-title"
+    projectId: string;
+    title: string;
+    html: string;
 }
 
-export type Theme = 'light' | 'dark' | 'system';
-export type AccentColorName = 'blue' | 'purple' | 'green' | 'orange' | 'red';
+export interface CustomCitation {
+    id: string;
+    key: string;
+    author: string;
+    year: string;
+    title: string;
+    url: string;
+}
 
 export interface AppSettings {
   language: string;
@@ -98,39 +105,26 @@ export interface AppSettings {
   };
 }
 
-export type ToastType = 'success' | 'error' | 'info';
+export interface ArticleInsights {
+  summary?: string;
+  keyConcepts?: { concept: string; explanation: string }[];
+  researchQuestions?: string[];
+  readingTimeMinutes: number;
+}
 
-export interface ToastMessage {
+export interface Toast {
   id: number;
   message: string;
-  type: ToastType;
+  type: 'success' | 'error' | 'info';
 }
 
 export interface ImportedImage {
-  id: string; // uuid
-  srcUrl: string;
-  altText: string;
-  caption: string;
-  originalArticleTitle: string;
-  tags: string[];
-  category: string;
-  notes: string;
-}
-
-// Types for Wikipedia API responses for better type safety
-export interface WikipediaSearchItem {
-    ns: number;
-    title: string;
-    pageid: number;
-    size: number;
-    wordcount: number;
-    snippet: string;
-    timestamp: string;
-}
-
-export interface WikipediaQueryResponse {
-    batchcomplete: string;
-    query: {
-        search: WikipediaSearchItem[];
-    };
+    id: string;
+    srcUrl: string;
+    altText: string;
+    caption: string;
+    tags: string[];
+    category: string;
+    notes: string;
+    originalArticleTitle: string;
 }

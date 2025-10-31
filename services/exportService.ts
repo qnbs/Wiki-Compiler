@@ -113,7 +113,6 @@ const processNode = async (node: Node, options: { bold?: boolean; italics?: bool
             break;
     }
 
-    // Handle specific element types that don't just pass down styles
     switch (element.tagName.toUpperCase()) {
         case 'A':
             const href = (element as HTMLAnchorElement).href;
@@ -132,32 +131,23 @@ const processNode = async (node: Node, options: { bold?: boolean; italics?: bool
             const src = imgElement.src;
             if (!src) return [];
             try {
-                // Using a proxy might be necessary for CORS issues in a real-world scenario
                 const response = await fetch(src);
                 if (!response.ok) {
                     console.warn(`Failed to fetch image at ${src}: ${response.status} ${response.statusText}`);
                     return [new TextRun({ text: `[Image not found: ${src}]`, italics: true })];
                 }
                 const blob = await response.blob();
-                 // Ensure blob is an image type before proceeding
                 if (!blob.type.startsWith('image/')) {
                     console.warn(`Fetched resource is not an image: ${src}`);
                     return [new TextRun({ text: `[Image: ${src}]`, italics: true })];
                 }
-                const buffer = await new Promise<ArrayBuffer>((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result as ArrayBuffer);
-                    reader.onerror = reject;
-                    reader.readAsArrayBuffer(blob);
-                });
+                const buffer = await blob.arrayBuffer();
 
-                // FIX: The `docx` library may require a 'type' property for images from a buffer, specifying the image format.
-                // Assuming 'png' as a fallback, a more robust solution would inspect the blob's MIME type.
                 return [new ImageRun({
                     data: buffer,
                     transformation: {
-                        width: Math.min(imgElement.width, 450) || 450, // Cap width to fit page
-                        height: Math.min(imgElement.height, 600) || 300,
+                        width: Math.min(imgElement.naturalWidth, 450) || 450,
+                        height: Math.min(imgElement.naturalHeight, 600) || 300,
                     },
                 })];
             } catch (error) {
@@ -165,7 +155,6 @@ const processNode = async (node: Node, options: { bold?: boolean; italics?: bool
                 return [new TextRun({ text: `[Image failed to load: ${src}]`, italics: true })];
             }
         default:
-             // Process children with new options for all other tags
              const childrenNested = await Promise.all(Array.from(element.childNodes).map((childNode) => processNode(childNode, newOptions)));
              return childrenNested.flat();
     }
@@ -181,65 +170,65 @@ const htmlToDocxChildren = async (htmlString: string): Promise<(Paragraph | Tabl
     const doc = parser.parseFromString(htmlString, 'text/html');
     const elements: (Paragraph | Table)[] = [];
 
+    const headingMap: Record<string, HeadingLevel> = {
+        'H1': HeadingLevel.HEADING_1,
+        'H2': HeadingLevel.HEADING_2,
+        'H3': HeadingLevel.HEADING_3,
+        'H4': HeadingLevel.HEADING_4,
+        'H5': HeadingLevel.HEADING_5,
+        'H6': HeadingLevel.HEADING_6,
+    };
+
     const processElement = async (el: Element) => {
-        switch (el.tagName.toUpperCase()) {
-            case 'H1':
-            case 'H2':
-            case 'H3':
-            case 'H4': {
-                // FIX: Use a type-safe method to get the HeadingLevel enum value instead of casting a dynamic string.
-                const headingMap: Record<string, HeadingLevel> = {
-                    'H1': HeadingLevel.HEADING_1,
-                    'H2': HeadingLevel.HEADING_2,
-                    'H3': HeadingLevel.HEADING_3,
-                    'H4': HeadingLevel.HEADING_4,
-                };
-                elements.push(new Paragraph({
-                    children: await processNode(el),
-                    heading: headingMap[el.tagName.toUpperCase()],
-                }));
-                break;
+        const tagName = el.tagName.toUpperCase();
+        if (headingMap[tagName]) {
+            elements.push(new Paragraph({
+                children: await processNode(el),
+                heading: headingMap[tagName],
+            }));
+        } else {
+            switch (tagName) {
+                case 'P':
+                    elements.push(new Paragraph({ children: await processNode(el) }));
+                    break;
+                case 'UL':
+                case 'OL':
+                    for (const li of Array.from(el.children)) {
+                        if (li.tagName.toUpperCase() === 'LI') {
+                            elements.push(new Paragraph({
+                                children: await processNode(li),
+                                bullet: { level: 0 },
+                            }));
+                        }
+                    }
+                    break;
+                case 'TABLE':
+                    const rows: TableRow[] = [];
+                    for (const tr of Array.from(el.querySelectorAll('tr'))) {
+                        const cells: TableCell[] = [];
+                        for (const td of Array.from(tr.querySelectorAll('td, th'))) {
+                            cells.push(new TableCell({
+                                children: [new Paragraph({ children: await processNode(td) })],
+                                borders: {
+                                    top: { style: BorderStyle.SINGLE, size: 1, color: "auto" },
+                                    bottom: { style: BorderStyle.SINGLE, size: 1, color: "auto" },
+                                    left: { style: BorderStyle.SINGLE, size: 1, color: "auto" },
+                                    right: { style: BorderStyle.SINGLE, size: 1, color: "auto" },
+                                }
+                            }));
+                        }
+                        rows.push(new TableRow({ children: cells }));
+                    }
+                    elements.push(new Table({ rows, width: { size: 100, type: WidthType.PERCENTAGE } }));
+                    break;
+                case 'DIV':
+                case 'SECTION':
+                case 'ARTICLE':
+                    for (const child of Array.from(el.children)) {
+                        await processElement(child);
+                    }
+                    break;
             }
-            case 'P':
-                elements.push(new Paragraph({ children: await processNode(el) }));
-                break;
-            case 'UL':
-            case 'OL':
-                for (const li of Array.from(el.children)) {
-                    if (li.tagName.toUpperCase() === 'LI') {
-                        elements.push(new Paragraph({
-                            children: await processNode(li),
-                            bullet: { level: 0 },
-                        }));
-                    }
-                }
-                break;
-            case 'TABLE':
-                const rows: TableRow[] = [];
-                for (const tr of Array.from(el.querySelectorAll('tr'))) {
-                    const cells: TableCell[] = [];
-                    for (const td of Array.from(tr.querySelectorAll('td, th'))) {
-                        cells.push(new TableCell({
-                            children: [new Paragraph({ children: await processNode(td) })],
-                            borders: {
-                                top: { style: BorderStyle.SINGLE, size: 1, color: "auto" },
-                                bottom: { style: BorderStyle.SINGLE, size: 1, color: "auto" },
-                                left: { style: BorderStyle.SINGLE, size: 1, color: "auto" },
-                                right: { style: BorderStyle.SINGLE, size: 1, color: "auto" },
-                            }
-                        }));
-                    }
-                    rows.push(new TableRow({ children: cells }));
-                }
-                elements.push(new Table({ rows, width: { size: 100, type: WidthType.PERCENTAGE } }));
-                break;
-            case 'DIV':
-            case 'SECTION':
-            case 'ARTICLE':
-                for (const child of Array.from(el.children)) {
-                    await processElement(child);
-                }
-                break;
         }
     };
     

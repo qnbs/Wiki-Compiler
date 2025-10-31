@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Project, AppSettings } from '../types';
-import type { RightPaneView } from './CompilerView';
+import { Project, AppSettings, RightPaneView } from '../types';
 import Spinner from './Spinner';
 import Icon from './Icon';
 import ArticleEditor from './ArticleEditor';

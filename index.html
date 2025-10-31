@@ -4,8 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wiki Compiler</title>
+
+    <!-- PWA & Mobile Meta Tags -->
     <meta name="theme-color" content="#1f2937">
-    <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiV2lraSBDb21waWxlciIsInNob3J0X25hbWUiOiJXaWtpQ29tcGlsZXIiLCJkZXNjcmlwdGlvbiI6IkEgcHJlbWl1bSBrbm93bGVkZ2UgbWFuYWdlbWVudCBhbmQgcmVzZWFyY2ggZW52aXJvbm1lbnQgZGVzaWduZWQgdG8gY3VyYXRlLCBjdXN0b21pemUsIGFuZCBjb25zdW1lIGtub3dsZWRnZSBmcm9tIFdpa2lwZWRpYS4gVHJhbnNmb3JtIHBhc3NpdmUgcmVhZGluZyBpbnRvIGFuIGFjdGl2ZSwgY3JlYXRpdmUgYWN0IG9mIGtub3dsZWRnZSBhc3NlbWJseS4iLCJzdGFydF91cmwiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzExMTgyNyIsInRoZW1lX2NvbG9yIjoiIzFmMjkzNyIsImljb25zIjpbeyJzcmMiOiJodHRwczovL3BsYWNlaG9sZC5jby8xOTJ4MTkyLzNiODJmNi9mZmZmZmY/dGV4dD1XIiwidHlwZSI6ImltYWdlL3BuZyIsInNpemVzIjoiMTkyeDE5MiJ9LHsic3JjIjoiaHR0cHM6Ly9wbGFjZWhvbGQuY28vNTEyeDUxMi8zYjgyZjYvZmZmZmZmP3RleHQ9VyIsInR5cGUiOiJpbWFnZS9wbmciLCJzaXplcyI6IjUxMng1MTIifV19">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/icon-192.svg">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Wiki Compiler">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -210,6 +217,6 @@
 </head>
 <body>
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
+    <script type="module" src="/index.tsx" id="main-app-script"></script>
 </body>
 </html>

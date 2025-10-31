@@ -30,7 +30,8 @@ const ImporterView: React.FC<{ getArticleContent: (title: string) => Promise<str
 
         const isMeaningfulImage = (img: HTMLImageElement, src: string | null): boolean => {
             if (!src) return false;
-            const isTooSmall = (img.width > 0 && img.width < 50) || (img.height > 0 && img.height < 50);
+            // A simple heuristic to filter out small icons and decorative images
+            const isTooSmall = (img.naturalWidth > 0 && img.naturalWidth < 50) || (img.naturalHeight > 0 && img.naturalHeight < 50);
             const isIcon = src.includes('icon') || src.includes('wiki-letter') || src.includes('Wiktionary-logo') || src.endsWith('.svg');
             return !isTooSmall && !isIcon;
         };
@@ -72,12 +73,12 @@ const ImporterView: React.FC<{ getArticleContent: (title: string) => Promise<str
 
     return (
         <>
-            <Modal isOpen={!!selectedArticle} onClose={() => setSelectedArticle(null)} title={selectedArticle?.title || ''} actions={
+            <Modal isOpen={!!selectedArticle} onClose={() => setSelectedArticle(null)} title={selectedArticle?.title || ''} size="xl" actions={
                 <button onClick={() => setSelectedArticle(null)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600">
                     {t('Close')}
                 </button>
             }>
-                {selectedArticle && <div className="prose dark:prose-invert max-w-none max-h-[60vh] overflow-y-auto" dangerouslySetInnerHTML={{ __html: selectedArticle.html }} />}
+                {selectedArticle && <div className="prose dark:prose-invert max-w-none max-h-[70vh] overflow-y-auto" dangerouslySetInnerHTML={{ __html: selectedArticle.html }} />}
             </Modal>
 
             <div className="max-w-7xl mx-auto">
