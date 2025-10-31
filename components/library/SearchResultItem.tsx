@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
-import { useLibraryContext } from '../../hooks/useLibraryContext';
 import { SearchResult } from '../../types';
 import Icon from '../Icon';
+import { useLibraryContext } from '../../hooks/useLibraryContext';
 
 interface SearchResultItemProps {
     result: SearchResult;
@@ -33,7 +33,7 @@ const SearchResultItem: React.FC<SearchResultItemProps> = memo(({ result, style 
     return (
         <li
             style={style}
-            className={`group p-3 rounded-lg transition-colors flex justify-between items-center animate-fade-in ${isSelected ? 'bg-accent-100 dark:bg-accent-900/50' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+            className={`group p-3 rounded-lg transition-colors flex justify-between items-center animate-fade-in list-none ${isSelected ? 'bg-accent-100 dark:bg-accent-900/50' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
         >
             <div onClick={() => handleSelectArticle(result.title)} className="cursor-pointer flex-grow truncate pr-2">
                 <h3 className="font-semibold text-gray-800 dark:text-gray-200 truncate">{result.title}</h3>
@@ -51,8 +51,8 @@ const SearchResultItem: React.FC<SearchResultItemProps> = memo(({ result, style 
                     title={t('Add to Importer') as string}
                     aria-label={t('Add to Importer')}
                     className={`p-2 rounded-full transition-colors ${
-                    isAddedToImporter ? 'text-green-500' : 'text-gray-400 hover:bg-accent-100 dark:hover:bg-accent-900/50 hover:text-accent-600'
-                    } disabled:text-green-500 disabled:cursor-default disabled:hover:bg-transparent dark:disabled:hover:bg-transparent`}
+                    isAddedToImporter ? 'text-green-500' : 'text-gray-400 opacity-0 group-hover:opacity-100 hover:bg-accent-100 dark:hover:bg-accent-900/50 hover:text-accent-600'
+                    } disabled:opacity-100 disabled:text-green-500 disabled:cursor-default`}
                 >
                     <Icon name={isAddedToImporter ? 'check' : 'upload'} className={`w-5 h-5 ${isAddedToImporter ? 'animate-pop-in' : ''}`} />
                 </button>
@@ -62,8 +62,8 @@ const SearchResultItem: React.FC<SearchResultItemProps> = memo(({ result, style 
                     title={t('Quick Add to Compilation') as string}
                     aria-label={t('Quick Add to Compilation')}
                     className={`p-2 rounded-full transition-colors ${
-                    isAddedToProject ? 'text-green-500' : 'text-gray-400 hover:bg-accent-100 dark:hover:bg-accent-900/50 hover:text-accent-600'
-                    } disabled:text-green-500 disabled:cursor-default disabled:hover:bg-transparent dark:disabled:hover:bg-transparent`}
+                    isAddedToProject ? 'text-green-500' : 'text-gray-400 opacity-0 group-hover:opacity-100 hover:bg-accent-100 dark:hover:bg-accent-900/50 hover:text-accent-600'
+                    } disabled:opacity-100 disabled:text-green-500 disabled:cursor-default`}
                 >
                     <Icon name={isAddedToProject ? 'check' : 'plus'} className={`w-5 h-5 ${isAddedToProject ? 'animate-pop-in' : ''}`} />
                 </button>

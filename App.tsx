@@ -1,10 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from './hooks/useSettingsContext';
-import { useToasts } from './hooks/useToasts';
-import { getArticleCache, saveArticleCache } from './services/dbService';
-import { getArticleHtml, getArticleMetadata } from './services/wikipediaService';
-
 import Header from './components/Header';
 import LibraryView from './components/LibraryView';
 import CompilerView from './components/CompilerView';
@@ -18,45 +14,32 @@ import CommandPalette from './components/CommandPalette';
 import WelcomeModal from './components/WelcomeModal';
 import ToastContainer from './components/ToastContainer';
 import Spinner from './components/Spinner';
-import { View, ArticleContent } from './types';
+import { View } from './types';
+import { useOnlineStatus } from './hooks/useOnlineStatus';
 
 function App() {
   const { t } = useTranslation();
   const { settings } = useSettings();
-  const { addToast } = useToasts();
+  const isOnline = useOnlineStatus();
 
-  const getArticleContent = useCallback(async (title: string): Promise<string> => {
-      let cachedArticle = await getArticleCache(title);
-      if (cachedArticle) {
-          return cachedArticle.html;
-      }
-
-      try {
-          const html = await getArticleHtml(title);
-          const metadataArray = await getArticleMetadata([title]);
-          const articleToCache: ArticleContent = { 
-              title, 
-              html, 
-              metadata: metadataArray.length > 0 ? metadataArray[0] : undefined 
-          };
-          await saveArticleCache(articleToCache);
-          return html;
-      } catch (error) {
-          console.error(`Failed to fetch and cache article: ${title}`, error);
-          addToast(`Failed to load article: ${title}`, 'error');
-          return `<p>Error loading article.</p>`;
-      }
-  }, [addToast]);
-
-  const [view, setView] = useState<View>(settings?.defaultView || View.Library);
+  const [view, setView] = useState<View>(View.Library);
   const [isCommandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [hasOnboarded, setHasOnboarded] = useState(localStorage.getItem('wiki-compiler-onboarded') === 'true');
 
   useEffect(() => {
     if (settings) {
-      setView(settings.defaultView);
+      const urlParams = new URLSearchParams(window.location.search);
+      const viewFromUrl = urlParams.get('view') as View;
+
+      if (viewFromUrl && Object.values(View).includes(viewFromUrl)) {
+        setView(viewFromUrl);
+        // Clean up the URL to avoid confusion on subsequent navigations
+        window.history.replaceState({}, '', window.location.pathname);
+      } else {
+        setView(settings.defaultView);
+      }
     }
-  }, [settings?.defaultView]);
+  }, [settings]);
 
   useEffect(() => {
     if (settings) {
@@ -90,13 +73,13 @@ function App() {
   const renderView = () => {
     switch (view) {
       case View.Library:
-        return <LibraryView getArticleContent={getArticleContent} />;
+        return <LibraryView />;
       case View.Compiler:
-        return <CompilerView getArticleContent={getArticleContent} />;
+        return <CompilerView />;
       case View.Archive:
           return <ArchiveView />;
       case View.Importer:
-          return <ImporterView getArticleContent={getArticleContent} />;
+          return <ImporterView />;
       case View.ImageImporter:
           return <ImageImporterView />;
       case View.Settings:
@@ -104,7 +87,7 @@ function App() {
       case View.Help:
         return <HelpView />;
       default:
-        return <LibraryView getArticleContent={getArticleContent} />;
+        return <LibraryView />;
     }
   };
 
@@ -118,11 +101,11 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
-      <Header view={view} setView={handleSetView} openCommandPalette={openCommandPalette} />
+      <Header view={view} setView={handleSetView} openCommandPalette={openCommandPalette} isOnline={isOnline} />
       <main className="max-w-7xl mx-auto p-4 sm:pb-24">
         {renderView()}
       </main>
-      <BottomNavBar view={view} setView={handleSetView} />
+      <BottomNavBar view={view} setView={handleSetView} isOnline={isOnline} />
       <CommandPalette isOpen={isCommandPaletteOpen} setIsOpen={setCommandPaletteOpen} commands={commands} />
       <WelcomeModal isOpen={!hasOnboarded} onClose={() => setHasOnboarded(true)} />
       <ToastContainer />

@@ -8,7 +8,7 @@ import { ArticleContent, ImportedImage } from '../types';
 import { useToasts } from '../hooks/useToasts';
 import Modal from './Modal';
 
-const ImporterView: React.FC<{ getArticleContent: (title: string) => Promise<string> }> = () => {
+const ImporterView: React.FC = () => {
     const { t } = useTranslation();
     const { stagedArticles, removeArticle, clearImporter } = useImporter();
     const { addArticleToProject } = useProjects();

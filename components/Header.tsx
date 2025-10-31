@@ -6,14 +6,16 @@ import { useClickOutside } from '../hooks/useClickOutside';
 import { useProjects } from '../hooks/useProjectsContext';
 import { useImporter } from '../hooks/useImporterContext';
 import { useImageImporter } from '../hooks/useImageImporterContext';
+import Logo from './Logo';
 
 interface HeaderProps {
   view: View;
   setView: (view: View) => void;
   openCommandPalette: () => void;
+  isOnline: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ view, setView, openCommandPalette }) => {
+const Header: React.FC<HeaderProps> = ({ view, setView, openCommandPalette, isOnline }) => {
   const { t } = useTranslation();
   const {
     projects,
@@ -199,7 +201,7 @@ const Header: React.FC<HeaderProps> = ({ view, setView, openCommandPalette }) =>
     <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 sticky top-0 z-20">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <h1 className="text-xl font-bold text-gray-800 dark:text-white">{t('Wiki Compiler')}</h1>
+          <Logo onClick={() => setView(View.Library)} />
         </div>
         
         {/* Center Navigation */}
@@ -250,6 +252,12 @@ const Header: React.FC<HeaderProps> = ({ view, setView, openCommandPalette }) =>
 
 
         <div className="flex items-center gap-2">
+          {!isOnline && (
+            <div className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-md bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300 text-xs font-semibold">
+                <Icon name="wifi-off" className="w-4 h-4" />
+                Offline
+            </div>
+          )}
           {/* Project Selector */}
           <div className="relative" ref={projectDropdownRef}>
             <button

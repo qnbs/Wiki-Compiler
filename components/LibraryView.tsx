@@ -5,10 +5,6 @@ import LibrarySearchPanel from './library/LibrarySearchPanel';
 import LibraryArticlePanel from './library/LibraryArticlePanel';
 import { useSettings } from '../hooks/useSettingsContext';
 
-interface LibraryViewProps {
-  getArticleContent: (title: string) => Promise<string>;
-}
-
 const LibraryViewContent: React.FC = () => {
     return (
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-[calc(100vh-120px)]">
@@ -18,12 +14,12 @@ const LibraryViewContent: React.FC = () => {
     );
 }
 
-const LibraryView: React.FC<LibraryViewProps> = ({ getArticleContent }) => {
+const LibraryView: React.FC = () => {
     const { settings } = useSettings();
     if (!settings) return <div className="flex justify-center items-center h-full"><Spinner /></div>;
 
     return (
-        <LibraryProvider getArticleContent={getArticleContent}>
+        <LibraryProvider>
             <LibraryViewContent />
         </LibraryProvider>
     );

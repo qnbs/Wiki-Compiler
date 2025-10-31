@@ -7,14 +7,21 @@ import { useImporter } from '../hooks/useImporterContext';
 interface BottomNavBarProps {
   view: View;
   setView: (view: View) => void;
+  isOnline: boolean;
 }
 
-const BottomNavBar: React.FC<BottomNavBarProps> = ({ view, setView }) => {
+const BottomNavBar: React.FC<BottomNavBarProps> = ({ view, setView, isOnline }) => {
   const { t } = useTranslation();
   const { stagedArticles } = useImporter();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex justify-around p-1 sm:hidden z-30">
+      {!isOnline && (
+          <div className="absolute -top-8 right-2 flex items-center gap-1.5 px-2 py-1 rounded-md bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300 text-xs font-semibold shadow-md">
+              <Icon name="wifi-off" className="w-4 h-4" />
+              Offline
+          </div>
+      )}
       <NavButton icon="book" label={t('Library')} isActive={view === View.Library} onClick={() => setView(View.Library)} />
       <NavButton icon="archive-box" label={t('Archive')} isActive={view === View.Archive} onClick={() => setView(View.Archive)} />
       <NavButton icon="compiler" label={t('Compiler')} isActive={view === View.Compiler} onClick={() => setView(View.Compiler)} />

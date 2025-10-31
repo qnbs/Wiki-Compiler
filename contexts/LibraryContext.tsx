@@ -7,6 +7,7 @@ import { useImporter } from '../hooks/useImporterContext';
 import { useToasts } from '../hooks/useToasts';
 import { useDebounce } from '../hooks/useDebounce';
 import { useArticleAnalysis } from '../hooks/useArticleAnalysis';
+import { useArticleCache } from '../hooks/useArticleCache';
 import { ArticleContent, SearchResult, AppSettings, ArticleInsights } from '../types';
 
 export interface LibraryContextType {
@@ -38,15 +39,15 @@ export const LibraryContext = createContext<LibraryContextType | undefined>(unde
 
 interface LibraryProviderProps {
     children: ReactNode;
-    getArticleContent: (title: string) => Promise<string>;
 }
 
-export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children, getArticleContent }) => {
+export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children }) => {
     const { t } = useTranslation();
     const { settings } = useSettings();
     const { activeProject, addArticleToProject: addArticleToProjectCtx } = useProjects();
     const { addArticle: addArticleToImporter, isArticleStaged } = useImporter();
     const { addToast } = useToasts();
+    const { getArticleContent } = useArticleCache();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [sortOption, setSortOption] = useState('relevance');

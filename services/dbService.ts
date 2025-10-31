@@ -161,7 +161,16 @@ export const exportAllData = async (): Promise<string> => {
     return JSON.stringify(data, null, 2);
 };
 
-export const importAllData = async (jsonString: string): Promise<void> => {
+export const importAllData = async (jsonString: string, createBackup: boolean = true): Promise<void> => {
+    if (createBackup) {
+        try {
+            const backupData = await exportAllData();
+            sessionStorage.setItem('wiki-compiler-backup', backupData);
+        } catch (e) {
+            console.error("Failed to create pre-import backup:", e);
+        }
+    }
+    
     const importData = JSON.parse(jsonString);
     if (!importData.data) throw new Error("Invalid import file format");
     const { projects, articles, settings, projectArticles, importedImages } = importData.data;

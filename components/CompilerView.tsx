@@ -2,20 +2,18 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useProjects } from '../hooks/useProjectsContext';
 import { useSettings } from '../hooks/useSettingsContext';
 import { useToasts } from '../hooks/useToasts';
+import { useArticleCache } from '../hooks/useArticleCache';
 import { generateMarkdown, generateJsonFile, generateDocx, generateOdt } from '../services/exportService';
 import Spinner from './Spinner';
 import CompilerLeftPanel from './CompilerLeftPanel';
 import CompilerRightPanel from './CompilerRightPanel';
 import { Project, RightPaneView } from '../types';
 
-interface CompilerViewProps {
-  getArticleContent: (title: string) => Promise<string>;
-}
-
-const CompilerView: React.FC<CompilerViewProps> = ({ getArticleContent }) => {
+const CompilerView: React.FC = () => {
   const { activeProject, updateProject } = useProjects();
   const { settings, updateSettings } = useSettings();
   const { addToast } = useToasts();
+  const { getArticleContent } = useArticleCache();
   
   const [activeArticleTitle, setActiveArticleTitle] = useState<string | null>(null);
   const [rightPaneView, setRightPaneView] = useState<RightPaneView>('settings');
