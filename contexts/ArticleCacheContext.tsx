@@ -2,7 +2,7 @@ import React, { createContext, useCallback, ReactNode } from 'react';
 import { useToasts } from '../hooks/useToasts';
 import { getArticleCache, saveArticleCache } from '../services/dbService';
 import { getArticleHtml, getArticleMetadata } from '../services/wikipediaService';
-import { ArticleContent } from '../types';
+import { ArticleContent, ArticleMetadata } from '../types';
 
 interface ArticleCacheContextType {
   getArticleContent: (title: string) => Promise<string>;
@@ -25,7 +25,8 @@ export const ArticleCacheProvider: React.FC<{ children: ReactNode }> = ({ childr
           const articleToCache: ArticleContent = { 
               title, 
               html, 
-              metadata: metadataArray.length > 0 ? metadataArray[0] : undefined 
+              // FIX: Cast the metadata object to the correct type.
+              metadata: metadataArray.length > 0 ? metadataArray[0] as ArticleMetadata : undefined 
           };
           await saveArticleCache(articleToCache);
           return html;

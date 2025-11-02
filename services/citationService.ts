@@ -1,7 +1,6 @@
 import { getArticleMetadata } from './wikipediaService';
-import { ArticleMetadata, CustomCitation } from '../types';
 
-const formatAPA = (meta: ArticleMetadata): string => {
+const formatAPA = (meta) => {
     const date = new Date(meta.touched);
     const year = date.getUTCFullYear();
     const month = date.toLocaleString('default', { month: 'long' });
@@ -11,7 +10,7 @@ const formatAPA = (meta: ArticleMetadata): string => {
     return `<i>${meta.title}</i>. (n.d.). In Wikipedia. Retrieved ${month} ${day}, ${year}, from <a href="${url}">${url}</a>`;
 };
 
-const formatMLA = (meta: ArticleMetadata): string => {
+const formatMLA = (meta) => {
     const date = new Date(meta.touched);
     const month = date.toLocaleString('default', { month: 'short' });
     const day = date.getUTCDate();
@@ -21,7 +20,7 @@ const formatMLA = (meta: ArticleMetadata): string => {
     return `"${meta.title}." <i>Wikipedia, The Free Encyclopedia</i>. Wikimedia Foundation, Inc. ${day} ${month}. ${year}. Web. ${day} ${month}. ${year}. &lt;<a href="${url}">${url}</a>&gt;`;
 };
 
-const formatChicago = (meta: ArticleMetadata): string => {
+const formatChicago = (meta) => {
     const date = new Date(meta.touched);
     const month = date.toLocaleString('default', { month: 'long' });
     const day = date.getUTCDate();
@@ -31,7 +30,7 @@ const formatChicago = (meta: ArticleMetadata): string => {
     return `Wikipedia, s.v. "${meta.title}," last modified ${month} ${day}, ${year}, <a href="${url}">${url}</a>.`;
 };
 
-const formatCustomAPA = (citation: CustomCitation): string => {
+const formatCustomAPA = (citation) => {
     const authorPart = citation.author ? `${citation.author}.` : '';
     const yearPart = citation.year ? `(${citation.year}).` : '';
     const titlePart = `<i>${citation.title}</i>.`;
@@ -39,7 +38,7 @@ const formatCustomAPA = (citation: CustomCitation): string => {
     return [authorPart, yearPart, titlePart, urlPart].filter(Boolean).join(' ');
 };
 
-const formatCustomMLA = (citation: CustomCitation): string => {
+const formatCustomMLA = (citation) => {
     const authorPart = citation.author ? `${citation.author}.` : '';
     const titlePart = `"${citation.title}."`;
     const yearPart = citation.year ? `, ${citation.year}` : '';
@@ -47,7 +46,7 @@ const formatCustomMLA = (citation: CustomCitation): string => {
     return `${authorPart} ${titlePart}${yearPart}${urlPart}`;
 };
 
-const formatCustomChicago = (citation: CustomCitation): string => {
+const formatCustomChicago = (citation) => {
     const authorPart = citation.author ? `${citation.author}.` : '';
     const titlePart = `"${citation.title}."`;
     const yearPart = citation.year ? `${citation.year}.` : '';
@@ -57,15 +56,15 @@ const formatCustomChicago = (citation: CustomCitation): string => {
 
 
 export const formatBibliography = async (
-    titles: string[], 
-    customCitations: CustomCitation[],
-    style: 'apa' | 'mla' | 'chicago'
-): Promise<string> => {
+    titles, 
+    customCitations,
+    style
+) => {
     try {
         const metadata = await getArticleMetadata(titles);
 
-        let wikiFormatter: (meta: ArticleMetadata) => string;
-        let customFormatter: (citation: CustomCitation) => string;
+        let wikiFormatter;
+        let customFormatter;
 
         switch (style) {
             case 'mla':

@@ -1,6 +1,8 @@
 {
   "name": "Wiki Compiler",
   "short_name": "WikiCompiler",
+  "id": "/",
+  "scope": "/",
   "description": "A premium knowledge management and research environment designed to curate, customize, and consume knowledge from Wikipedia. Transform passive reading into an active, creative act of knowledge assembly.",
   "start_url": "/",
   "display": "standalone",

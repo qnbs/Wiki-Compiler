@@ -1,33 +1,14 @@
-const CACHE_NAME = 'wiki-compiler-cache-v2'; // Increment version for updates
+const CACHE_NAME = 'wiki-compiler-cache-v5'; // Increment version for updates
 const urlsToCache = [
   '/',
   '/index.html',
   '/index.tsx',
   '/manifest.json',
   '/offline.html',
+  '/icons/icon-96.svg',
   '/icons/icon-192.svg',
   '/icons/icon-512.svg',
-  // URLs from the importmap for full offline availability
-  'https://aistudiocdn.com/file-saver@^2.0.5',
-  'https://aistudiocdn.com/@lexical/react@^0.35.0/',
-  'https://aistudiocdn.com/docx@^9.5.1',
-  'https://aistudiocdn.com/react@^19.1.1',
-  'https://aistudiocdn.com/react-dom@^19.1.1',
-  'https://aistudiocdn.com/i18next@^25.5.2',
-  'https://aistudiocdn.com/@google/genai@^1.17.0',
-  'https://aistudiocdn.com/idb@^8.0.3',
-  'https://aistudiocdn.com/react-i18next@^15.7.3',
-  'https://aistudiocdn.com/i18next-browser-languagedetector@^8.2.0',
-  'https://aistudiocdn.com/turndown@^7.2.1',
-  'https://aistudiocdn.com/lexical@^0.35.0',
-  'https://aistudiocdn.com/@lexical/rich-text@^0.35.0',
-  'https://aistudiocdn.com/@lexical/list@^0.35.0',
-  'https://aistudiocdn.com/@lexical/link@^0.35.0',
-  'https://aistudiocdn.com/@lexical/utils@^0.35.0',
-  'https://aistudiocdn.com/@lexical/selection@^0.35.0',
-  'https://aistudiocdn.com/@lexical/html@^0.35.0',
-  'https://cdn.tailwindcss.com',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'
+  '/icons/icon-maskable-512.svg'
 ];
 
 self.addEventListener('install', (event) => {

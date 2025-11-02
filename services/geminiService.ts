@@ -1,7 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { ArticleInsights } from '../types';
 
-const handleGeminiError = (error: unknown, context: 'analysis' | 'editing'): Error => {
+const handleGeminiError = (error, context) => {
     console.error(`Error during AI ${context}:`, error);
 
     if (error instanceof SyntaxError) {
@@ -35,7 +34,7 @@ const handleGeminiError = (error: unknown, context: 'analysis' | 'editing'): Err
 
 const API_KEY = process.env.API_KEY;
 
-let ai: GoogleGenAI | null = null;
+let ai = null;
 if (API_KEY) {
     ai = new GoogleGenAI({ apiKey: API_KEY });
 } else {
@@ -43,12 +42,6 @@ if (API_KEY) {
 }
 
 export const isAiConfigured = !!ai;
-
-interface AnalysisFocus {
-  summary: boolean;
-  keyConcepts: boolean;
-  researchQuestions: boolean;
-}
 
 const baseInsightsSchema = {
     summary: {
@@ -81,7 +74,7 @@ const baseInsightsSchema = {
 };
 
 
-export const getArticleInsights = async (text: string, systemInstruction: string | undefined, focus: AnalysisFocus): Promise<ArticleInsights> => {
+export const getArticleInsights = async (text, systemInstruction, focus) => {
     if (!ai) {
         throw new Error("AI Service is not configured. Please set an API key in your environment.");
     }
@@ -89,7 +82,8 @@ export const getArticleInsights = async (text: string, systemInstruction: string
     // Limit text size to avoid overly large requests
     const truncatedText = text.length > 30000 ? text.substring(0, 30000) : text;
     
-    const properties: any = {};
+    // FIX: Provide a type for the `properties` object to allow dynamic assignment.
+    const properties: Partial<typeof baseInsightsSchema> = {};
     const required: string[] = [];
     const promptParts: string[] = [];
 
@@ -137,14 +131,14 @@ export const getArticleInsights = async (text: string, systemInstruction: string
         });
         
         const jsonText = response.text.trim();
-        return JSON.parse(jsonText) as ArticleInsights;
+        return JSON.parse(jsonText);
 
     } catch (error) {
         throw handleGeminiError(error, 'analysis');
     }
 };
 
-export const editTextWithAi = async (instruction: string, textToEdit: string): Promise<string> => {
+export const editTextWithAi = async (instruction, textToEdit) => {
     if (!ai) {
         throw new Error("AI Service is not configured. Please set an API key in your environment.");
     }

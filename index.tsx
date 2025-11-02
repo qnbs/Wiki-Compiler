@@ -28,21 +28,21 @@ if (!rootElement) {
 
 const root = ReactDOM.createRoot(rootElement);
 root.render(
-  <React.StrictMode>
-    <I18nextProvider i18n={i18next}>
-      <ToastProvider>
-        <SettingsProvider>
-          <ProjectsProvider>
-            <ImporterProvider>
-              <ImageImporterProvider>
-                <ArticleCacheProvider>
-                  <App />
-                </ArticleCacheProvider>
-              </ImageImporterProvider>
-            </ImporterProvider>
-          </ProjectsProvider>
-        </SettingsProvider>
-      </ToastProvider>
-    </I18nextProvider>
-  </React.StrictMode>
+  React.createElement(React.StrictMode, null,
+    React.createElement(I18nextProvider, { i18n: i18next },
+      React.createElement(ToastProvider, null,
+        React.createElement(SettingsProvider, null,
+          React.createElement(ProjectsProvider, null,
+            React.createElement(ImporterProvider, null,
+              React.createElement(ImageImporterProvider, null,
+                React.createElement(ArticleCacheProvider, null,
+                  React.createElement(App, null)
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  )
 );

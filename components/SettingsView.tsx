@@ -11,7 +11,12 @@ import AboutSettings from './settings/AboutSettings';
 
 type SettingsTab = 'general' | 'appearance' | 'library' | 'citations' | 'storage' | 'about';
 
-const SettingsView: React.FC = () => {
+interface SettingsViewProps {
+  installPrompt: any;
+  setInstallPrompt: (prompt: any) => void;
+}
+
+const SettingsView: React.FC<SettingsViewProps> = ({ installPrompt, setInstallPrompt }) => {
     const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState<SettingsTab>('general');
 
@@ -26,7 +31,7 @@ const SettingsView: React.FC = () => {
 
     const renderTabContent = () => {
         switch (activeTab) {
-            case 'general': return <GeneralSettings />;
+            case 'general': return <GeneralSettings installPrompt={installPrompt} setInstallPrompt={setInstallPrompt} />;
             case 'appearance': return <AppearanceSettings />;
             case 'library': return <LibrarySettings />;
             case 'citations': return <CitationSettings />;

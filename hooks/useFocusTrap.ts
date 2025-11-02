@@ -5,16 +5,17 @@ import { useEffect, useRef, RefObject } from 'react';
  * @param isOpen - Boolean to indicate if the trap is active.
  * @returns A ref to attach to the trapping element.
  */
+// FIX: Made the hook generic and added proper types to support different element types and prevent type errors.
 export const useFocusTrap = <T extends HTMLElement>(isOpen: boolean): RefObject<T> => {
   const ref = useRef<T>(null);
-  const previouslyFocusedElement = useRef<HTMLElement | null>(null);
+  const previouslyFocusedElement = useRef<Element | null>(null);
 
   useEffect(() => {
     if (!isOpen || !ref.current) {
       return;
     }
 
-    previouslyFocusedElement.current = document.activeElement as HTMLElement;
+    previouslyFocusedElement.current = document.activeElement;
 
     const focusableElements = ref.current.querySelectorAll<HTMLElement>(
       'a[href]:not([disabled]), button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -51,8 +52,8 @@ export const useFocusTrap = <T extends HTMLElement>(isOpen: boolean): RefObject<
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
-      if (previouslyFocusedElement.current) {
-        previouslyFocusedElement.current.focus();
+      if (previouslyFocusedElement.current && typeof (previouslyFocusedElement.current as HTMLElement).focus === 'function') {
+        (previouslyFocusedElement.current as HTMLElement).focus();
       }
     };
   }, [isOpen]);

@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { ArticleContent, ArticleInsights } from '../types';
 import { getArticleInsights } from '../services/geminiService';
 import { useSettings } from './useSettingsContext';
 
@@ -7,12 +6,12 @@ import { useSettings } from './useSettingsContext';
 const textExtractor = document.createElement('div');
 
 export const useArticleAnalysis = (
-    article: ArticleContent | null
+    article
 ) => {
     const { settings } = useSettings();
-    const [insights, setInsights] = useState<ArticleInsights | null>(null);
+    const [insights, setInsights] = useState(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
-    const [analysisError, setAnalysisError] = useState<string | null>(null);
+    const [analysisError, setAnalysisError] = useState(null);
 
     const analyze = useCallback(async () => {
         if (!article || !settings || !settings.library.aiAssistant.enabled) return;

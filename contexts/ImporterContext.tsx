@@ -1,5 +1,5 @@
 import React, { createContext, useState, useCallback, ReactNode } from 'react';
-import { ArticleContent } from '../types';
+import { ArticleContent, ArticleMetadata } from '../types';
 import { getArticleMetadata } from '../services/wikipediaService';
 
 interface ImporterContextType {
@@ -23,7 +23,8 @@ export const ImporterProvider: React.FC<{ children: ReactNode }> = ({ children }
     const metadataArray = await getArticleMetadata([article.title]);
     const articleWithMeta: ArticleContent = { 
         ...article,
-        metadata: metadataArray.length > 0 ? metadataArray[0] : undefined 
+        // FIX: Cast the metadata object to the correct type.
+        metadata: metadataArray.length > 0 ? metadataArray[0] as ArticleMetadata : undefined 
     };
 
     setStagedArticles(prev => [...prev, articleWithMeta]);

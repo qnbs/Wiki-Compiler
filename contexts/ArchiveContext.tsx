@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArticleContent } from '../types';
+import { ArticleContent, ArticleMetadata } from '../types';
 import { getAllArticles, deleteArticleFromCache, clearArticleCache, saveArticleCache } from '../services/dbService';
 import { getArticleHtml as fetchArticleHtml, getArticleMetadata } from '../services/wikipediaService';
 import { useArticleAnalysis } from '../hooks/useArticleAnalysis';
@@ -132,7 +132,8 @@ export const ArchiveProvider: React.FC<{ children: ReactNode }> = ({ children })
             const articleToCache: ArticleContent = { 
                 title: selectedArticle.title, 
                 html, 
-                metadata: metadataArray.length > 0 ? metadataArray[0] : undefined 
+                // FIX: Cast the metadata object to the correct type.
+                metadata: metadataArray.length > 0 ? metadataArray[0] as ArticleMetadata : undefined 
             };
             await saveArticleCache(articleToCache);
             setSelectedArticle(articleToCache);

@@ -1,5 +1,4 @@
-import { openDB, IDBPDatabase } from 'idb';
-import { Project, ArticleContent, AppSettings, ProjectArticleContent, ImportedImage } from '../types';
+import { openDB } from 'idb';
 
 const DB_NAME = 'WikiCompilerDB';
 const DB_VERSION = 4; // Incremented version
@@ -10,7 +9,7 @@ const PROJECT_ARTICLES_STORE = 'project-articles';
 const IMPORTED_IMAGES_STORE = 'importedImages';
 const SETTINGS_KEY = 'app-settings';
 
-let dbPromise: Promise<IDBPDatabase> | null = null;
+let dbPromise = null;
 
 const initDB = () => {
   if (dbPromise) return dbPromise;
@@ -44,49 +43,49 @@ const initDB = () => {
 };
 
 // Project Functions
-export const getProjects = async (): Promise<Project[]> => {
+export const getProjects = async () => {
   const db = await initDB();
   return db.getAll(PROJECTS_STORE);
 };
 
-export const saveProject = async (project: Project): Promise<void> => {
+export const saveProject = async (project) => {
   const db = await initDB();
   await db.put(PROJECTS_STORE, project);
 };
 
-export const deleteProject = async (projectId: string): Promise<void> => {
+export const deleteProject = async (projectId) => {
     const db = await initDB();
     await db.delete(PROJECTS_STORE, projectId);
 };
 
 // Article Cache Functions
-export const getArticleCache = async (title: string): Promise<ArticleContent | null> => {
+export const getArticleCache = async (title) => {
   const db = await initDB();
-  const article: ArticleContent | undefined = await db.get(ARTICLES_STORE, title);
+  const article = await db.get(ARTICLES_STORE, title);
   return article || null;
 };
 
-export const getAllArticles = async (): Promise<ArticleContent[]> => {
+export const getAllArticles = async () => {
     const db = await initDB();
     return db.getAll(ARTICLES_STORE);
 };
 
-export const saveArticleCache = async (article: ArticleContent): Promise<void> => {
+export const saveArticleCache = async (article) => {
   const db = await initDB();
   await db.put(ARTICLES_STORE, article);
 };
 
-export const deleteArticleFromCache = async (title: string): Promise<void> => {
+export const deleteArticleFromCache = async (title) => {
     const db = await initDB();
     await db.delete(ARTICLES_STORE, title);
 };
 
-export const clearArticleCache = async (): Promise<void> => {
+export const clearArticleCache = async () => {
     const db = await initDB();
     await db.clear(ARTICLES_STORE);
 };
 
-export const getCacheSize = async (): Promise<{count: number, size: number}> => {
+export const getCacheSize = async () => {
     const db = await initDB();
     const articles = await db.getAll(ARTICLES_STORE);
     const count = articles.length;
@@ -98,47 +97,47 @@ export const getCacheSize = async (): Promise<{count: number, size: number}> => 
 
 
 // Settings Functions
-export const getSettings = async (): Promise<AppSettings | null> => {
+export const getSettings = async () => {
     const db = await initDB();
     return db.get(SETTINGS_STORE, SETTINGS_KEY);
 };
 
-export const saveSettings = async (settings: AppSettings): Promise<void> => {
+export const saveSettings = async (settings) => {
     const db = await initDB();
     await db.put(SETTINGS_STORE, settings, SETTINGS_KEY);
 };
 
 // Project-specific Article Content Functions
-export const getProjectArticleContent = async (projectId: string, title: string): Promise<ProjectArticleContent | null> => {
+export const getProjectArticleContent = async (projectId, title) => {
     const db = await initDB();
     const id = `${projectId}-${title}`;
-    const content: ProjectArticleContent | undefined = await db.get(PROJECT_ARTICLES_STORE, id);
+    const content = await db.get(PROJECT_ARTICLES_STORE, id);
     return content || null;
 };
 
-export const saveProjectArticleContent = async (content: ProjectArticleContent): Promise<void> => {
+export const saveProjectArticleContent = async (content) => {
     const db = await initDB();
     await db.put(PROJECT_ARTICLES_STORE, content);
 };
 
 // Image Importer Functions
-export const getImportedImages = async (): Promise<ImportedImage[]> => {
+export const getImportedImages = async () => {
     const db = await initDB();
     return db.getAll(IMPORTED_IMAGES_STORE);
 };
 
-export const saveImportedImage = async (image: ImportedImage): Promise<void> => {
+export const saveImportedImage = async (image) => {
     const db = await initDB();
     await db.put(IMPORTED_IMAGES_STORE, image);
 };
 
-export const deleteImportedImage = async (id: string): Promise<void> => {
+export const deleteImportedImage = async (id) => {
     const db = await initDB();
     await db.delete(IMPORTED_IMAGES_STORE, id);
 };
 
 // Data Management Functions
-export const exportAllData = async (): Promise<string> => {
+export const exportAllData = async () => {
     const db = await initDB();
     const projects = await db.getAll(PROJECTS_STORE);
     const articles = await db.getAll(ARTICLES_STORE);
@@ -161,7 +160,7 @@ export const exportAllData = async (): Promise<string> => {
     return JSON.stringify(data, null, 2);
 };
 
-export const importAllData = async (jsonString: string, createBackup: boolean = true): Promise<void> => {
+export const importAllData = async (jsonString, createBackup = true) => {
     if (createBackup) {
         try {
             const backupData = await exportAllData();
@@ -177,7 +176,7 @@ export const importAllData = async (jsonString: string, createBackup: boolean = 
 
     const db = await initDB();
 
-    const storesToClear: string[] = [PROJECTS_STORE, ARTICLES_STORE, PROJECT_ARTICLES_STORE, IMPORTED_IMAGES_STORE];
+    const storesToClear = [PROJECTS_STORE, ARTICLES_STORE, PROJECT_ARTICLES_STORE, IMPORTED_IMAGES_STORE];
     for(const storeName of storesToClear) {
         const tx = db.transaction(storeName, 'readwrite');
         await tx.store.clear();

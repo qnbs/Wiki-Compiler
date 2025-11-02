@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export const useOnlineStatus = (): boolean => {
+export const useOnlineStatus = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {

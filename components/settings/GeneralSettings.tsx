@@ -1,26 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from '../../types';
 import { useSettings } from '../../hooks/useSettingsContext';
 import Icon from '../Icon';
 
-const GeneralSettings: React.FC = () => {
+interface GeneralSettingsProps {
+    installPrompt: any;
+    setInstallPrompt: (prompt: any) => void;
+}
+
+const GeneralSettings: React.FC<GeneralSettingsProps> = ({ installPrompt, setInstallPrompt }) => {
     const { t } = useTranslation();
     const { settings, updateSettings } = useSettings();
-    const [installPrompt, setInstallPrompt] = useState<any>(null);
-
-    useEffect(() => {
-        const handleBeforeInstallPrompt = (e: Event) => {
-            e.preventDefault();
-            setInstallPrompt(e);
-        };
-
-        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-        return () => {
-            window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-        };
-    }, []);
 
     const handleInstallClick = () => {
         if (!installPrompt) {

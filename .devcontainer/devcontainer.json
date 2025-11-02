@@ -1,0 +1,44 @@
+{
+	"name": "Wiki Compiler",
+	// Wir verwenden das offizielle TypeScript & Node.js Dev Container Image.
+	// Es enthält Node.js, npm, TypeScript und notwendige Entwicklungswerkzeuge.
+	"image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye",
+	// Leitet den Port weiter, der von der Live Server Erweiterung verwendet wird,
+	// damit die laufende Anwendung im lokalen Browser zugänglich ist.
+	"forwardPorts": [
+		5500
+	],
+	// Passt die VS Code-Einstellungen und -Erweiterungen für dieses Projekt an.
+	"customizations": {
+		"vscode": {
+			"settings": {
+				// Setzt Prettier als Standard-Formatierer für einen konsistenten Code-Stil.
+				"editor.defaultFormatter": "esbenp.prettier-vscode",
+				// Formatiert Dateien automatisch beim Speichern.
+				"editor.formatOnSave": true,
+				// Aktiviert den Zeilenumbruch für Markdown-Dateien zur besseren Lesbarkeit.
+				"[markdown]": {
+					"editor.wordWrap": "on"
+				}
+			},
+			"extensions": [
+				// Live Server wird im README empfohlen, um die App auszuführen.
+				"ritwickdey.liveserver",
+				// Unverzichtbar für Codequalität und Konsistenz.
+				"esbenp.prettier-vscode",
+				"dbaeumer.vscode-eslint",
+				// Hervorragend für die Git-Integration und Zusammenarbeit.
+				"eamodio.gitlens",
+				"GitHub.vscode-pull-request-github",
+				// Nützlich für die Arbeit mit der README-Datei.
+				"bierner.markdown-preview-github-styles"
+			]
+		}
+	},
+	// Befehl, der nach der Erstellung des Containers ausgeführt wird.
+	// Wir geben eine Willkommensnachricht mit Anweisungen aus.
+	"postCreateCommand": "echo 'Container erstellt! Um die App zu starten, warten Sie, bis VS Code die Einrichtung abgeschlossen hat, und klicken Sie dann auf den \"Go Live\"-Button in der unteren rechten Statusleiste.'",
+	// Befehl, der bei jedem Start des Codespaces ausgeführt wird.
+	// Erinnert den Benutzer daran, den API-Schlüssel zu konfigurieren.
+	"postStartCommand": "echo 'Denken Sie daran, Ihren Gemini API_KEY als Secret in Ihren GitHub Codespaces-Einstellungen festzulegen, damit die KI-Funktionen funktionieren.'"
+}

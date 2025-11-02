@@ -75,7 +75,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, setIsOpen, comm
         className="w-full max-w-lg bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden"
         onKeyDown={handleKeyDown}
       >
-        <div className="relative">
+        <div className="relative hidden sm:block">
           <Icon name="search" className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input
             ref={inputRef}

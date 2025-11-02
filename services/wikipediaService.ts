@@ -1,7 +1,6 @@
 import i18n from '../i18n';
-import { SearchResult, ArticleMetadata, WikipediaQueryResponse, WikipediaSearchItem } from '../types';
 
-const getWikiBase = (): string => {
+const getWikiBase = () => {
     const lang = i18n.resolvedLanguage || 'en';
     const supportedLangs = ['en', 'de'];
     const finalLang = supportedLangs.includes(lang) ? lang : 'en';
@@ -11,7 +10,7 @@ const getWikiBase = (): string => {
 const getWikiApiBase = () => `${getWikiBase()}/w/api.php`;
 const getWikiRestBase = () => `${getWikiBase()}/api/rest_v1/page/html/`;
 
-export const searchArticles = async (query: string, limit: number = 10, sort: string = 'relevance'): Promise<SearchResult[]> => {
+export const searchArticles = async (query, limit = 10, sort = 'relevance') => {
   if (!query) return [];
   const params = new URLSearchParams({
     action: 'query',
@@ -28,14 +27,14 @@ export const searchArticles = async (query: string, limit: number = 10, sort: st
   if (!response.ok) {
     throw new Error('Failed to fetch search results from Wikipedia');
   }
-  const data: WikipediaQueryResponse = await response.json();
-  return data.query.search.map((item: WikipediaSearchItem) => ({
+  const data = await response.json();
+  return data.query.search.map((item) => ({
       ...item,
       snippet: item.snippet.replace(/<[^>]*>/g, '') // strip html tags
   }));
 };
 
-export const getArticleHtml = async (title: string): Promise<string> => {
+export const getArticleHtml = async (title) => {
   const response = await fetch(`${getWikiRestBase()}${encodeURIComponent(title)}`);
   if (!response.ok) {
     throw new Error(`Failed to fetch article: ${title}`);
@@ -51,7 +50,7 @@ export const getArticleHtml = async (title: string): Promise<string> => {
   return content;
 };
 
-export const getArticleMetadata = async (titles: string[]): Promise<ArticleMetadata[]> => {
+export const getArticleMetadata = async (titles) => {
     if (titles.length === 0) return [];
     const params = new URLSearchParams({
       action: 'query',
@@ -67,5 +66,5 @@ export const getArticleMetadata = async (titles: string[]): Promise<ArticleMetad
     }
     const data = await response.json();
     const pages = data.query.pages;
-    return Object.values(pages) as ArticleMetadata[];
+    return Object.values(pages);
   };

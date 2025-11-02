@@ -1,4 +1,3 @@
-import { Project } from '../types';
 import TurndownService from 'turndown';
 import saveAs from 'file-saver';
 import { 
@@ -27,7 +26,7 @@ const turndownService = new TurndownService({ headingStyle: 'atx', codeBlockStyl
  * @param getArticleContent A fallback function to get original article HTML.
  * @returns A single HTML string containing all project content.
  */
-const getHtmlContent = async (project: Project, getArticleContent: (title: string) => Promise<string>): Promise<string> => {
+const getHtmlContent = async (project, getArticleContent) => {
     const articleHtmlPromises = project.articles.map(async (article) => {
         const editedContent = await getProjectArticleContent(project.id, article.title);
         const html = editedContent ? editedContent.html : await getArticleContent(article.title);
@@ -55,14 +54,14 @@ const getHtmlContent = async (project: Project, getArticleContent: (title: strin
 
 // --- Markdown and JSON Export ---
 
-export const generateMarkdown = async (project: Project, getArticleContent: (title: string) => Promise<string>): Promise<void> => {
+export const generateMarkdown = async (project, getArticleContent) => {
     const html = await getHtmlContent(project, getArticleContent);
     const markdown = turndownService.turndown(html);
     const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
     saveAs(blob, `${project.name}.md`);
 };
 
-export const generateJsonFile = async (project: Project, getArticleContent: (title: string) => Promise<string>): Promise<void> => {
+export const generateJsonFile = async (project, getArticleContent) => {
     const articlesContent = await Promise.all(
         project.articles.map(async (article) => {
             const editedContent = await getProjectArticleContent(project.id, article.title);
@@ -82,7 +81,12 @@ export const generateJsonFile = async (project: Project, getArticleContent: (tit
 
 // --- DOCX Generation Overhaul ---
 
-type DocxChild = TextRun | ImageRun | ExternalHyperlink;
+// FIX: Added interface for processNode options
+interface ProcessNodeOptions {
+    bold?: boolean;
+    italics?: boolean;
+    style?: string;
+}
 
 /**
  * Recursively traverses a DOM node and its children to convert them into an array of docx.js objects.
@@ -90,7 +94,8 @@ type DocxChild = TextRun | ImageRun | ExternalHyperlink;
  * @param options Formatting options to apply to text nodes.
  * @returns An array of TextRun, ImageRun, or ExternalHyperlink objects.
  */
-const processNode = async (node: Node, options: { bold?: boolean; italics?: boolean; style?: string } = {}): Promise<DocxChild[]> => {
+// FIX: Added types for node and options parameters to resolve property access errors.
+const processNode = async (node: Node, options: ProcessNodeOptions = {}): Promise<Array<TextRun | ImageRun | ExternalHyperlink>> => {
     if (node.nodeType === Node.TEXT_NODE) {
         return [new TextRun({ text: node.textContent || '', ...options })];
     }
@@ -99,9 +104,9 @@ const processNode = async (node: Node, options: { bold?: boolean; italics?: bool
         return [];
     }
 
-    const element = node as HTMLElement;
+    const element = node as Element;
     
-    let newOptions = { ...options };
+    let newOptions: ProcessNodeOptions = { ...options };
     switch (element.tagName.toUpperCase()) {
         case 'STRONG':
         case 'B':
@@ -165,12 +170,12 @@ const processNode = async (node: Node, options: { bold?: boolean; italics?: bool
  * @param htmlString The HTML content to convert.
  * @returns A promise that resolves to an array of Paragraphs and Tables.
  */
-const htmlToDocxChildren = async (htmlString: string): Promise<(Paragraph | Table)[]> => {
+const htmlToDocxChildren = async (htmlString) => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlString, 'text/html');
-    const elements: (Paragraph | Table)[] = [];
+    const elements = [];
 
-    const headingMap: Record<string, HeadingLevel> = {
+    const headingMap: { [key: string]: HeadingLevel } = {
         'H1': HeadingLevel.HEADING_1,
         'H2': HeadingLevel.HEADING_2,
         'H3': HeadingLevel.HEADING_3,
@@ -179,6 +184,7 @@ const htmlToDocxChildren = async (htmlString: string): Promise<(Paragraph | Tabl
         'H6': HeadingLevel.HEADING_6,
     };
 
+    // FIX: Added type for el parameter to resolve property access errors on 'unknown'.
     const processElement = async (el: Element) => {
         const tagName = el.tagName.toUpperCase();
         if (headingMap[tagName]) {
@@ -203,9 +209,9 @@ const htmlToDocxChildren = async (htmlString: string): Promise<(Paragraph | Tabl
                     }
                     break;
                 case 'TABLE':
-                    const rows: TableRow[] = [];
+                    const rows = [];
                     for (const tr of Array.from(el.querySelectorAll('tr'))) {
-                        const cells: TableCell[] = [];
+                        const cells = [];
                         for (const td of Array.from(tr.querySelectorAll('td, th'))) {
                             cells.push(new TableCell({
                                 children: [new Paragraph({ children: await processNode(td) })],
@@ -239,7 +245,7 @@ const htmlToDocxChildren = async (htmlString: string): Promise<(Paragraph | Tabl
     return elements;
 };
 
-const generateDocxBlob = async (html: string, title: string): Promise<Blob> => {
+const generateDocxBlob = async (html, title) => {
     const content = await htmlToDocxChildren(html);
     const doc = new Document({
         styles: {
@@ -261,13 +267,13 @@ const generateDocxBlob = async (html: string, title: string): Promise<Blob> => {
     return Packer.toBlob(doc);
 };
 
-export const generateDocx = async (project: Project, getArticleContent: (title: string) => Promise<string>): Promise<void> => {
+export const generateDocx = async (project, getArticleContent) => {
     const html = await getHtmlContent(project, getArticleContent);
     const blob = await generateDocxBlob(html, project.name);
     saveAs(blob, `${project.name}.docx`);
 };
 
-export const generateSingleArticleDocx = async (title: string, html: string): Promise<void> => {
+export const generateSingleArticleDocx = async (title, html) => {
     const blob = await generateDocxBlob(html, title);
     saveAs(blob, `${title}.docx`);
 };
@@ -287,7 +293,7 @@ const getOdtStyles = () => `
     a { color: #0000FF; text-decoration: underline; }
 `;
 
-const generateOdtBlob = (html: string): Blob => {
+const generateOdtBlob = (html) => {
     const fullHtml = `<!DOCTYPE html>
 <html>
 <head>
@@ -300,13 +306,13 @@ const generateOdtBlob = (html: string): Blob => {
     return new Blob([fullHtml], { type: 'application/vnd.oasis.opendocument.text' });
 };
 
-export const generateOdt = async (project: Project, getArticleContent: (title: string) => Promise<string>): Promise<void> => {
+export const generateOdt = async (project, getArticleContent) => {
     const html = await getHtmlContent(project, getArticleContent);
     const blob = generateOdtBlob(html);
     saveAs(blob, `${project.name}.odt`);
 };
 
-export const generateSingleArticleOdt = async (title: string, html: string): Promise<void> => {
+export const generateSingleArticleOdt = async (title, html) => {
     const blob = generateOdtBlob(html);
     saveAs(blob, `${title}.odt`);
 };

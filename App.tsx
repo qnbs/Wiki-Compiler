@@ -22,17 +22,32 @@ function App() {
   const { settings } = useSettings();
   const isOnline = useOnlineStatus();
 
-  const [view, setView] = useState<View>(View.Library);
+  const [view, setView] = useState(View.Library);
   const [isCommandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [hasOnboarded, setHasOnboarded] = useState(localStorage.getItem('wiki-compiler-onboarded') === 'true');
+  const [installPrompt, setInstallPrompt] = useState(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+        e.preventDefault();
+        setInstallPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
 
   useEffect(() => {
     if (settings) {
       const urlParams = new URLSearchParams(window.location.search);
-      const viewFromUrl = urlParams.get('view') as View;
+      const viewFromUrl = urlParams.get('view');
 
-      if (viewFromUrl && Object.values(View).includes(viewFromUrl)) {
-        setView(viewFromUrl);
+      if (viewFromUrl && Object.values(View).includes(viewFromUrl as View)) {
+        // FIX: Cast viewFromUrl to View type as it has been validated.
+        setView(viewFromUrl as View);
         // Clean up the URL to avoid confusion on subsequent navigations
         window.history.replaceState({}, '', window.location.pathname);
       } else {
@@ -53,7 +68,7 @@ function App() {
     }
   }, [settings]);
 
-  const handleSetView = (newView: View) => {
+  const handleSetView = (newView) => {
     setView(newView);
     window.scrollTo(0, 0); // Scroll to top on view change
   };
@@ -73,43 +88,43 @@ function App() {
   const renderView = () => {
     switch (view) {
       case View.Library:
-        return <LibraryView />;
+        return React.createElement(LibraryView, null);
       case View.Compiler:
-        return <CompilerView />;
+        return React.createElement(CompilerView, null);
       case View.Archive:
-          return <ArchiveView />;
+          return React.createElement(ArchiveView, null);
       case View.Importer:
-          return <ImporterView />;
+          return React.createElement(ImporterView, null);
       case View.ImageImporter:
-          return <ImageImporterView />;
+          return React.createElement(ImageImporterView, null);
       case View.Settings:
-        return <SettingsView />;
+        return React.createElement(SettingsView, { installPrompt: installPrompt, setInstallPrompt: setInstallPrompt });
       case View.Help:
-        return <HelpView />;
+        return React.createElement(HelpView, null);
       default:
-        return <LibraryView />;
+        return React.createElement(LibraryView, null);
     }
   };
 
   if (!settings) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-white dark:bg-gray-900">
-        <Spinner />
-      </div>
+      React.createElement("div", { className: "flex h-screen w-screen items-center justify-center bg-white dark:bg-gray-900" },
+        React.createElement(Spinner, null)
+      )
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
-      <Header view={view} setView={handleSetView} openCommandPalette={openCommandPalette} isOnline={isOnline} />
-      <main className="max-w-7xl mx-auto p-4 sm:pb-24">
-        {renderView()}
-      </main>
-      <BottomNavBar view={view} setView={handleSetView} isOnline={isOnline} />
-      <CommandPalette isOpen={isCommandPaletteOpen} setIsOpen={setCommandPaletteOpen} commands={commands} />
-      <WelcomeModal isOpen={!hasOnboarded} onClose={() => setHasOnboarded(true)} />
-      <ToastContainer />
-    </div>
+    React.createElement("div", { className: "min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100" },
+      React.createElement(Header, { view: view, setView: handleSetView, openCommandPalette: openCommandPalette, isOnline: isOnline }),
+      React.createElement("main", { className: "max-w-7xl mx-auto p-4 sm:pb-24" },
+        renderView()
+      ),
+      React.createElement(BottomNavBar, { view: view, setView: handleSetView, isOnline: isOnline }),
+      React.createElement(CommandPalette, { isOpen: isCommandPaletteOpen, setIsOpen: setCommandPaletteOpen, commands: commands }),
+      React.createElement(WelcomeModal, { isOpen: !hasOnboarded, onClose: () => setHasOnboarded(true) }),
+      React.createElement(ToastContainer, null)
+    )
   );
 }
 
