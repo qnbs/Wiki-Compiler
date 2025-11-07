@@ -2,6 +2,8 @@
 
 _Your Private, AI-Powered Research and Knowledge Compilation Environment._
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/qnbs/Wiki-Compiler)
+
 ![Status](https://img.shields.io/badge/status-active-brightgreen) ![Version](https://img.shields.io/badge/version-1.2.0-blue) ![Platform](https://img.shields.io/badge/platform-web-orange)
 
 Wiki Compiler transforms passive reading into an active, creative act of knowledge assembly. It is a premium, offline-first Progressive Web App (PWA) designed for students, researchers, and lifelong learners to curate, customize, and compile knowledge from Wikipedia into beautifully formatted, portable documents.
