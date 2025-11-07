@@ -57,7 +57,7 @@ const CompilerExportSettings: React.FC<CompilerExportSettingsProps> = ({
          <ExportOption
           icon="document"
           title="ODT"
-          description={t('Export as an OpenDocument Text file for use in LibreOffice, etc.')}
+          description={t('export_odt_desc')}
           onClick={onGenerateOdt}
         />
 

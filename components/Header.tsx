@@ -112,14 +112,6 @@ const Header: React.FC<HeaderProps> = ({ view, setView, openCommandPalette, isOn
     }
   };
 
-  const mainNavItems = [
-    { id: View.Library, icon: 'book', label: 'Library', badge: undefined },
-    { id: View.Archive, icon: 'archive-box', label: 'Archive', badge: undefined },
-    { id: View.Compiler, icon: 'compiler', label: 'Compiler', badge: undefined },
-    { id: View.Importer, icon: 'upload', label: 'Importer', badge: stagedArticles.length > 0 ? stagedArticles.length : undefined },
-    { id: View.ImageImporter, icon: 'palette', label: 'Image Importer', badge: stagedImages.length > 0 ? stagedImages.length : undefined },
-  ];
-
   const projectDropdownContent = (
     <div onKeyDown={handleDropdownKeyDown}>
       <div className="p-2 border-b border-gray-200 dark:border-gray-700">

@@ -81,7 +81,6 @@ export const generateJsonFile = async (project, getArticleContent) => {
 
 // --- DOCX Generation Overhaul ---
 
-// FIX: Added interface for processNode options
 interface ProcessNodeOptions {
     bold?: boolean;
     italics?: boolean;
@@ -94,7 +93,6 @@ interface ProcessNodeOptions {
  * @param options Formatting options to apply to text nodes.
  * @returns An array of TextRun, ImageRun, or ExternalHyperlink objects.
  */
-// FIX: Added types for node and options parameters to resolve property access errors.
 const processNode = async (node: Node, options: ProcessNodeOptions = {}): Promise<Array<TextRun | ImageRun | ExternalHyperlink>> => {
     if (node.nodeType === Node.TEXT_NODE) {
         return [new TextRun({ text: node.textContent || '', ...options })];
@@ -124,7 +122,7 @@ const processNode = async (node: Node, options: ProcessNodeOptions = {}): Promis
             const linkChildrenNested = await Promise.all(
                 Array.from(element.childNodes).map((childNode) => processNode(childNode, { ...newOptions, style: "Hyperlink" })),
             );
-            const linkChildren = linkChildrenNested.flat().filter((c): c is TextRun => c instanceof TextRun);
+            const linkChildren = linkChildrenNested.flat().filter((c): c is TextRun | ImageRun => c instanceof TextRun || c instanceof ImageRun);
 
             return [new ExternalHyperlink({
                 children: linkChildren,
@@ -166,6 +164,55 @@ const processNode = async (node: Node, options: ProcessNodeOptions = {}): Promis
 };
 
 /**
+ * Recursively processes list items (LI) to handle nested lists for DOCX conversion.
+ * @param listNode The UL or OL element to process.
+ * @param level The current nesting level.
+ * @returns A promise that resolves to an array of docx.js Paragraphs.
+ */
+const processListItems = async (listNode: HTMLUListElement | HTMLOListElement, level: number): Promise<Paragraph[]> => {
+    const items: Paragraph[] = [];
+    for (const li of Array.from(listNode.children)) {
+        if (li.tagName.toUpperCase() !== 'LI') continue;
+
+        const contentChildren: Node[] = [];
+        let nestedList: HTMLUListElement | HTMLOListElement | null = null;
+
+        // Separate text content from nested lists within the same LI
+        li.childNodes.forEach(child => {
+            if (child.nodeName.toUpperCase() === 'UL' || child.nodeName.toUpperCase() === 'OL') {
+                nestedList = child as HTMLUListElement | HTMLOListElement;
+            } else {
+                contentChildren.push(child);
+            }
+        });
+
+        // Create a temporary element to process only the text content of the LI
+        const tempDiv = document.createElement('div');
+        contentChildren.forEach(child => tempDiv.appendChild(child.cloneNode(true)));
+        
+        const paragraphChildren = await processNode(tempDiv);
+        
+        // Add the main list item paragraph
+        if (paragraphChildren.length > 0 || !nestedList) {
+            items.push(new Paragraph({
+                children: paragraphChildren,
+                ...(listNode.tagName.toUpperCase() === 'OL' 
+                    ? { numbering: { reference: 'default-ordered', level } }
+                    : { bullet: { level } }
+                )
+            }));
+        }
+        
+        // If there's a nested list, process it recursively
+        if (nestedList) {
+            const nestedItems = await processListItems(nestedList, level + 1);
+            items.push(...nestedItems);
+        }
+    }
+    return items;
+};
+
+/**
  * Converts an HTML string into an array of docx.js Paragraph and Table objects.
  * @param htmlString The HTML content to convert.
  * @returns A promise that resolves to an array of Paragraphs and Tables.
@@ -173,7 +220,7 @@ const processNode = async (node: Node, options: ProcessNodeOptions = {}): Promis
 const htmlToDocxChildren = async (htmlString) => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlString, 'text/html');
-    const elements = [];
+    const elements: (Paragraph | Table)[] = [];
 
     const headingMap: { [key: string]: HeadingLevel } = {
         'H1': HeadingLevel.HEADING_1,
@@ -184,7 +231,6 @@ const htmlToDocxChildren = async (htmlString) => {
         'H6': HeadingLevel.HEADING_6,
     };
 
-    // FIX: Added type for el parameter to resolve property access errors on 'unknown'.
     const processElement = async (el: Element) => {
         const tagName = el.tagName.toUpperCase();
         if (headingMap[tagName]) {
@@ -199,14 +245,8 @@ const htmlToDocxChildren = async (htmlString) => {
                     break;
                 case 'UL':
                 case 'OL':
-                    for (const li of Array.from(el.children)) {
-                        if (li.tagName.toUpperCase() === 'LI') {
-                            elements.push(new Paragraph({
-                                children: await processNode(li),
-                                bullet: { level: 0 },
-                            }));
-                        }
-                    }
+                    const listItems = await processListItems(el as HTMLUListElement | HTMLOListElement, 0);
+                    elements.push(...listItems);
                     break;
                 case 'TABLE':
                     const rows = [];
@@ -248,6 +288,19 @@ const htmlToDocxChildren = async (htmlString) => {
 const generateDocxBlob = async (html, title) => {
     const content = await htmlToDocxChildren(html);
     const doc = new Document({
+        numbering: {
+             config: [
+                {
+                    reference: "default-ordered",
+                    levels: [
+                        { level: 0, format: "decimal", text: "%1." },
+                        { level: 1, format: "lowerLetter", text: "%2)" },
+                        { level: 2, format: "lowerRoman", text: "%3." },
+                        { level: 3, format: "decimal", text: "%4." },
+                    ],
+                },
+            ],
+        },
         styles: {
             paragraphStyles: [{
                 id: "Hyperlink",

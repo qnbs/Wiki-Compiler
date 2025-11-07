@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { View } from '../types';
 import Icon from './Icon';
 import { useImporter } from '../hooks/useImporterContext';
+import { useImageImporter } from '../hooks/useImageImporterContext';
 
 interface BottomNavBarProps {
   view: View;
@@ -13,6 +14,7 @@ interface BottomNavBarProps {
 const BottomNavBar: React.FC<BottomNavBarProps> = ({ view, setView, isOnline }) => {
   const { t } = useTranslation();
   const { stagedArticles } = useImporter();
+  const { stagedImages } = useImageImporter();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex justify-around p-1 sm:hidden z-30">
@@ -32,7 +34,13 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ view, setView, isOnline }) 
         onClick={() => setView(View.Importer)}
         badge={stagedArticles.length > 0 ? stagedArticles.length : undefined}
         />
-      <NavButton icon="palette" label={t('Image Importer')} isActive={view === View.ImageImporter} onClick={() => setView(View.ImageImporter)} />
+      <NavButton 
+        icon="palette" 
+        label={t('Image Importer')} 
+        isActive={view === View.ImageImporter} 
+        onClick={() => setView(View.ImageImporter)}
+        badge={stagedImages.length > 0 ? stagedImages.length : undefined}
+      />
     </nav>
   );
 };
@@ -56,7 +64,7 @@ const NavButton: React.FC<NavButtonProps> = ({ icon, label, isActive, onClick, b
     >
       <Icon name={icon} className="w-6 h-6" />
       <span className="text-xs font-medium">{label}</span>
-       {badge && (
+       {badge !== undefined && badge > 0 && (
         <span className="absolute top-1 right-4 flex h-5 w-5 items-center justify-center rounded-full bg-accent-500 text-xs font-bold text-white ring-2 ring-white dark:ring-gray-900">
           {badge}
         </span>

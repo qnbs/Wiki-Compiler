@@ -70,7 +70,7 @@ const ArchiveArticlePanel: React.FC = () => {
                             <Icon name={isSelectedArticleInProject ? 'check' : 'plus'} className="w-4 h-4"/>{t('Add to Compilation')}
                         </button>
                         <button onClick={handleRefreshContent} disabled={isRefreshing} className="flex items-center gap-2 bg-gray-500 text-white px-3 py-1.5 rounded-lg hover:bg-gray-600 text-sm disabled:bg-gray-400">
-                            {isRefreshing ? <Spinner light/> : <Icon name="download" className="w-4 h-4"/>} {t('Refresh Content')}
+                            {isRefreshing ? <Spinner light/> : <Icon name="arrow-down" className="w-4 h-4"/>} {t('Refresh Content')}
                         </button>
                     </div>
                     <ArticleInsightsView insights={insights} isAnalyzing={isAnalyzing} analysisError={analysisError} />

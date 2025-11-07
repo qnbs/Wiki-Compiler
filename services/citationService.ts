@@ -1,6 +1,7 @@
 import { getArticleMetadata } from './wikipediaService';
+import { ArticleMetadata, CustomCitation } from '../types';
 
-const formatAPA = (meta) => {
+const formatAPA = (meta: ArticleMetadata): string => {
     const date = new Date(meta.touched);
     const year = date.getUTCFullYear();
     const month = date.toLocaleString('default', { month: 'long' });
@@ -10,7 +11,7 @@ const formatAPA = (meta) => {
     return `<i>${meta.title}</i>. (n.d.). In Wikipedia. Retrieved ${month} ${day}, ${year}, from <a href="${url}">${url}</a>`;
 };
 
-const formatMLA = (meta) => {
+const formatMLA = (meta: ArticleMetadata): string => {
     const date = new Date(meta.touched);
     const month = date.toLocaleString('default', { month: 'short' });
     const day = date.getUTCDate();
@@ -20,7 +21,7 @@ const formatMLA = (meta) => {
     return `"${meta.title}." <i>Wikipedia, The Free Encyclopedia</i>. Wikimedia Foundation, Inc. ${day} ${month}. ${year}. Web. ${day} ${month}. ${year}. &lt;<a href="${url}">${url}</a>&gt;`;
 };
 
-const formatChicago = (meta) => {
+const formatChicago = (meta: ArticleMetadata): string => {
     const date = new Date(meta.touched);
     const month = date.toLocaleString('default', { month: 'long' });
     const day = date.getUTCDate();
@@ -30,7 +31,7 @@ const formatChicago = (meta) => {
     return `Wikipedia, s.v. "${meta.title}," last modified ${month} ${day}, ${year}, <a href="${url}">${url}</a>.`;
 };
 
-const formatCustomAPA = (citation) => {
+const formatCustomAPA = (citation: CustomCitation): string => {
     const authorPart = citation.author ? `${citation.author}.` : '';
     const yearPart = citation.year ? `(${citation.year}).` : '';
     const titlePart = `<i>${citation.title}</i>.`;
@@ -38,7 +39,7 @@ const formatCustomAPA = (citation) => {
     return [authorPart, yearPart, titlePart, urlPart].filter(Boolean).join(' ');
 };
 
-const formatCustomMLA = (citation) => {
+const formatCustomMLA = (citation: CustomCitation): string => {
     const authorPart = citation.author ? `${citation.author}.` : '';
     const titlePart = `"${citation.title}."`;
     const yearPart = citation.year ? `, ${citation.year}` : '';
@@ -46,7 +47,7 @@ const formatCustomMLA = (citation) => {
     return `${authorPart} ${titlePart}${yearPart}${urlPart}`;
 };
 
-const formatCustomChicago = (citation) => {
+const formatCustomChicago = (citation: CustomCitation): string => {
     const authorPart = citation.author ? `${citation.author}.` : '';
     const titlePart = `"${citation.title}."`;
     const yearPart = citation.year ? `${citation.year}.` : '';
@@ -56,15 +57,15 @@ const formatCustomChicago = (citation) => {
 
 
 export const formatBibliography = async (
-    titles, 
-    customCitations,
-    style
-) => {
+    titles: string[], 
+    customCitations: CustomCitation[],
+    style: 'apa' | 'mla' | 'chicago'
+): Promise<string> => {
     try {
-        const metadata = await getArticleMetadata(titles);
+        const metadata = (await getArticleMetadata(titles)) as ArticleMetadata[];
 
-        let wikiFormatter;
-        let customFormatter;
+        let wikiFormatter: (meta: ArticleMetadata) => string;
+        let customFormatter: (citation: CustomCitation) => string;
 
         switch (style) {
             case 'mla':
@@ -81,15 +82,36 @@ export const formatBibliography = async (
                 customFormatter = formatCustomAPA;
                 break;
         }
+        
+        const allCitations: { sortKey: string; html: string }[] = [];
+
+        // Add Wikipedia citations
+        metadata.forEach(meta => {
+            if (meta && meta.title) {
+                allCitations.push({
+                    sortKey: meta.title.replace(/"/g, ''),
+                    html: wikiFormatter(meta)
+                });
+            }
+        });
+
+        // Add custom citations
+        customCitations.forEach(citation => {
+            const sortKey = citation.author || citation.title;
+            allCitations.push({
+                sortKey: sortKey,
+                html: customFormatter(citation)
+            });
+        });
+
+        // Sort alphabetically by the sortKey
+        allCitations.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+
 
         let bibliographyHtml = `<div class="p-12" style="page-break-before: always;"><h1 class="text-4xl mb-8 border-b pb-2">Bibliography</h1><ul class="list-none space-y-4">`;
         
-        metadata.forEach(meta => {
-            bibliographyHtml += `<li class="text-base">${wikiFormatter(meta)}</li>`;
-        });
-        
-        customCitations.forEach(citation => {
-             bibliographyHtml += `<li class="text-base">${customFormatter(citation)}</li>`;
+        allCitations.forEach(citation => {
+             bibliographyHtml += `<li class="text-base">${citation.html}</li>`;
         });
 
         bibliographyHtml += `</ul></div>`;

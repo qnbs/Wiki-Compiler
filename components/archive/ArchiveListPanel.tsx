@@ -20,7 +20,7 @@ const ArchiveListPanel: React.FC = () => {
     } = useArchiveContext();
 
     return (
-        <div className="md:col-span-4 lg:col-span-3 border-r border-gray-200 dark:border-gray-700 pr-4 flex flex-col">
+        <div className="md:col-span-4 lg:col-span-3 border-r border-gray-200 dark:border-gray-700 pr-4 flex flex-col h-full">
             <div className="flex-shrink-0">
                 <div className="flex justify-between items-center mb-4">
                     <h1 className="text-3xl font-bold">{t('Article Archive')}</h1>

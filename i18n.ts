@@ -120,7 +120,7 @@ const enTranslations = {
   'Export as a Microsoft Word document, best for professional reports.': 'Export as a Microsoft Word document, best for professional reports.',
   'Export as a plain text Markdown file, ideal for web or developers.': 'Export as a plain text Markdown file, ideal for web or developers.',
   'Export project data as a JSON file, useful for backups or integration.': 'Export project data as a JSON file, useful for backups or integration.',
-  'Export as an OpenDocument Text file for use in LibreOffice, etc.': 'Export as an OpenDocument Text file for use in LibreOffice, etc.',
+  'export_odt_desc': 'Exports a web page styled as a document, best for LibreOffice/OpenOffice.',
 
   // Help View
   'Help & Getting Started': 'Help & Getting Started',
@@ -371,7 +371,7 @@ const deTranslations = {
   'Export as a Microsoft Word document, best for professional reports.': 'Als Microsoft Word-Dokument exportieren, am besten für professionelle Berichte.',
   'Export as a plain text Markdown file, ideal for web or developers.': 'Als reine Text-Markdown-Datei exportieren, ideal für Web oder Entwickler.',
   'Export project data as a JSON file, useful for backups or integration.': 'Projektdaten als JSON-Datei exportieren, nützlich für Backups oder Integration.',
-  'Export as an OpenDocument Text file for use in LibreOffice, etc.': 'Als OpenDocument Text-Datei für die Verwendung in LibreOffice usw. exportieren.',
+  'export_odt_desc': 'Exportiert eine als Dokument formatierte Webseite, ideal für LibreOffice/OpenOffice.',
 
   // Help View
   'Help & Getting Started': 'Hilfe & Erste Schritte',

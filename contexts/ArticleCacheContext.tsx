@@ -25,7 +25,6 @@ export const ArticleCacheProvider: React.FC<{ children: ReactNode }> = ({ childr
           const articleToCache: ArticleContent = { 
               title, 
               html, 
-              // FIX: Cast the metadata object to the correct type.
               metadata: metadataArray.length > 0 ? metadataArray[0] as ArticleMetadata : undefined 
           };
           await saveArticleCache(articleToCache);

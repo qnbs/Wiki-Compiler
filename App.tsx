@@ -46,7 +46,6 @@ function App() {
       const viewFromUrl = urlParams.get('view');
 
       if (viewFromUrl && Object.values(View).includes(viewFromUrl as View)) {
-        // FIX: Cast viewFromUrl to View type as it has been validated.
         setView(viewFromUrl as View);
         // Clean up the URL to avoid confusion on subsequent navigations
         window.history.replaceState({}, '', window.location.pathname);
@@ -117,7 +116,7 @@ function App() {
   return (
     React.createElement("div", { className: "min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100" },
       React.createElement(Header, { view: view, setView: handleSetView, openCommandPalette: openCommandPalette, isOnline: isOnline }),
-      React.createElement("main", { className: "max-w-7xl mx-auto p-4 sm:pb-24" },
+      React.createElement("main", { className: "max-w-7xl mx-auto p-4 pb-24" },
         renderView()
       ),
       React.createElement(BottomNavBar, { view: view, setView: handleSetView, isOnline: isOnline }),

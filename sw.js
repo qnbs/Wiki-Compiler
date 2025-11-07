@@ -1,10 +1,9 @@
-const CACHE_NAME = 'wiki-compiler-cache-v5'; // Increment version for updates
+const CACHE_NAME = 'wiki-compiler-cache-v1';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/index.tsx',
-  '/manifest.json',
   '/offline.html',
+  '/manifest.json',
   '/icons/icon-96.svg',
   '/icons/icon-192.svg',
   '/icons/icon-512.svg',
@@ -15,8 +14,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('Opened cache');
-        // Use addAll with a catch to prevent a single failed resource from breaking the entire cache
+        console.log('Opened cache and caching essential assets');
         return cache.addAll(urlsToCache).catch(err => {
             console.error('Failed to cache initial resources:', err);
         });
@@ -37,53 +35,39 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
-  return self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
+  // Ignore non-GET requests and chrome-extension URLs
   if (event.request.method !== 'GET' || event.request.url.startsWith('chrome-extension://')) {
     return;
   }
-  
+
+  // Strategy: Stale-While-Revalidate for app shell and assets.
+  // This serves from cache first for speed, then updates the cache in the background.
   event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Cache hit - return response
-        if (response) {
-          return response;
-        }
-
-        const fetchRequest = event.request.clone();
-
-        return fetch(fetchRequest).then(
-          (response) => {
-            // Check if we received a valid response to cache
-            if (!response || response.status !== 200) {
-              return response;
-            }
-
-            // Don't cache Wikipedia API calls.
-            if (event.request.url.includes('wikipedia.org')) {
-                return response;
-            }
-            
-            const responseToCache = response.clone();
-            caches.open(CACHE_NAME)
-              .then((cache) => {
-                cache.put(event.request, responseToCache);
-              });
-
-            return response;
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.match(event.request).then((cachedResponse) => {
+        const fetchPromise = fetch(event.request).then((networkResponse) => {
+          // Don't cache Wikipedia API calls or other external APIs
+          const isCachable = !event.request.url.includes('wikipedia.org');
+          if (networkResponse && networkResponse.status === 200 && isCachable) {
+            cache.put(event.request, networkResponse.clone());
           }
-        ).catch(() => {
-          // Network request failed. 
-          // If it's a navigation request, serve the offline page.
-          if (event.request.mode === 'navigate') {
-            return caches.match('/offline.html');
-          }
+          return networkResponse;
         });
-      })
+
+        // Return cached response immediately, and update cache in background.
+        // If not in cache, wait for network.
+        return cachedResponse || fetchPromise;
+      }).catch(() => {
+        // If both cache and network fail, show offline page for navigations
+        if (event.request.mode === 'navigate') {
+          return caches.match('/offline.html');
+        }
+      });
+    })
   );
 });

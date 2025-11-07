@@ -112,3 +112,10 @@ export interface ImportedImage {
     category: string;
     notes: string;
 }
+
+export interface ProjectArticleContent {
+    id: string; // composite key: `${projectId}-${title}`
+    projectId: string;
+    title: string;
+    html: string;
+}

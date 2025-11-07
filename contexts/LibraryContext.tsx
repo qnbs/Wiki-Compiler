@@ -68,11 +68,25 @@ export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children }) =>
                 setResults([]);
                 return;
             }
+            if (!settings) return;
+
             setIsSearching(true);
             setSearchError(null);
             try {
-                const limit = settings?.library.searchResultLimit || 10;
-                const searchResults = await searchArticles(debouncedSearchTerm, limit, sortOption);
+                const limit = settings.library.searchResultLimit || 10;
+                let apiSort = sortOption;
+                if (sortOption === 'title_asc' || sortOption === 'title_desc') {
+                    apiSort = 'relevance'; // Wikipedia API doesn't support title sort, so we fetch by relevance and sort locally.
+                }
+
+                let searchResults = await searchArticles(debouncedSearchTerm, limit, apiSort);
+                
+                if (sortOption === 'title_asc') {
+                  searchResults.sort((a, b) => a.title.localeCompare(b.title));
+                } else if (sortOption === 'title_desc') {
+                  searchResults.sort((a, b) => b.title.localeCompare(a.title));
+                }
+
                 setResults(searchResults);
             } catch (error) {
                 console.error("Search failed:", error);
@@ -82,7 +96,7 @@ export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children }) =>
             }
         };
         performSearch();
-    }, [debouncedSearchTerm, sortOption, settings?.library.searchResultLimit, t]);
+    }, [debouncedSearchTerm, sortOption, settings, t]);
     
     const handleSelectArticle = useCallback(async (title: string) => {
         setIsLoadingArticle(true);

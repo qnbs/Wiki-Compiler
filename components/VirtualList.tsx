@@ -55,7 +55,7 @@ export const VirtualList = <T,>({ items, itemHeight, renderItem, getKey, oversca
 
   return (
     <ul ref={containerRef} onScroll={handleScroll} className="relative h-full overflow-y-auto">
-      <div style={{ height: `${items.length * itemHeight}px` }}>
+      <div style={{ height: `${items.length * itemHeight}px`, position: 'relative' }}>
         {virtualItems}
       </div>
     </ul>

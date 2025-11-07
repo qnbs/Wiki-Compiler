@@ -19,7 +19,7 @@ const LibrarySearchPanel: React.FC = () => {
     } = useLibraryContext();
 
     return (
-        <div className="md:col-span-4 lg:col-span-3 overflow-hidden border-r border-gray-200 dark:border-gray-700 pr-4 flex flex-col">
+        <div className="md:col-span-4 lg:col-span-3 overflow-hidden border-r border-gray-200 dark:border-gray-700 pr-4 flex flex-col h-full">
             <div className="flex-shrink-0">
                 <div className="relative mb-2">
                     <input
@@ -51,7 +51,7 @@ const LibrarySearchPanel: React.FC = () => {
             </div>
             
             <div className="flex-grow mt-2 relative">
-                {isSearching && <div className="absolute inset-0 flex justify-center items-center bg-gray-50/50 dark:bg-gray-950/50 z-10"><Spinner /></div>}
+                {isSearching && <div className="absolute inset-0 flex justify-center pt-10 bg-gray-50/50 dark:bg-gray-950/50 z-10"><Spinner /></div>}
                 
                 {searchError && <p className="text-red-500 text-sm text-center my-4">{searchError}</p>}
                 
