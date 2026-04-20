@@ -48,6 +48,15 @@ const LibrarySettings: React.FC = () => {
                 {settings.library.aiAssistant.enabled && (
                     <div className="pl-6 pt-4 space-y-6">
                         <div>
+                             <div className="flex items-start mb-4">
+                                <input id="aiThinking" type="checkbox" checked={settings.library.aiAssistant.enableThinking} onChange={e => handleNestedChange('library.aiAssistant.enableThinking', e.target.checked)} className="h-4 w-4 mt-1 rounded border-gray-300 text-accent-600 focus:ring-accent-500"/>
+                                <div className="ml-2">
+                                    <label htmlFor="aiThinking" className="block text-sm font-medium text-gray-900 dark:text-gray-200">{t('Enable Deep Analysis')}</label>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('Uses more "thinking" tokens for higher quality, more nuanced results. Slower.')}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
                             <label htmlFor="aiInstruction" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('AI System Instruction')}</label>
                             <p className="text-xs text-gray-500 dark:text-gray-400">{t('Provide specific instructions to the AI to tailor its analysis style (e.g., "focus on economic impacts").')}</p>
                             <textarea id="aiInstruction" rows={3} value={settings.library.aiAssistant.systemInstruction} onChange={e => handleNestedChange('library.aiAssistant.systemInstruction', e.target.value)} className="w-full mt-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800" placeholder={t('e.g., "Analyze from the perspective of a historian."')}></textarea>

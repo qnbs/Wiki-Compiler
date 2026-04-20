@@ -27,7 +27,8 @@ export const useArticleAnalysis = (
             const resultInsights = await getArticleInsights(
                 textContent, 
                 settings.library.aiAssistant.systemInstruction,
-                settings.library.aiAssistant.focus
+                settings.library.aiAssistant.focus,
+                settings.library.aiAssistant.enableThinking
             );
             setInsights(resultInsights);
         } catch (error) {

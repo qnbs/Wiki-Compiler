@@ -12,6 +12,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     searchResultLimit: 10,
     aiAssistant: {
       enabled: true,
+      enableThinking: false,
       systemInstruction: '',
       focus: {
         summary: true,

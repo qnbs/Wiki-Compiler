@@ -1,3 +1,4 @@
+
 import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
@@ -220,6 +221,8 @@ const enTranslations = {
   'Install App': 'Install App',
   'Install Wiki Compiler on your device for quick access and offline capabilities.': 'Install Wiki Compiler on your device for quick access and offline capabilities.',
   'Chicago': 'Chicago',
+  'Enable Deep Analysis': 'Enable Deep Analysis',
+  'Uses more "thinking" tokens for higher quality, more nuanced results. Slower.': 'Uses more "thinking" tokens for higher quality, more nuanced results. Slower.',
 
   // AI & Editor
   'AI Research Assistant': 'AI Research Assistant',
@@ -370,7 +373,7 @@ const deTranslations = {
   'Export Project': 'Projekt exportieren',
   'Export as a Microsoft Word document, best for professional reports.': 'Als Microsoft Word-Dokument exportieren, am besten für professionelle Berichte.',
   'Export as a plain text Markdown file, ideal for web or developers.': 'Als reine Text-Markdown-Datei exportieren, ideal für Web oder Entwickler.',
-  'Export project data as a JSON file, useful for backups or integration.': 'Projektdaten als JSON-Datei exportieren, nützlich für Backups oder Integration.',
+  'Export project data as a JSON file, nützlich für Backups oder Integration.': 'Projektdaten als JSON-Datei exportieren, nützlich für Backups oder Integration.',
   'export_odt_desc': 'Exportiert eine als Dokument formatierte Webseite, ideal für LibreOffice/OpenOffice.',
 
   // Help View
@@ -455,7 +458,7 @@ const deTranslations = {
   'Import successful! The app will now reload.': 'Import erfolgreich! Die App wird jetzt neu geladen.',
   'Import failed. Please check the file format.': 'Import fehlgeschlagen. Bitte überprüfen Sie das Dateiformat.',
   'Restore Pre-Import Backup': 'Sicherung vor dem Import wiederherstellen',
-  'A backup was created before your last import. You can restore it if something went wrong.': 'Vor Ihrem letzten Import wurde eine Sicherung erstellt. Sie können sie wiederherstellen, wenn etwas schief gelaufen ist.',
+  'A backup was created before your last import. You can restore it if something went wrong.': 'Ein Backup wurde vor Ihrem letzten Import erstellt. Sie können es wiederherstellen, falls etwas schief gelaufen ist.',
   'Restore Backup': 'Sicherung wiederherstellen',
   'Are you sure you want to restore the pre-import backup? This will overwrite all current data.': 'Sind Sie sicher, dass Sie die Sicherung von vor dem Import wiederherstellen möchten? Dies überschreibt alle aktuellen Daten.',
   'Backup restored successfully! The app will now reload.': 'Sicherung erfolgreich wiederhergestellt! Die App wird jetzt neu geladen.',
@@ -471,6 +474,8 @@ const deTranslations = {
   'Install App': 'App installieren',
   'Install Wiki Compiler on your device for quick access and offline capabilities.': 'Installieren Sie Wiki Compiler auf Ihrem Gerät für schnellen Zugriff und Offline-Fähigkeiten.',
   'Chicago': 'Chicago',
+  'Enable Deep Analysis': 'Tiefenanalyse aktivieren',
+  'Uses more "thinking" tokens for higher quality, more nuanced results. Slower.': 'Verwendet mehr "Thinking"-Token für hochwertigere, nuanciertere Ergebnisse. Langsamer.',
 
   // AI & Editor
   'AI Research Assistant': 'KI-Forschungsassistent',

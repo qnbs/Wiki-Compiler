@@ -32,7 +32,8 @@ const handleGeminiError = (error, context) => {
     return new Error(defaultMessage);
 };
 
-const API_KEY = process.env.API_KEY;
+// Safely access process.env to prevent crashes in environments where process is undefined
+const API_KEY = (typeof process !== 'undefined' && process.env) ? process.env.API_KEY : undefined;
 
 let ai = null;
 if (API_KEY) {
@@ -74,7 +75,7 @@ const baseInsightsSchema = {
 };
 
 
-export const getArticleInsights = async (text, systemInstruction, focus) => {
+export const getArticleInsights = async (text, systemInstruction, focus, enableThinking = false) => {
     if (!ai) {
         throw new Error("AI Service is not configured. Please set an API key in your environment.");
     }
@@ -82,7 +83,6 @@ export const getArticleInsights = async (text, systemInstruction, focus) => {
     // Limit text size to avoid overly large requests
     const truncatedText = text.length > 30000 ? text.substring(0, 30000) : text;
     
-    // FIX: Provide a type for the `properties` object to allow dynamic assignment.
     const properties: Partial<typeof baseInsightsSchema> = {};
     const required: string[] = [];
     const promptParts: string[] = [];
@@ -118,6 +118,10 @@ export const getArticleInsights = async (text, systemInstruction, focus) => {
         ? promptParts.slice(0, -1).join(', ') + ' and ' + promptParts.slice(-1)
         : promptParts[0] || 'insights';
 
+    // Configure Thinking if enabled
+    const thinkingConfig = enableThinking 
+        ? { thinkingBudget: 2048 } 
+        : undefined;
 
     try {
         const response = await ai.models.generateContent({
@@ -127,6 +131,7 @@ export const getArticleInsights = async (text, systemInstruction, focus) => {
                 responseMimeType: "application/json",
                 responseSchema: dynamicSchema,
                 ...(systemInstruction && { systemInstruction }),
+                ...(thinkingConfig && { thinkingConfig }),
             },
         });
         

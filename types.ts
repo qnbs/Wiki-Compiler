@@ -88,6 +88,7 @@ export interface AppSettings {
         searchResultLimit: number;
         aiAssistant: {
             enabled: boolean;
+            enableThinking: boolean;
             systemInstruction: string;
             focus: {
                 summary: boolean;
