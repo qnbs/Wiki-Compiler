@@ -19,6 +19,17 @@ import { getSettings, getProjectArticleContent } from './dbService';
 
 const turndownService = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced' });
 
+type DocxHeadingLevel = (typeof HeadingLevel)[keyof typeof HeadingLevel];
+
+function mimeToDocxImageType(mime: string): 'jpg' | 'png' | 'gif' | 'bmp' | null {
+    const normalized = mime.split(';')[0]?.trim().toLowerCase() ?? '';
+    if (normalized === 'image/jpeg' || normalized === 'image/jpg') return 'jpg';
+    if (normalized === 'image/png') return 'png';
+    if (normalized === 'image/gif') return 'gif';
+    if (normalized === 'image/bmp' || normalized === 'image/x-ms-bmp') return 'bmp';
+    return null;
+}
+
 /**
  * Gathers the HTML content for a project, prioritizing edited versions of articles.
  * Combines all articles and appends a formatted bibliography.
@@ -145,8 +156,14 @@ const processNode = async (node: Node, options: ProcessNodeOptions = {}): Promis
                     return [new TextRun({ text: `[Image: ${src}]`, italics: true })];
                 }
                 const buffer = await blob.arrayBuffer();
+                const docxImageType = mimeToDocxImageType(blob.type);
+                if (!docxImageType) {
+                    console.warn(`DOCX export does not embed image type: ${blob.type}`);
+                    return [new TextRun({ text: `[Image (${blob.type}): ${src}]`, italics: true })];
+                }
 
                 return [new ImageRun({
+                    type: docxImageType,
                     data: buffer,
                     transformation: {
                         width: Math.min(imgElement.naturalWidth, 450) || 450,
@@ -222,7 +239,7 @@ const htmlToDocxChildren = async (htmlString) => {
     const doc = parser.parseFromString(htmlString, 'text/html');
     const elements: (Paragraph | Table)[] = [];
 
-    const headingMap: { [key: string]: HeadingLevel } = {
+    const headingMap: Record<string, DocxHeadingLevel> = {
         'H1': HeadingLevel.HEADING_1,
         'H2': HeadingLevel.HEADING_2,
         'H3': HeadingLevel.HEADING_3,

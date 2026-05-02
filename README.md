@@ -2,7 +2,7 @@
 
 _Your Private, AI-Powered Research and Knowledge Compilation Environment._
 
-![Status](https://img.shields.io/badge/status-active-brightgreen) ![Version](https://img.shields.io/badge/version-1.2.0-blue) ![Platform](https://img.shields.io/badge/platform-web-orange)
+[![CI](https://github.com/qnbs/Wiki-Compiler/actions/workflows/ci.yml/badge.svg)](https://github.com/qnbs/Wiki-Compiler/actions/workflows/ci.yml) ![Status](https://img.shields.io/badge/status-active-brightgreen) ![Version](https://img.shields.io/badge/version-1.2.0-blue) ![Platform](https://img.shields.io/badge/platform-web-orange)
 
 Wiki Compiler transforms passive reading into an active, creative act of knowledge assembly. It is a premium, offline-first Progressive Web App (PWA) designed for students, researchers, and lifelong learners to curate, customize, and compile knowledge from Wikipedia into beautifully formatted, portable documents.
 
@@ -58,7 +58,7 @@ Performance is a critical feature. Several strategies are employed to ensure a f
 
 ## 🛠️ Technology Deep Dive
 
-The tech stack was strategically chosen to meet the demands of a modern, offline-first, feature-rich web application without requiring a complex build pipeline.
+The tech stack targets a modern, offline-first, feature-rich web application: **Vite** bundles the TypeScript/React source for development and production, while **Tailwind CSS** is still loaded from a CDN in `index.html` for rapid styling.
 
 | Technology                                   | Rationale                                                                                                                                                                                                                                                            |
 | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -66,7 +66,7 @@ The tech stack was strategically chosen to meet the demands of a modern, offline
 | **Lexical (Rich Text Editor)**               | Chosen over other editors for its high degree of extensibility, reliability, and framework-agnostic core. Developed by Meta, it provides a solid foundation for advanced features like AI integration and custom formatting.                                             |
 | **IndexedDB (`idb` library)**                | The cornerstone of the offline architecture. Chosen for its large storage capacity, asynchronous API (preventing UI blocking), and powerful querying capabilities, making it ideal for storing full articles, projects, and user settings.                            |
 | **Google Gemini API (`@google/genai`)**      | The core of the application's AI features. Gemini models provide state-of-the-art performance for summarization and text editing. The API's support for JSON schema mode is critical for reliably parsing AI-generated insights.                                        |
-| **Tailwind CSS (via CDN)**                   | Enables rapid, utility-first styling directly in the HTML, perfectly suited for a no-build-step development environment. It allows for a consistent design system and easy implementation of features like Dark Mode and dynamic accent colors.                           |
+| **Tailwind CSS (via CDN)**                   | Utility-first styling loaded from CDN in `index.html`, complementing the Vite bundle. Supports Dark Mode and accent colors without a separate Tailwind build step in this repo.                           |
 | **`docx` & Custom ODT Generation**           | These libraries run entirely in the browser, allowing for client-side generation of professional documents. This enhances privacy and eliminates the need for a server-side rendering engine.                                                                      |
 | **`i18next` & `react-i18next`**                | Provides a comprehensive framework for internationalization (i18n), enabling full localization of the UI into multiple languages.                                                                                                                                     |
 
@@ -74,47 +74,62 @@ The tech stack was strategically chosen to meet the demands of a modern, offline
 
 ## 🚀 Getting Started
 
-This project is configured to run without a build step, leveraging modern browser features like import maps.
+Development uses **Node.js**, **npm**, and **Vite** (see `package.json`). Continuous integration runs `npm run typecheck` and `npm run build` on every push and pull request.
 
 ### Prerequisites
 
-*   A modern web browser with support for ES modules and import maps (e.g., Chrome, Firefox, Edge).
-*   A local web server to serve the files. The **Live Server** extension for VS Code is highly recommended.
+*   **Node.js** 20 or newer (see `engines` in `package.json`).
+*   A modern browser for manual testing (Chrome, Firefox, Edge, or Safari).
 
-### Local Development Setup
+### Local development
 
-1.  **Clone the Repository:**
+1.  **Clone the repository**
     ```bash
-    git clone https://github.com/your-username/wiki-compiler.git
-    cd wiki-compiler
+    git clone https://github.com/qnbs/Wiki-Compiler.git
+    cd Wiki-Compiler
     ```
 
-2.  **Launch with a Web Server:**
-    *   **Using VS Code & Live Server:** Right-click on `index.html` and select "Open with Live Server".
-    *   **Using Python:** Run `python -m http.server` in the project directory and navigate to `http://localhost:8000`.
-
-### Setting up the Gemini API Key
-
-To enable the AI Research Assistant, a valid Google Gemini API key is required.
-
-1.  **Get Your API Key:**
-    *   Visit **[Google AI Studio](https://aistudio.google.com/)**.
-    *   Click **"Get API key"** and create a new key.
-
-2.  **Provide the API Key:**
-    The application is designed to access the key from a pre-configured `process.env.API_KEY` environment variable.
-
-    > **Security Warning:** This is a client-side application. Exposing an API key directly in browser-run code is insecure for a public production application. For a real-world public deployment, the recommended pattern is to create a secure backend proxy (a "Backend-for-Frontend") that holds the key and forwards requests to the Google API. The following method is suitable for personal use, local development, or protected deployments only.
-
-    For local development, create a temporary script in `index.html` to simulate the environment variable. **This file should not be committed to version control.**
-
-    ```html
-    <!-- Add this inside the <head> tag in index.html for local development -->
-    <script>
-      // FOR LOCAL DEVELOPMENT ONLY - DO NOT COMMIT
-      window.process = { env: { API_KEY: 'YOUR_API_KEY_HERE' } };
-    </script>
+2.  **Install dependencies**
+    ```bash
+    npm install
     ```
+
+3.  **Start the dev server**
+    ```bash
+    npm run dev
+    ```
+    Open the URL printed in the terminal (default: `http://localhost:3000`).
+
+4.  **Production build & preview**
+    ```bash
+    npm run build
+    npm run preview
+    ```
+
+5.  **Typecheck** (same checks as CI)
+    ```bash
+    npm run typecheck
+    ```
+
+### Cursor / VS Code
+
+*   Recommended extensions are listed under `.vscode/extensions.json`.
+*   Workspace notes for agents and editors live in `.cursorrules`.
+*   Optional: open the repo in a Dev Container (`.devcontainer/`); after `postCreateCommand`, run `npm run dev`.
+
+### Gemini API key (optional)
+
+To enable the AI Research Assistant, use a Google Gemini API key.
+
+1.  Obtain a key from **[Google AI Studio](https://aistudio.google.com/)** (“Get API key”).
+2.  Copy `.env.example` to `.env` and set `GEMINI_API_KEY=your_key_here`.
+3.  Restart `npm run dev` after changing `.env`.
+
+Vite injects this value at dev/build time as `process.env.API_KEY` (see `vite.config.ts`).
+
+> **Security:** Client-side keys are unsafe for public production deployments. Use a backend proxy (“BFF”) for real-world hosting. The `.env` approach is intended for local development and personal use.
+
+**Note:** `index.html` still contains an **import map** (AI Studio CDN) for historical/static experiments. The supported workflow for this repository is **Vite**; opening only `index.html` without the bundler does not compile TypeScript.
 
 ---
 ## 🔐 Security Considerations
@@ -148,7 +163,7 @@ The development of Wiki Compiler was significantly accelerated by the capabiliti
 
 _Ihre private, KI-gestützte Forschungs- und Wissenskompilierungsumgebung._
 
-![Status](https://img.shields.io/badge/status-aktiv-brightgreen) ![Version](https://img.shields.io/badge/version-1.2.0-blue) ![Plattform](https://img.shields.io/badge/plattform-web-orange)
+[![CI](https://github.com/qnbs/Wiki-Compiler/actions/workflows/ci.yml/badge.svg)](https://github.com/qnbs/Wiki-Compiler/actions/workflows/ci.yml) ![Status](https://img.shields.io/badge/status-aktiv-brightgreen) ![Version](https://img.shields.io/badge/version-1.2.0-blue) ![Plattform](https://img.shields.io/badge/plattform-web-orange)
 
 Wiki Compiler verwandelt passives Lesen in einen aktiven, kreativen Akt der Wissenszusammenstellung. Es ist eine erstklassige, offline-fähige Progressive Web App (PWA), die für Studierende, Forschende und lebenslang Lernende entwickelt wurde, um Wissen aus Wikipedia zu kuratieren, anzupassen und in ansprechend formatierte, portable Dokumente zu kompilieren.
 
@@ -204,7 +219,7 @@ Leistung ist ein kritisches Merkmal. Es werden mehrere Strategien angewendet, um
 
 ## 🛠️ Technischer Einblick
 
-Der Technologiestapel wurde strategisch ausgewählt, um den Anforderungen einer modernen, offlinefähigen und funktionsreichen Webanwendung ohne komplexe Build-Pipeline gerecht zu werden.
+Der Technologiestapel zielt auf eine moderne, offlinefähige Webanwendung: **Vite** bündelt TypeScript/React für Entwicklung und Produktion; **Tailwind CSS** wird weiterhin per CDN in `index.html` geladen.
 
 | Technologie                                 | Begründung                                                                                                                                                                                                                                                          |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -212,7 +227,7 @@ Der Technologiestapel wurde strategisch ausgewählt, um den Anforderungen einer 
 | **Lexical (Rich-Text-Editor)**              | Wurde aufgrund seiner hohen Erweiterbarkeit, Zuverlässigkeit und seines Framework-unabhängigen Kerns anderen Editoren vorgezogen. Entwickelt von Meta, bietet es eine solide Grundlage für erweiterte Funktionen wie KI-Integration und benutzerdefinierte Formatierungen. |
 | **IndexedDB (`idb`-Bibliothek)**            | Der Eckpfeiler der Offline-Architektur. Ausgewählt wegen seiner großen Speicherkapazität, seiner asynchronen API (verhindert das Blockieren der Benutzeroberfläche) und seiner leistungsstarken Abfragemöglichkeiten, was es ideal für die Speicherung vollständiger Artikel, Projekte und Benutzereinstellungen macht. |
 | **Google Gemini API (`@google/genai`)**     | Der Kern der KI-Funktionen der Anwendung. Gemini-Modelle bieten modernste Leistung für Zusammenfassungen und Textbearbeitung. Die Unterstützung des JSON-Schema-Modus durch die API ist entscheidend für das zuverlässige Parsen von KI-generierten Erkenntnissen. |
-| **Tailwind CSS (über CDN)**                 | Ermöglicht schnelles, Utility-First-Styling direkt im HTML, perfekt geeignet für eine Entwicklungsumgebung ohne Build-Schritt. Es ermöglicht ein konsistentes Designsystem und eine einfache Implementierung von Funktionen wie dem Dunkelmodus und dynamischen Akzentfarben. |
+| **Tailwind CSS (über CDN)**                 | Utility-First-Styling per CDN in `index.html`, ergänzend zum Vite-Bundle. Dunkelmodus und Akzentfarben ohne separate Tailwind-Build-Pipeline in diesem Repository. |
 | **`docx` & benutzerdefinierte ODT-Generierung** | Diese Bibliotheken laufen vollständig im Browser und ermöglichen die clientseitige Erstellung professioneller Dokumente. Dies erhöht die Privatsphäre und macht eine serverseitige Rendering-Engine überflüssig. |
 | **`i18next` & `react-i18next`**               | Bietet ein umfassendes Framework für die Internationalisierung (i18n) und ermöglicht die vollständige Lokalisierung der Benutzeroberfläche in mehrere Sprachen. |
 
@@ -220,47 +235,60 @@ Der Technologiestapel wurde strategisch ausgewählt, um den Anforderungen einer 
 
 ## 🚀 Erste Schritte
 
-Dieses Projekt ist so konfiguriert, dass es ohne Build-Schritt ausgeführt werden kann und moderne Browserfunktionen wie Import-Maps nutzt.
+Die Entwicklung läuft mit **Node.js**, **npm** und **Vite** (siehe `package.json`). Die CI-Pipeline führt bei jedem Push und Pull Request `npm run typecheck` und `npm run build` aus.
 
 ### Voraussetzungen
 
-*   Ein moderner Webbrowser mit Unterstützung für ES-Module und Import-Maps (z. B. Chrome, Firefox, Edge).
-*   Ein lokaler Webserver zum Bereitstellen der Dateien. Die **Live Server**-Erweiterung für VS Code wird dringend empfohlen.
+*   **Node.js** 20 oder neuer (siehe `engines` in `package.json`).
+*   Ein aktueller Browser zum manuellen Testen.
 
-### Lokale Entwicklungseinrichtung
+### Lokale Entwicklung
 
-1.  **Repository klonen:**
+1.  **Repository klonen**
     ```bash
-    git clone https://github.com/your-username/wiki-compiler.git
-    cd wiki-compiler
+    git clone https://github.com/qnbs/Wiki-Compiler.git
+    cd Wiki-Compiler
     ```
 
-2.  **Mit einem Webserver starten:**
-    *   **Mit VS Code & Live Server:** Klicken Sie mit der rechten Maustaste auf `index.html` und wählen Sie "Open with Live Server".
-    *   **Mit Python:** Führen Sie `python -m http.server` im Projektverzeichnis aus und navigieren Sie zu `http://localhost:8000`.
-
-### Einrichten des Gemini API-Schlüssels
-
-Um den KI-Forschungsassistenten zu aktivieren, ist ein gültiger Google Gemini API-Schlüssel erforderlich.
-
-1.  **API-Schlüssel erhalten:**
-    *   Besuchen Sie **[Google AI Studio](https://aistudio.google.com/)**.
-    *   Klicken Sie auf **"Get API key"** und erstellen Sie einen neuen Schlüssel.
-
-2.  **API-Schlüssel bereitstellen:**
-    Die Anwendung ist so konzipiert, dass sie auf den Schlüssel aus einer vorkonfigurierten Umgebungsvariable `process.env.API_KEY` zugreift.
-
-    > **Sicherheitswarnung:** Dies ist eine clientseitige Anwendung. Das direkte Offenlegen eines API-Schlüssels in im Browser ausgeführtem Code ist für eine öffentliche Produktionsanwendung unsicher. Für einen realen öffentlichen Einsatz wird empfohlen, einen sicheren Backend-Proxy (ein "Backend-for-Frontend") zu erstellen, der den Schlüssel enthält und Anfragen an die Google-API weiterleitet. Die folgende Methode ist nur für den persönlichen Gebrauch, die lokale Entwicklung oder geschützte Bereitstellungen geeignet.
-
-    Für die lokale Entwicklung erstellen Sie ein temporäres Skript in `index.html`, um die Umgebungsvariable zu simulieren. **Diese Datei sollte nicht in die Versionskontrolle eingecheckt werden.**
-
-    ```html
-    <!-- Fügen Sie dies für die lokale Entwicklung im <head>-Tag von index.html hinzu -->
-    <script>
-      // NUR FÜR LOKALE ENTWICKLUNG - NICHT COMMITEN
-      window.process = { env: { API_KEY: 'IHR_API_SCHLÜSSEL_HIER' } };
-    </script>
+2.  **Abhängigkeiten installieren**
+    ```bash
+    npm install
     ```
+
+3.  **Entwicklungsserver starten**
+    ```bash
+    npm run dev
+    ```
+    Die App erreichen Sie unter der im Terminal angezeigten URL (Standard: `http://localhost:3000`).
+
+4.  **Produktions-Build und Vorschau**
+    ```bash
+    npm run build
+    npm run preview
+    ```
+
+5.  **Typprüfung** (wie in der CI)
+    ```bash
+    npm run typecheck
+    ```
+
+### Cursor / VS Code
+
+*   Empfohlene Erweiterungen: `.vscode/extensions.json`.
+*   Projekthinweise für Editoren und Agenten: `.cursorrules`.
+*   Optional: Dev Container (`.devcontainer/`); nach der Einrichtung `npm run dev` ausführen.
+
+### Gemini-API-Schlüssel (optional)
+
+1.  Schlüssel in **[Google AI Studio](https://aistudio.google.com/)** erstellen („Get API key“).
+2.  `.env.example` nach `.env` kopieren und `GEMINI_API_KEY=` setzen.
+3.  Nach Änderungen an `.env` den Dev-Server neu starten.
+
+Vite setzt den Wert zur Laufzeit von Dev/Build als `process.env.API_KEY` (siehe `vite.config.ts`).
+
+> **Sicherheit:** Öffentliche Produktionsdeployments sollten den Schlüssel nicht im Client halten; ein Backend-Proxy ist das empfohlene Muster. `.env` ist für lokale und persönliche Nutzung gedacht.
+
+**Hinweis:** Die **Import-Map** in `index.html` (AI-Studio-CDN) dient historischen/statischen Versuchen. Der unterstützte Weg in diesem Repo ist **Vite**; ohne Bundler wird kein TypeScript kompiliert.
 
 ---
 ## 🔐 Sicherheitsaspekte
