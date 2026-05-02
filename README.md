@@ -37,7 +37,7 @@ Wiki Compiler is engineered with a set of modern architectural principles to ens
 
 3.  **Component-Based & Modular UI:** Built with React, the UI is a composition of granular, reusable components. This promotes separation of concerns and maintainability. Views are decoupled from state management logic through a system of custom hooks and contexts.
 
-4.  **Reactive State Management:** Global state (e.g., projects, settings, importers) is managed through the React Context API, encapsulated within custom hooks (`useProjects`, `useSettings`, `useLibraryContext`). This provides a clean, reactive data flow where components automatically update in response to state changes without prop-drilling.
+4.  **Reactive State Management:** Global state (e.g., projects, settings, importers) is managed through the React Context API, encapsulated within custom hooks (`useProjectsContext`, `useSettingsContext`, `useLibraryContext`). This provides a clean, reactive data flow where components automatically update in response to state changes without prop-drilling.
 
 5.  **Accessibility (A11y) by Design:** The application incorporates accessibility best practices, including semantic HTML, ARIA attributes, keyboard navigability (e.g., Command Palette, focus trapping in modals), and sufficient color contrast, ensuring a usable experience for all users.
 
@@ -198,7 +198,7 @@ Wiki Compiler wurde nach einer Reihe moderner Architekturprinzipien entwickelt, 
 
 3.  **Komponentenbasiertes & modulares UI:** Mit React erstellt, ist die Benutzeroberfläche eine Komposition aus granularen, wiederverwendbaren Komponenten. Dies fördert die Trennung der Belange und die Wartbarkeit. Die Ansichten sind durch ein System von benutzerdefinierten Hooks und Kontexten von der Logik der Zustandsverwaltung entkoppelt.
 
-4.  **Reaktives Zustandsmanagement:** Der globale Zustand (z. B. Projekte, Einstellungen, Importer) wird über die React Context API verwaltet, die in benutzerdefinierten Hooks (`useProjects`, `useSettings`, `useLibraryContext`) gekapselt ist. Dies sorgt für einen sauberen, reaktiven Datenfluss, bei dem sich Komponenten automatisch als Reaktion auf Zustandsänderungen aktualisieren, ohne Prop-Drilling.
+4.  **Reaktives Zustandsmanagement:** Der globale Zustand (z. B. Projekte, Einstellungen, Importer) wird über die React Context API verwaltet, die in benutzerdefinierten Hooks (`useProjectsContext`, `useSettingsContext`, `useLibraryContext`) gekapselt ist. Dies sorgt für einen sauberen, reaktiven Datenfluss, bei dem sich Komponenten automatisch als Reaktion auf Zustandsänderungen aktualisieren, ohne Prop-Drilling.
 
 5.  **Barrierefreiheit (A11y) by Design:** Die Anwendung berücksichtigt Best Practices für die Barrierefreiheit, einschließlich semantischem HTML, ARIA-Attributen, Tastaturnavigation (z. B. Befehlspalette, Fokus-Trapping in Modalen) und ausreichendem Farbkontrast, um eine nutzbare Erfahrung für alle Benutzer zu gewährleisten.
 
