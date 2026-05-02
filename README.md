@@ -78,7 +78,7 @@ Development uses **Node.js**, **npm**, and **Vite** (see `package.json`). Contin
 
 ### Prerequisites
 
-*   **Node.js** 20 or newer (see `engines` in `package.json`).
+*   **Node.js** 22 or newer (see `engines` in `package.json`).
 *   A modern browser for manual testing (Chrome, Firefox, Edge, or Safari).
 
 ### Local development
@@ -239,7 +239,7 @@ Die Entwicklung läuft mit **Node.js**, **npm** und **Vite** (siehe `package.jso
 
 ### Voraussetzungen
 
-*   **Node.js** 20 oder neuer (siehe `engines` in `package.json`).
+*   **Node.js** 22 oder neuer (siehe `engines` in `package.json`).
 *   Ein aktueller Browser zum manuellen Testen.
 
 ### Lokale Entwicklung
