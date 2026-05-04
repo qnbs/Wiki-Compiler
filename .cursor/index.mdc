@@ -1,0 +1,24 @@
+---
+description: Project Manifest and Global Architecture
+alwaysApply: true
+---
+
+# Wiki Compiler
+
+**Zweck:** Lokaler Wiki-/Artikel-Editor mit Lexical, Projektverwaltung, Wikipedia-Import, KI-gestützter Bearbeitung (Google Gemini als Standard-Adapter) und Export (u. a. DOCX).
+
+**Laufzeit:** Reine Client-SPA (kein App-Server); Datenhaltung **IndexedDB** (`idb`). **PWA:** statische Dateien unter **`public/`** — `sw.js`, `manifest.json`, `offline.html`, `icons/` (Vite kopiert sie nach `dist/` unverändert). Registrierung in `index.tsx`.
+
+**Stack:** React 19, TypeScript (`strictNullChecks`, Bundler-Resolution, `jsx: react-jsx`), Vite 6, Port **3000**. Alias **`@/` → Repo-Root** (`vite.config.ts`, `tsconfig.json`). Eingang **`index.tsx`**, globale Styles **`index.css`** (Tailwind + Custom).
+
+**Styling:** **Tailwind CSS v3** per **PostCSS** (kein Tailwind-CDN), Plugin **`@tailwindcss/typography`** (`prose`), Akzentfarben via CSS-Variablen — siehe `tailwind.config.js`, `postcss.config.js`, `.cursor/rules/310-tailwind-styling.mdc`.
+
+**KI:** Abstraktion in **`services/ai/`** (`factory`, `geminiProvider`, `mapAiError`, …). Öffentliche Fassade bleibt **`services/geminiService.ts`** (re-export). Konfiguration: **`.env`** — `GEMINI_API_KEY`, optional **`AI_PROVIDER`** (`gemini` | `none`). Vite `define` → `process.env.API_KEY`, `GEMINI_API_KEY`, `AI_PROVIDER`. Detail: **`docs/AI_PROVIDERS.md`**.
+
+**Backup-Import:** JSON wird mit **Zod** in **`services/backupSchema.ts`** validiert, bevor `importAllData` schreibt.
+
+**Editor / Export:** Lexical (`@lexical/*`). DOCX (`docx` v9): **`ImageRun`** nur Rasterformate (`jpg`, `png`, `gif`, `bmp`); andere MIME-Typen → Platzhalter.
+
+**Skripte:** `npm run dev`, `build`, `preview`, **`typecheck`**, **`test`** (Vitest), **`test:watch`**. Konfiguration: **`vitest.config.ts`**, Tests unter `**/*.test.ts(x)`. Standards: `@/.cursor/rules/800-testing-standards.mdc`.
+
+**Konventionen:** Fokussierte Änderungen; Services (`@/services/`), Contexts, Hooks beibehalten. Nach substanziellen Codeänderungen: **`graphify update .`** (Projektregel).

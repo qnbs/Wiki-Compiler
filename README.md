@@ -58,15 +58,15 @@ Performance is a critical feature. Several strategies are employed to ensure a f
 
 ## 🛠️ Technology Deep Dive
 
-The tech stack targets a modern, offline-first, feature-rich web application: **Vite** bundles the TypeScript/React source for development and production, while **Tailwind CSS** is still loaded from a CDN in `index.html` for rapid styling.
+The tech stack targets a modern, offline-first, feature-rich web application: **Vite** bundles the TypeScript/React source for development and production, while **Tailwind CSS** is built via **PostCSS** (purged utility classes) and the **@tailwindcss/typography** plugin.
 
 | Technology                                   | Rationale                                                                                                                                                                                                                                                            |
 | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **React & TypeScript**                       | Provides a robust, type-safe foundation for building a complex, component-based UI. TypeScript ensures maintainability and reduces runtime errors.                                                                                                                   |
 | **Lexical (Rich Text Editor)**               | Chosen over other editors for its high degree of extensibility, reliability, and framework-agnostic core. Developed by Meta, it provides a solid foundation for advanced features like AI integration and custom formatting.                                             |
 | **IndexedDB (`idb` library)**                | The cornerstone of the offline architecture. Chosen for its large storage capacity, asynchronous API (preventing UI blocking), and powerful querying capabilities, making it ideal for storing full articles, projects, and user settings.                            |
-| **Google Gemini API (`@google/genai`)**      | The core of the application's AI features. Gemini models provide state-of-the-art performance for summarization and text editing. The API's support for JSON schema mode is critical for reliably parsing AI-generated insights.                                        |
-| **Tailwind CSS (via CDN)**                   | Utility-first styling loaded from CDN in `index.html`, complementing the Vite bundle. Supports Dark Mode and accent colors without a separate Tailwind build step in this repo.                           |
+| **Google Gemini API (`@google/genai`)**      | The default AI backend (see `docs/AI_PROVIDERS.md` for `AI_PROVIDER` and BYOK / proxy notes). JSON schema mode is used for structured insights.                                                                                                                    |
+| **Tailwind CSS + Typography plugin**         | Utility-first styling compiled by Tailwind v3 with PostCSS; dark mode (`class`) and accent palette via CSS variables.                                                                                 |
 | **`docx` & Custom ODT Generation**           | These libraries run entirely in the browser, allowing for client-side generation of professional documents. This enhances privacy and eliminates the need for a server-side rendering engine.                                                                      |
 | **`i18next` & `react-i18next`**                | Provides a comprehensive framework for internationalization (i18n), enabling full localization of the UI into multiple languages.                                                                                                                                     |
 
@@ -74,7 +74,7 @@ The tech stack targets a modern, offline-first, feature-rich web application: **
 
 ## 🚀 Getting Started
 
-Development uses **Node.js**, **npm**, and **Vite** (see `package.json`). Continuous integration runs `npm run typecheck` and `npm run build` on every push and pull request.
+Development uses **Node.js**, **npm**, and **Vite** (see `package.json`). Continuous integration runs `npm run typecheck`, `npm test`, and `npm run build` on every push and pull request.
 
 ### Prerequisites
 
@@ -114,7 +114,8 @@ Development uses **Node.js**, **npm**, and **Vite** (see `package.json`). Contin
 ### Cursor / VS Code
 
 *   Recommended extensions are listed under `.vscode/extensions.json`.
-*   Workspace notes for agents and editors live in `.cursorrules`.
+*   Project manifest and Cursor rules: `.cursor/index.mdc` (always-on) and `.cursor/rules/*.mdc` (scoped).
+*   Product requirements (`PRD.md`), developer playbook (`instructions.md`), and decision log (`.notes/meeting_notes.md`).
 *   Optional: open the repo in a Dev Container (`.devcontainer/`); after `postCreateCommand`, run `npm run dev`.
 
 ### Gemini API key (optional)
@@ -122,14 +123,14 @@ Development uses **Node.js**, **npm**, and **Vite** (see `package.json`). Contin
 To enable the AI Research Assistant, use a Google Gemini API key.
 
 1.  Obtain a key from **[Google AI Studio](https://aistudio.google.com/)** (“Get API key”).
-2.  Copy `.env.example` to `.env` and set `GEMINI_API_KEY=your_key_here`.
+2.  Copy `.env.example` to `.env` and set `GEMINI_API_KEY=your_key_here` (optional: `AI_PROVIDER` — see `docs/AI_PROVIDERS.md`).
 3.  Restart `npm run dev` after changing `.env`.
 
 Vite injects this value at dev/build time as `process.env.API_KEY` (see `vite.config.ts`).
 
 > **Security:** Client-side keys are unsafe for public production deployments. Use a backend proxy (“BFF”) for real-world hosting. The `.env` approach is intended for local development and personal use.
 
-**Note:** `index.html` still contains an **import map** (AI Studio CDN) for historical/static experiments. The supported workflow for this repository is **Vite**; opening only `index.html` without the bundler does not compile TypeScript.
+**Note:** The supported workflow for this repository is **Vite**. Opening raw `index.html` without the bundler does not compile TypeScript or Tailwind.
 
 ---
 ## 🔐 Security Considerations
@@ -219,15 +220,15 @@ Leistung ist ein kritisches Merkmal. Es werden mehrere Strategien angewendet, um
 
 ## 🛠️ Technischer Einblick
 
-Der Technologiestapel zielt auf eine moderne, offlinefähige Webanwendung: **Vite** bündelt TypeScript/React für Entwicklung und Produktion; **Tailwind CSS** wird weiterhin per CDN in `index.html` geladen.
+Der Technologiestapel zielt auf eine moderne, offlinefähige Webanwendung: **Vite** bündelt TypeScript/React für Entwicklung und Produktion; **Tailwind CSS** wird per **PostCSS** gebaut (inkl. **@tailwindcss/typography**).
 
 | Technologie                                 | Begründung                                                                                                                                                                                                                                                          |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **React & TypeScript**                      | Bietet eine robuste, typsichere Grundlage für die Erstellung einer komplexen, komponentenbasierten Benutzeroberfläche. TypeScript gewährleistet die Wartbarkeit und reduziert Laufzeitfehler.                                                                      |
 | **Lexical (Rich-Text-Editor)**              | Wurde aufgrund seiner hohen Erweiterbarkeit, Zuverlässigkeit und seines Framework-unabhängigen Kerns anderen Editoren vorgezogen. Entwickelt von Meta, bietet es eine solide Grundlage für erweiterte Funktionen wie KI-Integration und benutzerdefinierte Formatierungen. |
 | **IndexedDB (`idb`-Bibliothek)**            | Der Eckpfeiler der Offline-Architektur. Ausgewählt wegen seiner großen Speicherkapazität, seiner asynchronen API (verhindert das Blockieren der Benutzeroberfläche) und seiner leistungsstarken Abfragemöglichkeiten, was es ideal für die Speicherung vollständiger Artikel, Projekte und Benutzereinstellungen macht. |
-| **Google Gemini API (`@google/genai`)**     | Der Kern der KI-Funktionen der Anwendung. Gemini-Modelle bieten modernste Leistung für Zusammenfassungen und Textbearbeitung. Die Unterstützung des JSON-Schema-Modus durch die API ist entscheidend für das zuverlässige Parsen von KI-generierten Erkenntnissen. |
-| **Tailwind CSS (über CDN)**                 | Utility-First-Styling per CDN in `index.html`, ergänzend zum Vite-Bundle. Dunkelmodus und Akzentfarben ohne separate Tailwind-Build-Pipeline in diesem Repository. |
+| **Google Gemini API (`@google/genai`)**     | Standard-KI-Backend (siehe `docs/AI_PROVIDERS.md` zu `AI_PROVIDER`, BYOK und Proxy). JSON-Schema-Modus für strukturierte Erkenntnisse. |
+| **Tailwind CSS + Typography-Plugin**        | Utility-First via Tailwind v3 und PostCSS; Dark Mode (`class`) und Akzentfarben über CSS-Variablen. |
 | **`docx` & benutzerdefinierte ODT-Generierung** | Diese Bibliotheken laufen vollständig im Browser und ermöglichen die clientseitige Erstellung professioneller Dokumente. Dies erhöht die Privatsphäre und macht eine serverseitige Rendering-Engine überflüssig. |
 | **`i18next` & `react-i18next`**               | Bietet ein umfassendes Framework für die Internationalisierung (i18n) und ermöglicht die vollständige Lokalisierung der Benutzeroberfläche in mehrere Sprachen. |
 
@@ -235,7 +236,7 @@ Der Technologiestapel zielt auf eine moderne, offlinefähige Webanwendung: **Vit
 
 ## 🚀 Erste Schritte
 
-Die Entwicklung läuft mit **Node.js**, **npm** und **Vite** (siehe `package.json`). Die CI-Pipeline führt bei jedem Push und Pull Request `npm run typecheck` und `npm run build` aus.
+Die Entwicklung läuft mit **Node.js**, **npm** und **Vite** (siehe `package.json`). Die CI-Pipeline führt bei jedem Push und Pull Request `npm run typecheck`, `npm test` und `npm run build` aus.
 
 ### Voraussetzungen
 
@@ -275,20 +276,21 @@ Die Entwicklung läuft mit **Node.js**, **npm** und **Vite** (siehe `package.jso
 ### Cursor / VS Code
 
 *   Empfohlene Erweiterungen: `.vscode/extensions.json`.
-*   Projekthinweise für Editoren und Agenten: `.cursorrules`.
+*   Projekthinweise für Editoren und Agenten: `.cursor/index.mdc` und `.cursor/rules/*.mdc`.
+*   Produktanforderungen (`PRD.md`), Umsetzungsanleitung (`instructions.md`), Entscheidungsprotokoll (`.notes/meeting_notes.md`).
 *   Optional: Dev Container (`.devcontainer/`); nach der Einrichtung `npm run dev` ausführen.
 
 ### Gemini-API-Schlüssel (optional)
 
 1.  Schlüssel in **[Google AI Studio](https://aistudio.google.com/)** erstellen („Get API key“).
-2.  `.env.example` nach `.env` kopieren und `GEMINI_API_KEY=` setzen.
+2.  `.env.example` nach `.env` kopieren und `GEMINI_API_KEY=` setzen (optional: `AI_PROVIDER` — siehe `docs/AI_PROVIDERS.md`).
 3.  Nach Änderungen an `.env` den Dev-Server neu starten.
 
 Vite setzt den Wert zur Laufzeit von Dev/Build als `process.env.API_KEY` (siehe `vite.config.ts`).
 
 > **Sicherheit:** Öffentliche Produktionsdeployments sollten den Schlüssel nicht im Client halten; ein Backend-Proxy ist das empfohlene Muster. `.env` ist für lokale und persönliche Nutzung gedacht.
 
-**Hinweis:** Die **Import-Map** in `index.html` (AI-Studio-CDN) dient historischen/statischen Versuchen. Der unterstützte Weg in diesem Repo ist **Vite**; ohne Bundler wird kein TypeScript kompiliert.
+**Hinweis:** Der unterstützte Weg in diesem Repo ist **Vite**; ohne Bundler werden weder TypeScript noch Tailwind kompiliert.
 
 ---
 ## 🔐 Sicherheitsaspekte

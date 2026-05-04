@@ -1,0 +1,169 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --accent-color: 39 110 241;
+    font-family: 'Inter', sans-serif;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Wikipedia article prose (extends @tailwindcss/typography) */
+.prose a {
+  color: rgb(var(--accent-color));
+}
+.prose a:hover {
+  text-decoration: underline;
+}
+.prose img {
+  border-radius: 0.5rem;
+}
+.prose .infobox {
+  border: 1px solid #a2a9b1;
+  margin: 0.5em 0 0.5em 1em;
+  padding: 0.2em;
+  float: right;
+  clear: right;
+  font-size: 88%;
+  line-height: 1.5em;
+  max-width: 22em;
+  width: auto;
+  float: none;
+  margin: 1em 0;
+}
+@media (min-width: 640px) {
+  .prose .infobox {
+    float: right;
+    clear: right;
+    margin: 0.5em 0 0.5em 1em;
+  }
+}
+.dark .prose .infobox {
+  border-color: #72777d;
+  background-color: #202122;
+}
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  font-weight: 700;
+}
+.dark .prose {
+  --tw-prose-body: #d1d5db;
+  --tw-prose-headings: #f9fafb;
+  --tw-prose-lead: #e5e7eb;
+  --tw-prose-links: #93c5fd;
+  --tw-prose-bold: #f9fafb;
+  --tw-prose-counters: #9ca3af;
+  --tw-prose-bullets: #6b7280;
+  --tw-prose-hr: #4b5563;
+  --tw-prose-quotes: #f3f4f6;
+  --tw-prose-quote-borders: #4b5563;
+  --tw-prose-captions: #9ca3af;
+  --tw-prose-code: #f9fafb;
+  --tw-prose-pre-code: #e5e7eb;
+  --tw-prose-pre-bg: #1f2937;
+  --tw-prose-th-borders: #4b5563;
+  --tw-prose-td-borders: #374151;
+}
+
+/* Lexical editor */
+.editor-input {
+  caret-color: rgb(5, 5, 5);
+  position: relative;
+  tab-size: 1;
+  outline: 0;
+  padding: 10px;
+  user-select: text;
+  white-space: pre-wrap;
+  word-break: break-word;
+  min-height: 200px;
+}
+.dark .editor-input {
+  caret-color: #eee;
+}
+.editor-placeholder {
+  color: #999;
+  overflow: hidden;
+  position: absolute;
+  text-overflow: ellipsis;
+  top: 10px;
+  left: 10px;
+  font-size: 1rem;
+  user-select: none;
+  display: inline-block;
+  pointer-events: none;
+}
+
+@keyframes pop-in {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.animate-pop-in {
+  animation: pop-in 0.3s ease-out forwards;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in {
+  opacity: 0;
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+.slide-over-panel,
+.slide-over-overlay {
+  transition-property: transform, opacity;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dragging-item {
+  opacity: 0.5;
+  background: rgb(var(--accent-color) / 0.1);
+}
+.drop-indicator {
+  position: relative;
+}
+.drop-indicator::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background-color: rgb(var(--accent-color));
+  border-radius: 2px;
+}

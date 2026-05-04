@@ -1,0 +1,23 @@
+---
+description: Build accessible React UI; consistent props naming; Lexical and hooks patterns
+globs: components/**/*.tsx,contexts/**/*.tsx,hooks/**/*.tsx,hooks/**/*.ts
+alwaysApply: false
+---
+
+# React UI (Vite SPA)
+
+- **Paradigma:** Funktionale Komponenten, Hooks für State/Side-Effects; Contexts für bereichsbezogenen State (`@/contexts/*`).
+- **Props:** `camelCase`, booleans mit klarem Präfix (`isOpen`, `hasError`); Callbacks `onX`.
+- **Styling:** Utility-Klassen (**Tailwind**, gebaut via PostCSS); globale Artikel-/Editor-Styles und Animationen in **`@/index.css`** — siehe **`@/.cursor/rules/310-tailwind-styling.mdc`**.
+- **A11y:** Fokus-Fallen/Fokus-Management wo Modale/Panels (`useFocusTrap`); Buttons/Links semantisch; `aria-*` bei dynamischen UI.
+- **Lexical:** Editor-spezifisches in `@/components/lexical/` und Toolbar/Bubble — Editor-API nicht in zufälligen Views duplizieren.
+- **Performance:** Listen virtualisieren wo sinnvoll (`VirtualList`); teure Berechnungen debouncen (`useDebounce`).
+- Kein Next.js — keine Server/Client-Component-Trennung; alles Client-Bundle.
+
+<example>
+<button type="button" aria-expanded={isOpen} onClick={onToggle}>…</button>
+</example>
+
+<example type="invalid">
+<div onClick={submit}>Send</div> ohne Rolle/Tastatur bei kritischen Aktionen
+</example>

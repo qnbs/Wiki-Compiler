@@ -11,13 +11,15 @@
     ],
     "skipLibCheck": true,
     "types": [
-      "node"
+      "node",
+      "vite/client"
     ],
     "moduleResolution": "bundler",
     "isolatedModules": true,
     "moduleDetection": "force",
     "allowJs": true,
     "jsx": "react-jsx",
+    "strictNullChecks": true,
     "paths": {
       "@/*": [
         "./*"
@@ -25,5 +27,21 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "include": [
+    "App.tsx",
+    "index.tsx",
+    "i18n.ts",
+    "types.ts",
+    "components/**/*.ts",
+    "components/**/*.tsx",
+    "contexts/**/*.tsx",
+    "hooks/**/*.ts",
+    "services/**/*.ts",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "vitest.config.ts",
+    "vite.config.ts"
+  ],
+  "exclude": ["node_modules", "dist", "graphify-out", ".cursor"]
 }

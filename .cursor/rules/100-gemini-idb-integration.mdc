@@ -1,0 +1,21 @@
+---
+description: Use Gemini client and IndexedDB idb per services; version bumps and export constraints
+globs: services/**/*.ts
+alwaysApply: false
+---
+
+# Gemini & IndexedDB
+
+- **KI / Gemini:** Nur über **`@/services/geminiService.ts`** (Fassade) bzw. bestehende Imports davon; Implementierung liegt unter **`@/services/ai/`** (`GeminiAiProvider`, `createAiProvider`, …). Keine parallelen `@google/genai`-Clients mit dupliziertem Key-Loading.
+- **IndexedDB:** Schema und Versionierung zentral in **`@/services/dbService.ts`**; `DB_VERSION` bei Schemaänderungen erhöhen, Migrationen in `upgrade`.
+- **Backup-Import:** Vollimport nur nach Validierung mit **`@/services/backupSchema.ts`** (`parseBackupJson`); Formate nicht umgehen.
+- **idb:** Transaktionen kurz halten; Keys/Stores nicht als Magic Strings in der UI — Konstanten im Service.
+- **DOCX / Medien:** Export-Logik **`@/services/exportService.ts`** — Bildformate für `ImageRun` siehe **`@/.cursor/index.mdc`**.
+
+<example>
+await openDB(DB_NAME, DB_VERSION, { upgrade(db, oldVersion) { /* migrate */ } });
+</example>
+
+<example type="invalid">
+openDB('other-db', 1); // zweites Schema ohne Abstimmung mit dbService
+</example>

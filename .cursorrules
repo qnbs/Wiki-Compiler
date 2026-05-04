@@ -1,7 +1,0 @@
-# Wiki Compiler – Hinweise für die Bearbeitung in Cursor
-
-- **Stack:** React 19, TypeScript, Vite 6, Lexical, IndexedDB (`idb`), PWA (`sw.js`).
-- **Einstieg:** `index.tsx`; Alias `@/` zeigt auf das Repository-Root (`vite.config.ts`, `tsconfig.json`).
-- **Gemini:** Lokale Datei `.env` mit `GEMINI_API_KEY=` (siehe `.env.example`). Vite mappt das auf `process.env.API_KEY` / `process.env.GEMINI_API_KEY`.
-- **Skripte:** `npm run dev` (Port 3000), `npm run build`, `npm run typecheck`, `npm run preview`.
-- **DOCX-Export:** `docx` v9 verlangt bei `ImageRun` ein Rasterformat (`jpg` | `png` | `gif` | `bmp`); andere MIME-Typen werden als Platzhaltertext ausgegeben.

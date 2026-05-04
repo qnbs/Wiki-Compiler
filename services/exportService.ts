@@ -266,9 +266,9 @@ const htmlToDocxChildren = async (htmlString) => {
                     elements.push(...listItems);
                     break;
                 case 'TABLE':
-                    const rows = [];
+                    const rows: TableRow[] = [];
                     for (const tr of Array.from(el.querySelectorAll('tr'))) {
-                        const cells = [];
+                        const cells: TableCell[] = [];
                         for (const td of Array.from(tr.querySelectorAll('td, th'))) {
                             cells.push(new TableCell({
                                 children: [new Paragraph({ children: await processNode(td) })],

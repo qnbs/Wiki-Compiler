@@ -36,7 +36,7 @@ export const VirtualList = <T,>({ items, itemHeight, renderItem, getKey, oversca
     const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan);
     const endIndex = Math.min(items.length, Math.ceil((scrollTop + viewportHeight) / itemHeight) + overscan);
     
-    const rendered = [];
+    const rendered: React.ReactElement[] = [];
     for (let i = startIndex; i < endIndex; i++) {
       const item = items[i];
       if (item) {

@@ -1,0 +1,23 @@
+---
+description: ALWAYS use when asked to CREATE A RULE or UPDATE A RULE or when taught a lesson to RETAIN AS NEW RULE
+globs: 
+alwaysApply: false
+---
+
+# Meta: Regeln für Regeln
+
+- Wenn der Nutzer mich anweist, eine Regel zu erstellen oder ich aus einer Korrektur lerne, **MUSS** ich eine `.mdc`-Datei im Verzeichnis `.cursor/rules/` erstellen oder modifizieren.
+- Ich **MUSS** die dreistellige Kebab-Case-Nomenklatur nutzen: **001–099** Core/Security, **100–199** Integrationen/APIs, **200–299** Architektur/Patterns, **300–399** UI/Styling (z. B. `310-*` für Tailwind/CSS-Build), **800–899** Workflows/Testing.
+- Ich **MUSS** für `description` im Frontmatter das **ATO-Format** (Action, Trigger, Outcome) anwenden und **unter 120 Zeichen** bleiben.
+- Beim Feld `globs` **keine Leerzeichen nach Kommas**; **keine Anführungszeichen** (korrekt: `globs: *.ts,src/**/*.tsx` — projektspezifische Pfade siehe jeweilige Regel).
+- Token-Footprint minimieren: Regeln **maximal 200 Zeilen**. Kanonische Dateien referenzieren (z. B. „Siehe `@/services/dbService.ts`“), statt große Codeblöcke zu duplizieren.
+- Veranschaulichung mit `<example>` und `<example type="invalid">` nutzen.
+- Dateien mit dem **Standard-Texteditor** schreiben/bearbeiten, um MDC-Editor-Bugs zu vermeiden.
+
+<example>
+description: Create rule file when user asks; trigger phrase or correction; outcome is updated .mdc in .cursor/rules/
+</example>
+
+<example type="invalid">
+globs: *.ts, *.tsx
+</example>

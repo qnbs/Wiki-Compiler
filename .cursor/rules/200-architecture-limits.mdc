@@ -1,0 +1,20 @@
+---
+description: Keep files small; extract utils and split modules when logic grows past limits
+globs: *.*
+alwaysApply: false
+---
+
+# Architektur: KISS, DRY, Dateigrößen
+
+- **KISS / DRY:** Keine doppelte Geschäftslogik; Wiederverwendung über `@/services/`, `@/hooks/`, `@/types.ts`.
+- **Dateigröße:** Ziel **200–700 Zeilen** pro Datei. **Über ~700 Zeilen:** Logik in Hilfsfunktionen oder neue Module auslagern (z. B. `services/*`, `hooks/*`), Datei splitten.
+- **Komplexität:** Tiefe Verschachtelung vermeiden; früh extrahieren statt „God components“.
+- Keine Drive-by-Refactors außerhalb der aktuellen Aufgabe.
+
+<example>
+ArticleEditor.tsx > 700 Zeilen → Toolbar/Bubble in eigene Komponenten unter components/lexical/.
+</example>
+
+<example type="invalid">
+Eine neue 1200-Zeilen-Datei mit Parser + UI + Export in einer Datei.
+</example>

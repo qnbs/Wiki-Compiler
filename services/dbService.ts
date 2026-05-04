@@ -1,4 +1,5 @@
-import { openDB } from 'idb';
+import { openDB, type IDBPDatabase } from 'idb';
+import { parseBackupJson } from './backupSchema';
 
 const DB_NAME = 'WikiCompilerDB';
 const DB_VERSION = 4; // Incremented version
@@ -9,11 +10,10 @@ const PROJECT_ARTICLES_STORE = 'project-articles';
 const IMPORTED_IMAGES_STORE = 'importedImages';
 const SETTINGS_KEY = 'app-settings';
 
-let dbPromise = null;
+let dbPromise: Promise<IDBPDatabase> | null = null;
 
-const initDB = () => {
-  if (dbPromise) return dbPromise;
-  
+const initDB = (): Promise<IDBPDatabase> => {
+  if (!dbPromise) {
   dbPromise = openDB(DB_NAME, DB_VERSION, {
     upgrade(db, oldVersion) {
       if (!db.objectStoreNames.contains(PROJECTS_STORE)) {
@@ -39,7 +39,8 @@ const initDB = () => {
       }
     },
   });
-  return dbPromise;
+  }
+  return dbPromise as Promise<IDBPDatabase>;
 };
 
 // Project Functions
@@ -170,9 +171,8 @@ export const importAllData = async (jsonString, createBackup = true) => {
         }
     }
     
-    const importData = JSON.parse(jsonString);
-    if (!importData.data) throw new Error("Invalid import file format");
-    const { projects, articles, settings, projectArticles, importedImages } = importData.data;
+    const parsed = parseBackupJson(jsonString);
+    const { projects, articles, settings, projectArticles, importedImages } = parsed.data;
 
     const db = await initDB();
 
@@ -185,28 +185,28 @@ export const importAllData = async (jsonString, createBackup = true) => {
 
     const projectTx = db.transaction(PROJECTS_STORE, 'readwrite');
     for (const project of projects) {
-        await projectTx.store.add(project);
+        await projectTx.store.put(project);
     }
     await projectTx.done;
     
     const articleTx = db.transaction(ARTICLES_STORE, 'readwrite');
     for (const article of articles) {
-        await articleTx.store.add(article);
+        await articleTx.store.put(article);
     }
     await articleTx.done;
 
-    if (projectArticles) {
+    if (projectArticles?.length) {
         const projectArticleTx = db.transaction(PROJECT_ARTICLES_STORE, 'readwrite');
         for (const pa of projectArticles) {
-            await projectArticleTx.store.add(pa);
+            await projectArticleTx.store.put(pa);
         }
         await projectArticleTx.done;
     }
 
-    if (importedImages) {
+    if (importedImages?.length) {
         const imageTx = db.transaction(IMPORTED_IMAGES_STORE, 'readwrite');
         for (const image of importedImages) {
-            await imageTx.store.add(image);
+            await imageTx.store.put(image);
         }
         await imageTx.done;
     }

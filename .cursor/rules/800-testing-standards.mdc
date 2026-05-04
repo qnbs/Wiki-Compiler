@@ -1,0 +1,23 @@
+---
+description: Deterministic Vitest tests; mock IO; never comment tests out to green CI
+globs: **/*.test.ts,**/*.test.tsx,**/*.spec.ts,**/*.spec.tsx
+alwaysApply: false
+---
+
+# Testing (Vitest)
+
+- **Runner:** **Vitest** (`npm test`, `npm run test:watch`); Konfiguration **`vitest.config.ts`**, Environment **`happy-dom`** für DOM-light APIs wo nötig.
+- **Verbot:** Fehlschlagende Tests **nicht** auskommentieren oder ausblendeln, um Builds „grün“ zu machen — Ursache beheben oder Test korrekt anpassen.
+- **Isolation:** Jeder Test lauffähig allein; keine Reihenfolge-Abhängigkeit; geteilten Zustand vermeiden.
+- **Externe Systeme:** Gemini, Wikipedia, Dateisystem — **mocken** (`vi.mock`, Stub-Provider). Keine echten API-Keys in Tests.
+- **IndexedDB:** In Tests durch Fake/In-Memory oder gemockte `idb`-Schicht ersetzen; keine Produktions-DB-Namen mit Live-Daten.
+- **Zeit:** Zeit fest verdrahten oder mocken; keine flaky Timer.
+- **CI:** `npm test` läuft in **`.github/workflows/ci.yml`** vor `npm run build`.
+
+<example>
+expect(mapAiError(new Error('api key'), 'analysis').message).toMatch(/API key/i);
+</example>
+
+<example type="invalid">
+// it('fails', () => { ... }); komplett auskommentiert
+</example>

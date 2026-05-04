@@ -1,0 +1,25 @@
+---
+description: Read PRD and instructions before architecture changes; meeting notes; MCP overview
+globs: 
+alwaysApply: false
+---
+
+# PRD, Notizen & MCP
+
+## Product Requirements
+
+Vor **größeren architektonischen Änderungen** oder neuen Produktfeatures **`PRD.md`** (Scope/Anforderungen) und **`instructions.md`** (Umsetzung/Playbook) im Repo-Root lesen. Ergänzend: **`.notes/meeting_notes.md`** für Beschlüsse. KI-Deployment-Modi: **`docs/AI_PROVIDERS.md`**.
+
+## Consciousness Stream
+
+Kontextuelle Erinnerungen, Beschlüsse und Follow-ups für dieses Projekt in **`.notes/meeting_notes.md`** pflegen („Consciousness Stream“), wenn der Nutzer das explizit wünscht oder wiederkehrende Projektentscheidungen dokumentiert werden sollen.
+
+## MCP (Platzhalter)
+
+Für dieses Repo können je nach Setup sinnvoll sein (Beispiele, nicht zwingend installiert):
+
+- **Browser / Debugging:** Chrome DevTools MCP für Performance/A11y.
+- **Repository:** GitHub-/Git-MCP für Issues und PR-Kontext.
+- **Docs:** Framework-/Vendor-Dokumentation über passende MCP-Server.
+
+Konkrete MCP-Server in der Cursor-Konfiguration aktivieren und hier nicht duplizieren — Verweis auf die lokale MCP-Liste der IDE.

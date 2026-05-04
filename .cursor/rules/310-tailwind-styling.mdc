@@ -1,0 +1,21 @@
+---
+description: Use Tailwind PostCSS build and typography plugin; avoid CDN and duplicate globals
+globs: *.tsx,*.css,tailwind.config.js,postcss.config.js
+alwaysApply: false
+---
+
+# Tailwind & globale Styles
+
+- **Build:** Tailwind wird über **`tailwind.config.js`** + **`postcss.config.js`** mit Vite kompiliert — **kein** `cdn.tailwindcss.com`, keine Runtime-Tailwind-Konfiguration in HTML.
+- **Content:** `content`-Pfade müssen **Projektquellen** treffen und **`node_modules` nicht flächig scannen** — aktuelle Liste siehe `tailwind.config.js`.
+- **Typography:** **`@tailwindcss/typography`** für `prose` / `dark:prose-invert` auf Wikipedia-HTML und Editor-Hülle.
+- **Akzentfarben:** Palette `accent-*` nutzt **`rgb(var(--accent-color) / …)`**; `--accent-color` setzt die App über Einstellungen (`document.documentElement`).
+- **Custom CSS:** Wikipedia-Infobox, Lexical `.editor-input`, Animationen (`.animate-pop-in`, …) in **`index.css`** — nicht wieder nach `index.html` inline schieben.
+
+<example>
+<div className="prose dark:prose-invert max-w-none">…</div>
+</example>
+
+<example type="invalid">
+<script src="https://cdn.tailwindcss.com"></script>
+</example>

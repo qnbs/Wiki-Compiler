@@ -1,0 +1,20 @@
+---
+description: Protect secrets via env; safe errors and logs for Gemini, IDB, and Vite client bundle
+globs: *.*
+alwaysApply: false
+---
+
+# Core Security & Betrieb
+
+- **Secrets:** API-Schlüssel **nur** aus `.env` (`GEMINI_API_KEY`); niemals in Quelltext, Commits oder Issues. Vite injiziert über `define` (`API_KEY`, `GEMINI_API_KEY`, optional `AI_PROVIDER`) — keine zweiten „Fallback“-Keys im Code. Siehe `@/vite.config.ts`.
+- **KI-Fehler:** Nutzerfreundliche Messages zentral über **`@/services/ai/mapAiError.ts`**; Aufrufer nutzen die Fassade **`@/services/geminiService.ts`** (re-export) — keine Roh-API-Responses mit Schlüsseln loggen.
+- **Client-Bundle:** Annahme: gebündelter Code ist einsehbar — keine sensiblen Strings außerhalb der vorgesehenen Env-Kette.
+- **Logging:** `console` sparsam; keine PII/Token in Logs. Bei IndexedDB-Fehlern: kontextbezogene, nicht sensitive Meldungen.
+
+<example>
+// Nur Build-Zeit-Env über Vite; Fehler über mapAiError — keine Key-Strings in UI.
+</example>
+
+<example type="invalid">
+const API_KEY = "AIza...";
+</example>

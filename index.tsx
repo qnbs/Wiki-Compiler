@@ -1,3 +1,4 @@
+import './index.css';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
@@ -10,13 +11,26 @@ import { ImporterProvider } from './contexts/ImporterContext';
 import { ImageImporterProvider } from './contexts/ImageImporterContext';
 import { ArticleCacheProvider } from './contexts/ArticleCacheContext';
 
-// PWA Service Worker Registration
+// PWA Service Worker: reload once when a new worker takes control (post-update).
 if ('serviceWorker' in navigator) {
+  let hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController) {
+      hadController = true;
+      return;
+    }
+    window.location.reload();
+  });
+
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').then(registration => {
-      console.log('SW registered: ', registration);
-    }).catch(registrationError => {
-      console.log('SW registration failed: ', registrationError);
+    navigator.serviceWorker.register('/sw.js').then((registration) => {
+      if (import.meta.env.DEV) {
+        console.log('SW registered:', registration);
+      }
+    }).catch((registrationError) => {
+      if (import.meta.env.DEV) {
+        console.log('SW registration failed:', registrationError);
+      }
     });
   });
 }
