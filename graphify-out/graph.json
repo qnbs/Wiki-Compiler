@@ -3714,8 +3714,8 @@
       "source_file": "services/dbService.ts",
       "source_location": "L174",
       "weight": 1.0,
-      "_src": "dbservice_importalldata",
-      "_tgt": "backupschema_parsebackupjson",
+      "_src": "backupschema_parsebackupjson",
+      "_tgt": "dbservice_importalldata",
       "source": "backupschema_parsebackupjson",
       "target": "dbservice_importalldata"
     },

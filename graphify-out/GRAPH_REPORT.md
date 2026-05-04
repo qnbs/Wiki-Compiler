@@ -1,7 +1,7 @@
 # Graph Report - Wiki-Compiler  (2026-05-04)
 
 ## Corpus Check
-- 87 files · ~33,568 words
+- 87 files · ~33,763 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
